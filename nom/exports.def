@@ -1,0 +1,51 @@
+PROTMODE
+CODE PRELOAD DISCARDABLE
+DATA SHARED LOADONCALL
+
+EXPORTS  
+	nomTkInit		@1
+	NOMMalloc             @2
+	NOMCalloc		@3
+	NOMFree		
+;	somIsObj               
+
+	nomPrintf		
+;	somDataResolve	@11
+;	somStringFromId	@12
+;
+;	somParentNumResolve   
+;        _NOMClassMgrObject     
+
+        nomEnvironmentNew     
+	nomBuildClass		
+
+	_NOMObjectClassData    
+	_NOMObjectCClassData  
+	NOMObjectNewClass     
+
+	_NOMClassClassData    
+	_NOMClassCClassData   
+	NOMClassNewClass      
+
+	_NOMClassMgrClassData    
+	_NOMClassMgrCClassData   
+	NOMClassMgrNewClass      
+
+;	_NOMTestClassData      
+;	_NOMTestCClassData     
+;	NOMTestNewClass       
+
+;	_NOMTest2ClassData      
+;	_NOMTest2CClassData     
+;	NOMTest2NewClass       
+
+        dumpClasses
+
+        ;_dumpMtab
+
+;_dumpParentMTab @100
+;_dumpObj            @101
+;_dumpMTabListPrivClass @102
+;_dumpObjShort      @103
+
+;IMPORTS
