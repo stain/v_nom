@@ -124,8 +124,11 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
       /* New() macro */
       fprintf(ci->fh, "\n/*\n * New macro for %s\n */\n", id);
       fprintf(ci->fh, "#define %sNew() \\\n", id);
-      fprintf(ci->fh, "        (_nomNew((_%s ? _%s : %sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
-              id, id, id, id ,id);
+      /* Changed for typesafety */
+      fprintf(ci->fh, "        ((%s*)_nomNew((_%s ? _%s : %sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
+              id, id, id, id, id ,id);
+      //  fprintf(ci->fh, "        (_nomNew((_%s ? _%s : %sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
+      //      id, id, id, id ,id);
 
       fprintf(ci->fh, "\n");
       g_free (id);
@@ -323,7 +326,13 @@ ch_output_interface(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
     }
 #else
     fprintf(ci->fh, "#ifndef %s\n", fullname);
-    fprintf(ci->fh, "#define %s NOMObject\n", fullname);
+    /* For being more typesave when calling methods */
+    fprintf(ci->fh, "typedef struct %s_struct {\n", fullname);
+    fprintf(ci->fh, "  struct nomMethodTabStruct  *mtab;\n");
+    fprintf(ci->fh, "  integer4 body[1];\n");
+    fprintf(ci->fh, "} %sObj;\n", fullname);
+
+    fprintf(ci->fh, "#define %s %sObj\n", fullname, fullname);
     fprintf(ci->fh, "#endif\n");
 #endif
 
