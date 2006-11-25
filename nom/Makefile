@@ -11,7 +11,7 @@ WPSLIBS		=	$(OBJDIR)/cwsomtk.lib
 # Define search directories
 CDIR		=	./src
 CLASSCDIR	=	./class_c
-CLASSTEMPLATEDIR	=	./../class_templates
+CLASSTEMPLATEDIR	=	./../../../class_templates
 WPSCDIR		=	./wpsclass_c
 CLASSINC	=	./class_h
 WPSINC		=	./wps_h
