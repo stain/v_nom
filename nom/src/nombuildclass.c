@@ -51,7 +51,7 @@
 #include <nomclassmanager.h>
 
 /* Define if you want to have messages from somBuildClass() and friends */
-//#define DEBUG_NOMBUILDCLASS
+#define DEBUG_NOMBUILDCLASS
 /* Define if you want to have messages from building NOMObject */
 //#define DEBUG_BUILDNOMOBJECT
 /* Define if you want to have messages from building NOMClass */
@@ -638,7 +638,7 @@ NOMClass * NOMLINK priv_buildWithNOMClassAsMeta(gulong ulReserved,
   _dumpObjShort(nomClass);
 #endif
 
-  /* nomClassReady() is called in nomBuildClass(), so don't call it here. */
+  /* nomClassReady() is called in nomBuildClass(), so don't call it here. Same goes for _nomInit(). */
   return nomClass;
 }
 
@@ -856,7 +856,8 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(NOM_ulong ulReserved,
         if(nomClass){
 #ifdef DEBUG_NOMBUILDCLASS
           nomPrintf("%s: class is %x\n", nomClass->mtab->nomClassName, nomClass);
-#endif      
+#endif    
+          _nomInit(nomClass, NULLHANDLE);
           _nomClassReady(nomClass, NULLHANDLE);
         }
 
@@ -872,6 +873,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(NOM_ulong ulReserved,
       if(nomClass){
         //#warning !!!!! No call of  _nomClassReady() here !!!!!
         //#if 0
+        _nomInit(nomClass, NULLHANDLE);
         _nomClassReady(nomClass, NULLHANDLE);   
         //#endif
       }
@@ -964,7 +966,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(NOM_ulong ulReserved,
 #endif
 
   //priv_addPrivClassToGlobalClassList(pGlobalNomEnv, nClass);
-
+  _nomInit(nomClass, NULLHANDLE);
   _nomClassReady(nomClass, NULLHANDLE);
   return nomClass;
 };
