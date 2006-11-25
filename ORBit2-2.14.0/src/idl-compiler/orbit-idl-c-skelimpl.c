@@ -1116,8 +1116,10 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
           fprintf(ski->of, "\n#include \"%s.h\"\n\n", chrTemp);
           g_free(chrTemp);
         }
-        fprintf(ski->of, "%s* NOMLINK %sNewClass(gulong ulMajor, gulong ulMinor)\n{\n", id, id);
-        fprintf(ski->of, "  %s* result;\n\n", id);
+        fprintf(ski->of, "NOMClass* NOMLINK %sNewClass(gulong ulMajor, gulong ulMinor)\n{\n", id);
+        fprintf(ski->of, "  NOMClass* result;\n\n");
+        //fprintf(ski->of, "%s* NOMLINK %sNewClass(gulong ulMajor, gulong ulMinor)\n{\n", id, id);
+        // fprintf(ski->of, "  %s* result;\n\n", id);
 
         /* Make sure meta class is created if specified by the user */
         if(NULL!=gsMetaClassName[ulCurInterface]){
