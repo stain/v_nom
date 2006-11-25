@@ -43,7 +43,6 @@
 #include "nomtk.h"
 
 #include "nomcls.ih"
-
 #include "nomclassmanager.h"
 
 extern NOMClassMgr* NOMClassMgrObject;
@@ -72,6 +71,7 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Env
   if((nObj=_nomAllocate(nomSelf, ncp->mtab->ulInstanceSize, NULLHANDLE))==NULLHANDLE)
     return NULLHANDLE;
 
+  /* _nomInit() is called in _nomRenew() */
   return _nomRenew(nomSelf, (CORBA_Object)nObj, NULLHANDLE); /* This will also init the object */
 }
 
@@ -98,15 +98,10 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenewNoInit(NOMClass* nomSelf,
 
 NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const CORBA_Object nomObj, CORBA_Environment *ev)
 {
-
   _nomRenewNoInit(nomSelf, nomObj, NULLHANDLE);
 
-  /* call somDefaultInit() for initialization */
-  /* _somDefaultInit((SOMObject*)obj); */
-  
-#warning !!!!! No _nomInitialize() for new objects !!!!!
   /* And now give the object the possibility to initialize... */
-  //_nomInitialize((NOMObject*)nomObj);
+  _nomInit((NOMObject*)nomObj, NULLHANDLE);
   
   return nomObj;
 }
