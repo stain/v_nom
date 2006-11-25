@@ -18,8 +18,8 @@ WPSINC		=	./wps_h
 IDLDIR		=	./idl
 WPSIDLDIR	=	./wps_idl
 INCDIR		=	./include
-OBJDIR		=	./../o
-BINDIR		=	./../bin
+OBJDIR		=	./../../../o
+BINDIR		=	./../../../bin
 TOOLDIR		=	./../tools
 
 # Define objects to build
