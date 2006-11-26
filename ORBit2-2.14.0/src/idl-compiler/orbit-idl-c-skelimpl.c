@@ -55,6 +55,13 @@ typedef struct {
   char* chrOverridenMethodName;
 } InheritedOutputInfo;
 
+typedef struct {
+  FILE *of;
+  IDL_tree realif;
+  char* chrOverridenMethodName;
+  char* chrClassName;
+} InheritedOutputInfo2;
+
 static const char *passnames[] = {
   "Voyager object instance data",
   "Voyager GetData macros ", 
@@ -222,33 +229,13 @@ void VoyagerWriteParamsForParentCall(IDL_tree curif, InheritedOutputInfo *ioi)
   }
 }
 
-#if 0
-static
-void VoyagerWriteParamsForParentCall (FILE       *of,
-                                      IDL_tree    op)
-{
-  IDL_tree  sub;
-  
-  g_assert (IDL_NODE_TYPE(op) == IDLN_OP_DCL);
-  
-  fprintf (of, "(nomSelf, ");
-   
-  for (sub = IDL_OP_DCL (op).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
-    IDL_tree parm = IDL_LIST (sub).data;
-    fprintf (of, "/**/ %s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
-  }
-  fprintf (of, " ev)");
-}
-#endif
-
-
 /*
   This function is called for each parent to check if the current parent introduced the
   overriden method. If yes, the parameter info is taken from this parent and put into the
   file.
  */
 static
-void VoyagerDoWriteParamsForOverridenMethod(IDL_tree curif, InheritedOutputInfo *ioi)
+void VoyagerDoWriteOverridenMethodDeclaration(IDL_tree curif, InheritedOutputInfo2 *ioi)
 {
   IDL_tree curitem;
   char* overridenMethodName;
@@ -270,6 +257,15 @@ void VoyagerDoWriteParamsForOverridenMethod(IDL_tree curif, InheritedOutputInfo 
           IDL_tree  sub;
           
           g_assert (IDL_NODE_TYPE(curop) == IDLN_OP_DCL);
+
+          /* return typespec */
+          orbit_cbe_write_param_typespec (ioi->of, curop);
+          
+          /* The methodname */
+          fprintf (ioi->of, " %s%s_%s", "NOMLINK impl_",
+                   ioi->chrClassName, overridenMethodName);
+          
+          fprintf (ioi->of, "(%s* nomSelf, ", ioi->chrClassName);
           
           /* Write the params including the typespec */          
           for (sub = IDL_OP_DCL (curop).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
@@ -277,7 +273,7 @@ void VoyagerDoWriteParamsForOverridenMethod(IDL_tree curif, InheritedOutputInfo 
             
             orbit_cbe_write_param_typespec (ioi->of, parm);
             
-            fprintf (ioi->of, " %s,\n", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
+            fprintf (ioi->of, " %s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
           }
         }
         break;
@@ -294,16 +290,21 @@ void VoyagerDoWriteParamsForOverridenMethod(IDL_tree curif, InheritedOutputInfo 
   for every node while traversing actually writes the info.
 */ 
 static void
-VoyagerWriteParamsForOverridenMethod(FILE       *of,
-                                          IDL_tree    op,
-                                          const char *nom_prefix,
-                                          gboolean    for_epv)
+VoyagerWriteOverridenMethodDeclaration(FILE       *of,
+                                     IDL_tree    op,
+                                     const char *nom_prefix,
+                                     gboolean    for_epv)
 {
+  char     *id;
   char * id2;
   char * ptr;
   IDL_tree tmptree;
 
   g_assert (IDL_NODE_TYPE(op) == IDLN_OP_DCL);
+
+  id = IDL_ns_ident_to_qstring (
+                                IDL_IDENT_TO_NS (IDL_INTERFACE (
+                                IDL_get_parent_node (op, IDLN_INTERFACE, NULL)).ident), "_", 0);
 
   id2=g_strdup(IDL_IDENT (IDL_OP_DCL (op).ident).str);
   if((ptr=strstr(id2, NOM_OVERRIDE_STRING))!=NULL)
@@ -312,14 +313,18 @@ VoyagerWriteParamsForOverridenMethod(FILE       *of,
   tmptree = IDL_get_parent_node(op, IDLN_INTERFACE, NULL);
   
   if(IDL_INTERFACE(tmptree).inheritance_spec) {
-    InheritedOutputInfo ioi;
+    InheritedOutputInfo2 ioi;
     
     ioi.of = of;
     ioi.realif = tmptree;
     ioi.chrOverridenMethodName=id2;
-    IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerDoWriteParamsForOverridenMethod, &ioi);
+    ioi.chrClassName=id; /* The current class name. In the called function the parent is searched introducing the method.
+                            When this parent is found, the current class info isn't easy to get again but it's needed. */
+
+    IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerDoWriteOverridenMethodDeclaration, &ioi);
   }
   g_free(id2);
+  g_free(id);
 }
 
 static void
@@ -801,29 +806,23 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
             fprintf(ski->of, "%s_ 1\n", id);
 #if USE_LIBIDL_CODE    
             fprintf(ski->of, "static ");
-#else
-            fprintf(ski->of, "NOM_Scope ");
-#endif
-            orbit_cbe_write_param_typespec(ski->of, ski->tree);
-#if USE_LIBIDL_CODE    
             fprintf(ski->of, " impl_%s(impl_POA_%s *servant,\n", id, id2);
-#else
-            if(bOverriden)
-              fprintf(ski->of, " NOMLINK impl_%s_%s(%s *nomSelf,\n",
-                      id2, gstr->str, id2);
-            else
-              fprintf(ski->of, " NOMLINK impl_%s_%s(%s *nomSelf,\n",
-                      id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str, id2);
 #endif
+
             /* Output the params */
             if(bOverriden)
               {
-                fprintf(ski->of, "/* Params should end here ... */\n");
+                /* Overriden method */
+                fprintf(ski->of, "NOM_Scope ");
+#if 0
+                fprintf(ski->of, " NOMLINK impl_%s_%s(%s *nomSelf,\n",
+                        id2, gstr->str, id2);
+#endif
                 op = ski->tree;
-                VoyagerWriteParamsForOverridenMethod(ski->of,
-                                                     op,
-                                                     "",
-                                                     FALSE);
+                VoyagerWriteOverridenMethodDeclaration(ski->of,
+                                                       op,
+                                                       "",
+                                                       FALSE);
 
                 for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
                     curitem; curitem = IDL_LIST(curitem).next) {
@@ -833,6 +832,12 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
               }
             else
               {
+                fprintf(ski->of, "NOM_Scope ");
+
+                orbit_cbe_write_param_typespec(ski->of, ski->tree);
+                fprintf(ski->of, " NOMLINK impl_%s_%s(%s *nomSelf,\n",
+                        id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str, id2);
+
                 op = ski->tree;
                 for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
                     curitem; curitem = IDL_LIST(curitem).next) {
