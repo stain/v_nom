@@ -38,23 +38,17 @@ orbit_idl_output_c_headers (IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci
   /* Do all the typedefs, etc. */
   fprintf(ci->fh, "\n/** typedefs **/\n");
   ch_output_types(tree, rinfo, ci);
-  
+
+#ifdef USE_LIBIDL_CODE  
   if ( ci->do_skel_defs ) {
   	/* Do all the POA structures, etc. */
   	fprintf(ci->fh, "\n/** POA structures **/\n");
-#ifdef USE_LIBIDL_CODE
   	ch_output_poa(tree, rinfo, ci);
-#else
-  	fprintf(ci->fh, "  /* POA structures not used in Voyager */\n");
+  	fprintf(ci->fh, "\n/** skel prototypes **/\n");
+  	ch_output_skel_protos(tree, rinfo, ci);
+  }
 #endif
 
-  	fprintf(ci->fh, "\n/** skel prototypes **/\n");
-#ifdef USE_LIBIDL_CODE
-  	ch_output_skel_protos(tree, rinfo, ci);
-#else
-  	fprintf(ci->fh, "  /* skel prototypes not used in Voyager */\n");
-#endif
-  }
   fprintf(ci->fh, "\n/** stub prototypes **/\n");
   fprintf(ci->fh, "  /* (%s, %s line %d) */\n", __FILE__, __FUNCTION__, __LINE__);
   ch_output_stub_protos(tree, rinfo, ci);
@@ -106,7 +100,7 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
       //ch_output_interface (tree, rinfo, ci);
       id = orbit_cbe_get_typespec_str(tree);
 
-      fprintf(ci->fh, "\n/** Voyager **/\n");
+      fprintf(ci->fh, "\n/** Voyager  (%s: %s line %d) **/\n", __FILE__, __FUNCTION__, __LINE__);
 
       /* C specific class structure */
       fprintf(ci->fh, "/*\n * (%s, %s line %d)\n */\n", __FILE__, __FUNCTION__, __LINE__);
@@ -124,7 +118,7 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
       /* New() macro */
       fprintf(ci->fh, "\n/*\n * New macro for %s\n */\n", id);
       fprintf(ci->fh, "#define %sNew() \\\n", id);
-      /* Changed for typesafety */
+      /* Changed for typesafetyness */
       fprintf(ci->fh, "        ((%s*)_nomNew((_%s ? _%s : %sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
               id, id, id, id, id ,id);
       //  fprintf(ci->fh, "        (_nomNew((_%s ? _%s : %sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
