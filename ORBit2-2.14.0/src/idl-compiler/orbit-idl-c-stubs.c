@@ -58,6 +58,40 @@ VoyagerOutputOverridenMethodTemplate(IDL_tree curif, InheritedOutputInfo *ioi)
 
 }
 
+static
+void VoyagerWriteParamsForParentCall(IDL_tree curif, InheritedOutputInfo *ioi)
+{
+  IDL_tree curitem;
+  char* overridenMethodName;
+
+  if(curif == ioi->realif)
+    return;
+
+  overridenMethodName=ioi->chrOverridenMethodName;
+
+  for(curitem = IDL_INTERFACE(curif).body; curitem; curitem = IDL_LIST(curitem).next) {
+    IDL_tree curop = IDL_LIST(curitem).data;
+
+    switch(IDL_NODE_TYPE(curop)) {
+    case IDLN_OP_DCL:
+      {
+        /* Check if the current method (introduced by some parent) is the one to be
+           overriden. */
+        if(!strcmp(overridenMethodName, IDL_IDENT(IDL_OP_DCL(curop).ident).str)){
+          IDL_tree  sub;
+
+          for (sub = IDL_OP_DCL (curop).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
+            IDL_tree parm = IDL_LIST (sub).data;
+            fprintf (ioi->of, "%s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
+          }
+        }
+        break;
+      }
+	default:
+	  break;
+    }
+  }
+}
 
 void
 VoyagerWriteProtoForParentCall (FILE       *of,
@@ -69,7 +103,8 @@ VoyagerWriteProtoForParentCall (FILE       *of,
   char     *id;
   char * id2;
   char * ptr;
-  
+  IDL_tree tmptree;
+
   g_assert (IDL_NODE_TYPE(op) == IDLN_OP_DCL);
   
   //  orbit_cbe_write_param_typespec (of, op);
@@ -85,22 +120,31 @@ VoyagerWriteProtoForParentCall (FILE       *of,
     fprintf (of, "  %s%s_%s_parent", nom_prefix ? nom_prefix : "",
 			 id, id2);
 
-    g_free(id2);
-
-
 	fprintf (of, "(");
+    fprintf (of, "nomSelf, ");
 
-    fprintf (of, "nomSelf, ", id);
 
-	g_free (id);
+    tmptree = IDL_get_parent_node(op, IDLN_INTERFACE, NULL);
 
+    if(IDL_INTERFACE(tmptree).inheritance_spec) {
+      InheritedOutputInfo ioi;
+      
+      ioi.of = of;
+      ioi.realif = tmptree;
+      ioi.chrOverridenMethodName=id2;
+      IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerWriteParamsForParentCall, &ioi);
+    }
+
+#if 0
 	for (sub = IDL_OP_DCL (op).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
 		IDL_tree parm = IDL_LIST (sub).data;
 
 		//orbit_cbe_write_param_typespec (of, parm);
 		fprintf (of, " %s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
 	}
-
+#endif
+    g_free(id2);
+	g_free (id);
 	fprintf (of, " ev);\n");
 }
 
@@ -180,6 +224,7 @@ cs_output_stub (IDL_tree     tree,
 		fprintf (of, "return " ORBIT_RETVAL_VAR_NAME ";\n");
 	fprintf (of, "}\n");
 #else
+    /* This is Voyager stuff... */
     if(strstr(opname, NOM_INSTANCEVAR_STRING)==NULL &&
        strstr(opname, NOM_OVERRIDE_STRING)==NULL)
       {
@@ -229,9 +274,6 @@ cs_output_stub (IDL_tree     tree,
         VoyagerWriteProtoForParentCall (of, tree, "", FALSE);
 
         fprintf (of, "#endif\n");
-        //        fprintf(of, "/*  %s_%s_parent_resolved()*/\n",
-        //      realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
-
 #if 0
         /* Inherited */
         tmptree = IDL_get_parent_node(tree, IDLN_INTERFACE, NULL);; 
