@@ -1338,34 +1338,36 @@ ch_output_inherited_protos(IDL_tree curif, InheritedOutputInfo *ioi)
       /* Only output methods which are not overriden */
       if(!strstr(IDL_IDENT (IDL_OP_DCL (curop).ident).str, "__OVERRIDE__"))
         {
+          fprintf(ioi->of, "#if 0 /* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
           fprintf(ioi->of, "#define %s_%s %s_%s\n",
                   realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str,
                   id, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
+          fprintf(ioi->of, "#endif\n");
         }
       break;
 #if 0
       /* We don't use _Set*() and _Get*() methods with attributes in Voyager */
     case IDLN_ATTR_DCL:
       {
-	IDL_tree curitem;
-
-	/* We don't use OIDL_Attr_Info here because inherited ops may go back into trees that are output-inhibited
-	   and therefore don't have the OIDL_Attr_Info generated on them */
-
-	for(curitem = IDL_ATTR_DCL(curop).simple_declarations; curitem; curitem = IDL_LIST(curitem).next) {
-	  IDL_tree ident;
-
-	  ident = IDL_LIST(curitem).data;
-	  
-	  fprintf(ioi->of, "#define %s__get_%s %s__get_%s\n",
-		  realid, IDL_IDENT(ident).str,
-		  id, IDL_IDENT(ident).str);
-
-	  if(!IDL_ATTR_DCL(curop).f_readonly)
-	    fprintf(ioi->of, "#define %s__set_%s %s__set_%s\n",
-		    realid, IDL_IDENT(ident).str,
-		    id, IDL_IDENT(ident).str);
-	}
+        IDL_tree curitem;
+        
+        /* We don't use OIDL_Attr_Info here because inherited ops may go back into trees that are output-inhibited
+           and therefore don't have the OIDL_Attr_Info generated on them */
+        
+        for(curitem = IDL_ATTR_DCL(curop).simple_declarations; curitem; curitem = IDL_LIST(curitem).next) {
+          IDL_tree ident;
+          
+          ident = IDL_LIST(curitem).data;
+          
+          fprintf(ioi->of, "#define %s__get_%s %s__get_%s\n",
+                  realid, IDL_IDENT(ident).str,
+                  id, IDL_IDENT(ident).str);
+          
+          if(!IDL_ATTR_DCL(curop).f_readonly)
+            fprintf(ioi->of, "#define %s__set_%s %s__set_%s\n",
+                    realid, IDL_IDENT(ident).str,
+                    id, IDL_IDENT(ident).str);
+        }/* for() */
       }
       break;
 #endif
