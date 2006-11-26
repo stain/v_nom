@@ -94,7 +94,7 @@ void VoyagerWriteParamsForParentCall(IDL_tree curif, InheritedOutputInfo2 *ioi)
   }
 }
 
-void
+static void
 VoyagerWriteProtoForParentCall (FILE       *of,
                                 IDL_tree    op,
                                 const char *nom_prefix,
@@ -140,6 +140,11 @@ VoyagerWriteProtoForParentCall (FILE       *of,
 	fprintf (of, " ev);\n");
 }
 
+/*
+  This function is called for each parent to check if the current parent introduced the
+  overriden method. If yes, the parameter info is taken from this parent and put into the
+  file.
+ */
 static
 void VoyagerDoWriteParamsForOverridenMethod(IDL_tree curif, InheritedOutputInfo2 *ioi)
 {
@@ -195,7 +200,13 @@ void VoyagerDoWriteParamsForOverridenMethod(IDL_tree curif, InheritedOutputInfo2
   }
 }
 
-void VoyagerWriteParamsForOverridenMethod(FILE       *of,
+/*
+  Overriden methods are introduced by some parent class. This function gets the parent node and
+  climbs down the list of classes to find the one introducing the method. A support function called
+  for every node while traversing actually writes the info.
+*/ 
+static void 
+VoyagerWriteParamsForOverridenMethod(FILE       *of,
                                 IDL_tree    op,
                                 const char *nom_prefix,
                                 gboolean    for_epv)
