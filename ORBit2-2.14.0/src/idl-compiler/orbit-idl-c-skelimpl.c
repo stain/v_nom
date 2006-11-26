@@ -188,8 +188,44 @@ void VoyagerOutputParentMethodSpec(IDL_tree curif, InheritedOutputInfo *ioi)
 }
 
 static
+void VoyagerWriteParamsForParentCall(IDL_tree curif, InheritedOutputInfo *ioi)
+{
+  IDL_tree curitem;
+  char* overridenMethodName;
+
+  if(curif == ioi->realif)
+    return;
+
+  overridenMethodName=ioi->chrOverridenMethodName;
+
+  for(curitem = IDL_INTERFACE(curif).body; curitem; curitem = IDL_LIST(curitem).next) {
+    IDL_tree curop = IDL_LIST(curitem).data;
+
+    switch(IDL_NODE_TYPE(curop)) {
+    case IDLN_OP_DCL:
+      {
+        /* Check if the current method (introduced by some parent) is the one to be
+           overriden. */
+        if(!strcmp(overridenMethodName, IDL_IDENT(IDL_OP_DCL(curop).ident).str)){
+          IDL_tree  sub;
+
+          for (sub = IDL_OP_DCL (curop).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
+            IDL_tree parm = IDL_LIST (sub).data;
+            fprintf (ioi->of, "%s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
+          }
+        }
+        break;
+      }
+	default:
+	  break;
+    }
+  }
+}
+
+#if 0
+static
 void VoyagerWriteParamsForParentCall (FILE       *of,
-                                IDL_tree    op)
+                                      IDL_tree    op)
 {
   IDL_tree  sub;
   
@@ -199,10 +235,11 @@ void VoyagerWriteParamsForParentCall (FILE       *of,
    
   for (sub = IDL_OP_DCL (op).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
     IDL_tree parm = IDL_LIST (sub).data;
-    fprintf (of, " %s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
+    fprintf (of, "/**/ %s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
   }
   fprintf (of, " ev)");
 }
+#endif
 
 static void
 VoyagerExtractMetaClass(CBESkelImplInfo *ski)
@@ -696,15 +733,27 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
             else
               fprintf(ski->of, " NOMLINK impl_%s_%s(%s *nomSelf,\n",
                       id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str, id2);
-            // fprintf(ski->of, " NOMLINK %s(%s *nomSelf,\n", IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str, id2);
 #endif
-            
-            op = ski->tree;
-            for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
-                curitem; curitem = IDL_LIST(curitem).next) {
-              subski.tree = IDL_LIST(curitem).data;
-              orbit_cbe_ski_process_piece(&subski);
-            }
+            /* Output the params */
+            if(bOverriden)
+              {
+                fprintf(ski->of, "/* Params should end here ... */\n");
+                op = ski->tree;
+                for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
+                    curitem; curitem = IDL_LIST(curitem).next) {
+                  subski.tree = IDL_LIST(curitem).data;
+                  orbit_cbe_ski_process_piece(&subski);
+                }
+              }
+            else
+              {
+                op = ski->tree;
+                for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
+                    curitem; curitem = IDL_LIST(curitem).next) {
+                  subski.tree = IDL_LIST(curitem).data;
+                  orbit_cbe_ski_process_piece(&subski);
+                }
+              }
             
             if(IDL_OP_DCL(op).context_expr)
               fprintf(ski->of, "CORBA_Context ctx,\n");
@@ -746,13 +795,23 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   ioi.chrOverridenMethodName=gstr->str;
                   IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerOutputIntroducingClass, &ioi);
                 }
-                fprintf(ski->of, ":%s\";\n",gstr->str);
+                fprintf(ski->of, ":%s\";\n",gstr->str); /* Output the method name */
 
                 fprintf(ski->of, "/* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
                 fprintf(ski->of, "static nomMethodProc* %s_parent_resolved;\n", id);
                 fprintf(ski->of, "#define %s_parent", id);
+
                 /* output params for macro */
-                VoyagerWriteParamsForParentCall (ski->of, ski->tree );
+                fprintf(ski->of, "(nomSelf, ");
+                if(IDL_INTERFACE(tmptree).inheritance_spec) {
+                  InheritedOutputInfo ioi;
+
+                  ioi.of = ski->of;
+                  ioi.realif = tmptree;
+                  ioi.chrOverridenMethodName=gstr->str;
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerWriteParamsForParentCall, &ioi);
+                }
+                fprintf(ski->of, "ev)");
                 fprintf(ski->of, " \\\n    (((");
 
                 /* Output the typespec of the overriden proc */
@@ -766,7 +825,17 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                 }
                 fprintf(ski->of, ") \\\n    %s_parent_resolved)", id);
                 /* output params for macro */
-                VoyagerWriteParamsForParentCall (ski->of, ski->tree );
+                // VoyagerWriteParamsForParentCall (ski->of, ski->tree );
+                fprintf(ski->of, "(nomSelf, ");
+                if(IDL_INTERFACE(tmptree).inheritance_spec) {
+                  InheritedOutputInfo ioi;
+                  
+                  ioi.of = ski->of;
+                  ioi.realif = tmptree;
+                  ioi.chrOverridenMethodName=gstr->str;
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerWriteParamsForParentCall, &ioi);
+                }
+                fprintf(ski->of, "ev)");
                 fprintf(ski->of, ")\n");
 #if 0
                 fprintf(ski->of, "static char* nomFullIdString_%s_%s = nomMNFullDef_%s_%s;\n",
