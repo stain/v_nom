@@ -55,6 +55,10 @@
 
 #define NOMMETACLASS( a ) const string METACLASS_TO_USE = (a)  
 
+/* Define a pointer on a class for IDL using the classname. This is only one half of the work.
+   The rest is done by the IDL compiler which typedefs this in the *.h file so it can be used
+   in the C code. */
+#define NOMCLASSNAME( a ) native P ## a 
 
 /* #warning !!!!! NOMCLASSNAME macro is missing !!!!! */
 

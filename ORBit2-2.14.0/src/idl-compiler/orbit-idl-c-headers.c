@@ -105,8 +105,8 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
       /* C specific class structure */
       fprintf(ci->fh, "/*\n * (%s, %s line %d)\n */\n", __FILE__, __FUNCTION__, __LINE__);
       fprintf(ci->fh, "/*\n * C specific class structure\n */\n");
-      fprintf(ci->fh, "NOMEXTERN struct %sCClassDataStructure {\n   nomMethodTabs parentMtab;\n   nomDToken instanceDataToken;\n\
-} NOMDLINK %sCClassData;\n\n", id, id);
+      fprintf(ci->fh, "NOMEXTERN struct %sCClassDataStructure {\n", id);
+      fprintf(ci->fh, "   nomMethodTabs parentMtab;\n   nomDToken instanceDataToken;\n} NOMDLINK %sCClassData;\n\n", id);
       /* vomNewClass() */
       fprintf(ci->fh, "/*\n * Class creation function\n */\n");
       fprintf(ci->fh, "NOMEXTERN NOMClass * NOMLINK %sNewClass(NOM_ulong somtmajorVersion, NOM_ulong somtminorVersion);\n",
@@ -327,6 +327,7 @@ ch_output_interface(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
     fprintf(ci->fh, "} %sObj;\n", fullname);
 
     fprintf(ci->fh, "#define %s %sObj\n", fullname, fullname);
+    fprintf(ci->fh, "typedef %s *P%s;\n", fullname, fullname);
     fprintf(ci->fh, "#endif\n");
 #endif
 
@@ -445,6 +446,7 @@ ch_output_type_dcl(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
 static void
 ch_output_native(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
 {
+#ifdef USE_LIBIDL_CODE
     char *ctmp;
     IDL_tree id = IDL_NATIVE(tree).ident;
     ctmp = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(id), "_", 0);
@@ -453,6 +455,7 @@ ch_output_native(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
     /* Dont even think about emitting a typecode. */
     fprintf(ci->fh, "#endif\n");
     g_free(ctmp);
+#endif
 }
 
 static void
