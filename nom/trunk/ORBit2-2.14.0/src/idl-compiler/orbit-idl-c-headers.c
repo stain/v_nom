@@ -1291,6 +1291,9 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
                 *ptr='\0';
                 fprintf(ci->fh, "/* OVERRIDE_METHOD: ");
                 fprintf(ci->fh, "%s %s */\n", IDL_IDENT (IDL_OP_DCL (cur).ident).str, id );
+                fprintf(ci->fh, "#ifdef %s_%s\n", id, IDL_IDENT (IDL_OP_DCL (cur).ident).str);
+                fprintf(ci->fh, "#undef %s_%s\n", id, IDL_IDENT (IDL_OP_DCL (cur).ident).str);
+                fprintf(ci->fh, "#endif\n");
                 /* Try to find the interface introducing this method */
 
                 /* Inherited */
@@ -1341,11 +1344,10 @@ ch_output_inherited_protos(IDL_tree curif, InheritedOutputInfo *ioi)
       /* Only output methods which are not overriden */
       if(!strstr(IDL_IDENT (IDL_OP_DCL (curop).ident).str, "__OVERRIDE__"))
         {
-          fprintf(ioi->of, "#if 0 /* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
+          fprintf(ioi->of, "/* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
           fprintf(ioi->of, "#define %s_%s %s_%s\n",
                   realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str,
                   id, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
-          fprintf(ioi->of, "#endif\n");
         }
       break;
 #if 0
