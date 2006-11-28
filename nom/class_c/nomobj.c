@@ -71,4 +71,19 @@ NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA
   return nomSelf->mtab->ulInstanceSize;
 }
 
+NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environment *ev)
+{
+/* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+
+  /* Give object the chance to free resources */
+  _nomUninit(nomSelf, NULLHANDLE);
+
+  /* And now delete the object */
+  /*
+    FIXME: we should probably call a class function here, so the
+    class can keep track of objects.
+   */
+  NOMFree(nomSelf);
+}
+
 

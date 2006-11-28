@@ -45,7 +45,7 @@ interface NOMObject
 	void nomUninit();
 	/* Return the size of the object. That is sizeof(mTab*)+sizeof(all instance vars) */
 	long nomGetSize();
-
+  void delete();
 #if 0
 	NOMOVERRIDE(wpEchoString);
 	NOMINSTANCEVAR(long theLong);
