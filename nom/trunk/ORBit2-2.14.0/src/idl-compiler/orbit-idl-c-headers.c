@@ -971,11 +971,12 @@ VoyagerOutputClassDataStructAttributeMember (FILE       *of,
 #endif
 }
 
+
 /*
   This function puts out something like the following in the *.h file:
 
-  #define WPFolder_wpEchoString() \
-          WPObject_wpEchoString()
+  #define WPFolder_wpEchoString(nomSelf, a, b, ...) \
+          WPObject_wpEchoString((WPObject*) nomSelf, a, b, ...)
 */
 static void
 VoyagerOutputOverridenMethod(IDL_tree curif, InheritedOutputInfo *ioi)
@@ -1001,9 +1002,25 @@ VoyagerOutputOverridenMethod(IDL_tree curif, InheritedOutputInfo *ioi)
         /* Check if the current method (introduced by some parent) is the one to be
            overriden. */
         if(!strcmp(overridenMethodName, IDL_IDENT(IDL_OP_DCL(curop).ident).str)){
-          fprintf(ioi->of, "#define %s_%s() \\\n        %s_%s()\n",
-                  realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str,
-                  id, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
+          IDL_tree  sub;
+
+          //fprintf(ioi->of, "#define %s_%s() \\\n        %s_%s()\n",
+          //      realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str,
+          //      id, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
+          fprintf(ioi->of, "#define %s_%s(nomSelf, ",
+                  realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
+          for (sub = IDL_OP_DCL (curop).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
+            IDL_tree parm = IDL_LIST (sub).data;
+            fprintf (ioi->of, "%s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
+          }
+          fprintf(ioi->of, "ev) \\\n");
+          fprintf(ioi->of, "        %s_%s((%s*) nomSelf, ",
+                  id, IDL_IDENT(IDL_OP_DCL(curop).ident).str, id);
+          for (sub = IDL_OP_DCL (curop).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
+            IDL_tree parm = IDL_LIST (sub).data;
+            fprintf (ioi->of, "%s, ", IDL_IDENT (IDL_PARAM_DCL (parm).simple_declarator).str);
+          }
+          fprintf(ioi->of, "ev)\n");
         }
         break;
       }
@@ -1134,7 +1151,6 @@ VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
     return ;
 }
 
-
 static void
 ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
 {
@@ -1198,16 +1214,6 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
               VoyagerOutputClassDataStructMember(ci->fh, cur, "");
               fprintf(ci->fh, ";\n");
             }
-          else
-            {
-#if 0
-              /* FIXME:
-                 This is only a debug method to be thrown out... */
-              fprintf(ci->fh, "/* DEBUG: Overriden method ");
-              fprintf(ci->fh, "%s, %s, %s: %d */\n", IDL_IDENT (IDL_OP_DCL (cur).ident).str,
-                      __FILE__, __FUNCTION__, __LINE__);
-#endif
-            }
           break;
         case IDLN_ATTR_DCL:
           {
@@ -1246,7 +1252,8 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
       /* Voyager special struct */
       fprintf(ci->fh, "} %sClassData;\n\n", id);
       
-      /***** Print introduced method for possible postprocessing ***/
+
+      /******* Print introduced method for possible postprocessing *******/
       for(sub = IDL_INTERFACE(tree).body; sub; sub = IDL_LIST(sub).next) {
         IDL_tree cur;
         
@@ -1271,9 +1278,9 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
         }/* switch */
       }/* for */
       fprintf(ci->fh, "\n");
-      /***** Print introduced method for possible postprocessing ***/
+      /******* Print introduced method for possible postprocessing *******/
 
-      /***** Output overriden methods ***/
+      /******* Output overriden methods *******/
       for(sub = IDL_INTERFACE(tree).body; sub; sub = IDL_LIST(sub).next) {
         IDL_tree cur;
         
@@ -1289,11 +1296,13 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
               {
                 /* There's an overriden method here */
                 *ptr='\0';
+                fprintf(ci->fh, "/* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
                 fprintf(ci->fh, "/* OVERRIDE_METHOD: ");
                 fprintf(ci->fh, "%s %s */\n", IDL_IDENT (IDL_OP_DCL (cur).ident).str, id );
                 fprintf(ci->fh, "#ifdef %s_%s\n", id, IDL_IDENT (IDL_OP_DCL (cur).ident).str);
                 fprintf(ci->fh, "#undef %s_%s\n", id, IDL_IDENT (IDL_OP_DCL (cur).ident).str);
                 fprintf(ci->fh, "#endif\n");
+
                 /* Try to find the interface introducing this method */
 
                 /* Inherited */
@@ -1302,7 +1311,8 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
                   ioi.of = ci->fh;
                   ioi.realif = tree;
                   ioi.chrOverridenMethodName=IDL_IDENT (IDL_OP_DCL (cur).ident).str;
-                  IDL_tree_traverse_parents(IDL_INTERFACE(tree).inheritance_spec, (GFunc)VoyagerOutputOverridenMethod, &ioi);
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tree).inheritance_spec,
+                                            (GFunc)VoyagerOutputOverridenMethod, &ioi);
                 }
                 *ptr='_';
               }
@@ -1313,7 +1323,7 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
         }/* switch */
       }/* for */
       fprintf(ci->fh, "\n");
-      /***** Output overriden methods ***/
+      /******* Output overriden methods *******/
 
       /* */
       g_free (id);
@@ -1322,6 +1332,32 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
   default:
     break;
   }
+}
+
+/*
+  This function writes the params of methods. The typespec is not written.
+  This function is useful for putting parameters into macros.
+ */
+static void
+VoyagerOutputMethodParamsNoTypeSpec(FILE  *of, IDL_tree tree, const char *nom_prefix)
+{
+	IDL_tree curitem;
+
+    g_assert (IDL_NODE_TYPE(tree) == IDLN_OP_DCL);
+
+    /* add the parms */
+    for(curitem = IDL_OP_DCL(tree).parameter_dcls;
+        curitem; curitem = IDL_LIST(curitem).next) {
+      IDL_tree tr;
+
+      tr = IDL_LIST(curitem).data;      
+      /*  Write list of params */
+      if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
+        {
+          fprintf(of, " %s,", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
+        }
+    }
+    return ;
 }
 
 static void
@@ -1341,13 +1377,20 @@ ch_output_inherited_protos(IDL_tree curif, InheritedOutputInfo *ioi)
 
     switch(IDL_NODE_TYPE(curop)) {
     case IDLN_OP_DCL:
-      /* Only output methods which are not overriden */
+      /* Only output methods which are not overriden. Overriden methods are also
+         put into the data but they're marked with __OVERRIDE__. */
       if(!strstr(IDL_IDENT (IDL_OP_DCL (curop).ident).str, "__OVERRIDE__"))
         {
           fprintf(ioi->of, "/* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
-          fprintf(ioi->of, "#define %s_%s %s_%s\n",
-                  realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str,
-                  id, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
+          //          fprintf(ioi->of, "#define %s_%s %s_%s\n",
+          //      realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str,
+          //      id, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
+          fprintf(ioi->of, "#define %s_%s(nomSelf,",realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
+          VoyagerOutputMethodParamsNoTypeSpec(ioi->of, curop, "");
+          fprintf(ioi->of, " ev) \\\n        %s_%s((%s*) nomSelf,",
+                  id, IDL_IDENT(IDL_OP_DCL(curop).ident).str, id);
+          VoyagerOutputMethodParamsNoTypeSpec(ioi->of, curop, "");
+          fprintf(ioi->of, " ev)\n");
         }
       break;
 #if 0
