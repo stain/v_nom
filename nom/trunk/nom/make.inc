@@ -35,3 +35,5 @@ export	SOMINC	=	-I z:\include
 
 IDLCOMP		=	L:\svn-sources\nom\trunk\ORBit2-2.14.0\src\idl-compiler\.libs\orbit-idl-2.exe
 #IDLCOMP		=	L:/ORBit2-2.14.0/src/idl-compiler/.libs/orbit-idl-2.exe
+
+GCPATH		=	L:/svn-sources/nom/trunk/gc6.8

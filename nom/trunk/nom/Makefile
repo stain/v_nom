@@ -22,6 +22,8 @@ OBJDIR		=	./../../../o
 BINDIR		=	./../../../bin
 TOOLDIR		=	./../tools
 
+GCLIB		=	./../../../o/gc.a
+
 # Define objects to build
 
 TKOBJECTS	= 	$(OBJDIR)/nomtkinit.o \
@@ -68,10 +70,10 @@ all:	$(BINDIR)/nobjtk.dll
 #all:	$(CLASSINC)/nomobj.h
 
 
-$(BINDIR)/nobjtk.dll:	 $(OBJDIR)/o.dep $(NOMOBJECTS) $(OBJECTS) ./exports.def
+$(BINDIR)/nobjtk.dll:	 $(OBJDIR)/o.dep $(NOMOBJECTS) $(OBJECTS) $(GCLIB) ./exports.def
 	@echo "[33;1;mLinking "$@"...[0;m"
 	cmd.exe /C create_vobjtk_def $(OBJDIR)/nobjtk.def
-	$(CC) $(GCCLDFLAGS)  -o $@ $(OBJECTS) $(LIBS) $(OBJDIR)/nobjtk.def
+	$(CC) $(GCCLDFLAGS)  -o $@ $(OBJECTS) $(LIBS) $(GCLIB) $(OBJDIR)/nobjtk.def
 	emximp -o $(OBJDIR)/$(basename $(notdir $@)).a $(OBJDIR)/nobjtk.def
 	@echo "[32;1;mDone linking "$@"...[0;m"
 
@@ -130,6 +132,9 @@ $(OBJDIR)/o.dep:
 	echo > $(OBJDIR)/o.dep
 	mkdir -p $(BINDIR)
 	mkdir -p $(CLASSTEMPLATEDIR)
+
+$(GCLIB):
+	cp $(GCPATH)/.libs/gc.a $(GCLIB)
 
 clean:
 	@cd $(OBJDIR) && rm *
