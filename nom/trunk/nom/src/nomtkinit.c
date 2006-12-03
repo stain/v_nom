@@ -61,7 +61,7 @@
 PNOM_ENV pGlobalNomEnv;
 /* Global class manager object */
 NOMClassMgr* NOMClassMgrObject; /* Referenced from different files */
-
+gboolean bUseGC=FALSE; /* MArk if we use the garbage collector */
 
 /********************************************************/
 /*   Toolkit functions, exported                        */
@@ -105,6 +105,7 @@ void _System  nomInitGarbageCollection()
 
  g_mem_set_vtable(&vtbl);
  fprintf(stderr, "   GC memory functions set for GLIB. (%s: %d)\n", __FILE__, __LINE__);
+ bUseGC=TRUE;
 }
 
 /*

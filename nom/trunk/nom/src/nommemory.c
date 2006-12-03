@@ -45,6 +45,9 @@
 #include <nom.h>
 #include <nomtk.h>
 
+/* This tells us if memory allocation is done using the garbage collector */
+extern gboolean bUseGC; /* Set during initialization */
+
 NOMEXTERN nomToken NOMLINK NOMMalloc(ULONG size)
 {
   PULONG memPtr;
@@ -62,8 +65,11 @@ nomToken NOMLINK NOMCalloc(const ULONG num, const ULONG size)
   PULONG memPtr;
 
   if((memPtr=g_malloc(size*num + sizeof(ULONG)))==NULLHANDLE)
-    return NULLHANDLE;
-  memset(memPtr, 0, size*num + sizeof(ULONG));
+    return NULLHANDLE; /* We won't end here because GLib just terminates the process :-/ 
+                          A really sick idea imho. */
+  if(!bUseGC)
+    memset(memPtr, 0, size*num + sizeof(ULONG)); /* GC always returns zeroed memory */
+
   *memPtr=size;
   memPtr++;
   return (nomToken) memPtr;
