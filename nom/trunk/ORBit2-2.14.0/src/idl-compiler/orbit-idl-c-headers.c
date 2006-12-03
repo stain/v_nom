@@ -13,6 +13,7 @@ static void ch_output_itypes (IDL_tree tree, OIDL_C_Info *ci);
 static void ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
 static void ch_output_skel_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
 static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
+static void ch_VoyagerOutputClassDeclaration(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
 
 void
 orbit_idl_output_c_headers (IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
@@ -35,6 +36,8 @@ orbit_idl_output_c_headers (IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci
   fprintf(ci->fh, "extern \"C\" {\n");
   fprintf(ci->fh, "#endif /* __cplusplus */\n\n");
 
+  /* Forward declare our class */
+  ch_VoyagerOutputClassDeclaration(tree, rinfo, ci);
   /* Do all the typedefs, etc. */
   fprintf(ci->fh, "\n/** typedefs **/\n");
   ch_output_types(tree, rinfo, ci);
@@ -217,7 +220,7 @@ ch_output_types (IDL_tree       tree,
 		break;
 	case IDLN_FORWARD_DCL:
 	case IDLN_INTERFACE:
-		ch_output_interface (tree, rinfo, ci);
+      /* ch_output_interface (tree, rinfo, ci); */
 		break;
 	case IDLN_TYPE_STRUCT:
 		ch_output_type_struct (tree, rinfo, ci);
@@ -294,6 +297,63 @@ ch_output_types (IDL_tree       tree,
 		break;
 	}
 }
+
+/*
+  This function declares the class struct and the pointer on the class.
+ */
+static void
+ch_VoyagerOutputClassDeclaration(IDL_tree tree,
+                                 OIDL_Run_Info *rinfo,
+                                 OIDL_C_Info   *ci)
+{
+	if (!tree)
+		return;
+
+	switch (IDL_NODE_TYPE (tree)) {
+	case IDLN_EXCEPT_DCL:
+		break;
+	case IDLN_FORWARD_DCL:
+	case IDLN_INTERFACE:
+		ch_output_interface (tree, rinfo, ci);
+		break;
+	case IDLN_TYPE_STRUCT:
+		break;
+	case IDLN_TYPE_ENUM:
+		break;
+	case IDLN_TYPE_DCL:
+		break;
+	case IDLN_TYPE_UNION:
+		break;
+	case IDLN_CODEFRAG:
+		break;
+	case IDLN_SRCFILE:
+		break;
+	case IDLN_CONST_DCL:
+		break;
+	case IDLN_NATIVE:
+		break;
+	default:
+		break;
+	}
+
+	switch (IDL_NODE_TYPE (tree)) {
+	case IDLN_MODULE:
+		break;
+	case IDLN_LIST: {
+		IDL_tree sub;
+
+		for (sub = tree; sub; sub = IDL_LIST (sub).next) {
+			ch_VoyagerOutputClassDeclaration (IDL_LIST (sub).data, rinfo, ci);
+		}
+		}
+		break;
+	case IDLN_INTERFACE:
+		break;
+	default:
+		break;
+	}
+}
+
 
 static void
 ch_output_interface(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
