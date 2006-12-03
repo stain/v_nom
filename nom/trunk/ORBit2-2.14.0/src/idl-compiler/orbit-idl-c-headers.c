@@ -109,7 +109,7 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
       fprintf(ci->fh, "   nomMethodTabs parentMtab;\n   nomDToken instanceDataToken;\n} NOMDLINK %sCClassData;\n\n", id);
       /* vomNewClass() */
       fprintf(ci->fh, "/*\n * Class creation function\n */\n");
-      fprintf(ci->fh, "NOMEXTERN NOMClass * NOMLINK %sNewClass(NOM_ulong somtmajorVersion, NOM_ulong somtminorVersion);\n",
+      fprintf(ci->fh, "NOMEXTERN NOMClass * NOMLINK %sNewClass(gulong somtmajorVersion, gulong somtminorVersion);\n",
               id);
       fprintf(ci->fh, "\n");
 
