@@ -9,6 +9,8 @@ EXPORTS
 	NOMFree		
 ;	somIsObj               
 
+	nomInitGarbageCollection
+
 	nomPrintf		
 ;	somDataResolve	@11
 ;	somStringFromId	@12
