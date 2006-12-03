@@ -82,17 +82,6 @@ typedef void* NOMLINK nomMethodProc(void*);
 #define INOUT
 #endif
 
-typedef char integer1;
-typedef short integer2;
-typedef unsigned short uinteger2;
-typedef long integer4;
-typedef unsigned long uinteger4;
-typedef float float4;
-typedef double float8;
-typedef char *zString;                 /* NULL terminated string */
-typedef char *fString;                 /* non-terminated string  */
-typedef unsigned char octet;
-
 typedef gchar *string;
 
 typedef gint16    CORBA_short;
@@ -119,10 +108,10 @@ typedef struct CORBA_Object_type *CORBA_Object;
 typedef unsigned long NOM_ulong;
 typedef GQuark nomId;
 
-typedef GData* pGData;
+typedef GData* PGData;
 
-typedef char **nomID;                  
-typedef void *nomToken;                /*  */
+typedef gchar **nomID;                  
+typedef void *nomToken;                /* Use a gpointer instead of void* here?  */
 
 #ifndef NOM_BOOLEAN
   #define NOM_BOOLEAN
@@ -130,13 +119,11 @@ typedef void *nomToken;                /*  */
 #endif /* NOM_BOOLEAN */
 
 
-
-/* somtypes.h */
 /*  Object Instance Structure */
 struct nomMethodTabStruct;
 typedef struct NOMAnyObj_struct {
   struct nomMethodTabStruct  *mtab;
-  integer4 body[1];
+  gulong body[1];
 } NOMAnyObj;
 
 
@@ -146,14 +133,10 @@ typedef struct NOMAnyObj_struct {
 
 typedef NOMObject *CORBA_Object;
 
+/* The following is probably not correct... */
 typedef NOMAnyObj CORBA_Environment;
 
- /*#define nomresolve_(obj,mToken) (nomresolve(obj,mToken)) */
-
 #define nomresolve_(obj,mToken) ((nomMethodProc*)((void)obj, mToken))
-
-
-/* from oc's mtbl, with verification of o */
 #define NOM_Resolve(obj, objClassName, methodName) \
     (( nomTD_ ## objClassName ## _ ## methodName ) \
      nomresolve_(obj, objClassName ## ClassData.methodName ))

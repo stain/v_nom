@@ -128,7 +128,7 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
 
 
 
-NOM_Scope pGData NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, CORBA_Environment *ev)
+NOM_Scope PGData NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, CORBA_Environment *ev)
 {
   NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf);
   nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
