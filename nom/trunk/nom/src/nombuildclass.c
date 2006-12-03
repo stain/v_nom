@@ -695,10 +695,10 @@ NOMClass*  createNOMObjectClassObjectAndUpdateNOMObject(NOMClass* nomClass, NOMC
 }
 
 
-NOMEXTERN NOMClass * NOMLINK nomBuildClass(NOM_ulong ulReserved,
+NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
                                            nomStaticClassInfo *sci,
-                                           NOM_ulong ulMajorVersion,
-                                           NOM_ulong ulMinorVersion)
+                                           gulong ulMajorVersion,
+                                           gulong ulMinorVersion)
 {
   NOMClass *nomClass;
   NOMClassPriv *nClass;

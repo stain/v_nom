@@ -97,8 +97,8 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
 
   NOMClassPriv *nClass; /* This struct holds our private data. A pointer will be in mtab->nomClsInfo */
 
-  NOM_ulong mtabSize;
-  NOM_ulong ulMemSize=0;
+  gulong mtabSize;
+  gulong ulMemSize=0;
   BYTE * mem;
   int a;
 
@@ -193,10 +193,10 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
 
   !!! This function is only called once for building NOMObject !!!
  */
-NOMClassPriv * NOMLINK priv_buildNOMObjectClassInfo(NOM_ulong ulReserved,
+NOMClassPriv * NOMLINK priv_buildNOMObjectClassInfo(gulong ulReserved,
                                                     nomStaticClassInfo *sci,
-                                                    NOM_ulong majorVersion,
-                                                    NOM_ulong minorVersion)
+                                                    gulong majorVersion,
+                                                    gulong minorVersion)
 {
   NOMClassPriv *nClassPriv; /* This struct holds our private data. A pointer will be in mtab->nomClsInfo */
   ULONG ulParentDataSize=0;

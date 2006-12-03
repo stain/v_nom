@@ -176,7 +176,7 @@ NOMClass * NOMLINK priv_buildNOMClass(gulong ulReserved,
                                       gulong minorVersion)
 {
   NOMClassPriv *nClass;
-  NOM_ulong ulParentDataSize=0;
+  gulong ulParentDataSize=0;
   NOMClassPriv *ncpParent;
   NOMClass *nomClass;
 

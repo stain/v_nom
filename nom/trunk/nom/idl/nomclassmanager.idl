@@ -52,12 +52,12 @@ interface NOMClassMgr : NOMObject
                               in long ulNinorVersion);
 
   void nomRegisterClass(in gpointer classMtab);
-  pGData nomGetClassList();
+  PGData nomGetClassList();
   gpointer nomGetClassInfoPtrFromName(in string className);
   void nomRegisterMethod(in gpointer classMtab, in string chrMethodName);
 
-  NOMINSTANCEVAR(pGData gdataClassList); 
-  NOMINSTANCEVAR(pGData gdataMethodList); 
+  NOMINSTANCEVAR(PGData gdataClassList); 
+  NOMINSTANCEVAR(PGData gdataMethodList); 
 
   /* nomInit : override;*/
 

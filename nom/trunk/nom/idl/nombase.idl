@@ -64,6 +64,6 @@
 
 /* Native types we want to use in the IDL */
 native  gpointer;
-native  pGData;
+native  PGData;
 
 #endif /* NOMBASE_IDL_INCLUDED */
