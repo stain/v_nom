@@ -323,7 +323,7 @@ ch_output_interface(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
     /* For being more typesave when calling methods */
     fprintf(ci->fh, "typedef struct %s_struct {\n", fullname);
     fprintf(ci->fh, "  struct nomMethodTabStruct  *mtab;\n");
-    fprintf(ci->fh, "  integer4 body[1];\n");
+    fprintf(ci->fh, "  gulong body[1];\n");
     fprintf(ci->fh, "} %sObj;\n", fullname);
 
     fprintf(ci->fh, "#define %s %sObj\n", fullname, fullname);
