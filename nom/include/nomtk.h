@@ -56,8 +56,6 @@ typedef struct _nomEnv {
 }NOM_ENV;
 typedef NOM_ENV *PNOM_ENV;
 
-typedef qsPtrRec_t * HREGDLL;
-
 /* Redefine SOMFree(), SOMCalloc(), SOMMalloc */
 #define SOMFree   NOMFree
 #define SOMMalloc NOMMalloc
@@ -73,12 +71,6 @@ NOMEXTERN boolean NOMLINK nomIsObj(NOMObject * nomObj);
 NOMEXTERN int NOMLINK nomPrintf(string chrFormat, ...);
 NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void);
 NOMEXTERN void NOMLINK dumpClasses(void);
-
-/* Garbage collector */
-NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void);
-NOMEXTERN void NOMLINK nomEndRegisterDLLWithGC(const HREGDLL hRegisterDLL );
-NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName);
-NOMEXTERN void NOMLINK  nomRegisterDataAreaForGC(char* pStart, char* pEnd);
 
 /* Functions used by nomBuildClass() */
 ULONG priv_requestSomEnvMutex(PNOM_ENV pEnv);

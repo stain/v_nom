@@ -48,6 +48,7 @@
 /* For nomToken etc. */
 #include <nom.h>
 #include "nomtk.h"
+#include "nomgc.h"
 
 /* Garbage collector */
 #include <gc.h>
@@ -276,5 +277,5 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
       }
       break;
     }
-  return NULLHANDLE;
+  return FALSE;
 }
