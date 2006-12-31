@@ -32,39 +32,73 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#ifndef NOMBASE_IDL_INCLUDED
-#define NOMBASE_IDL_INCLUDED
+/*
+  This file contains functions for working with the garbage collector.
+ */
 
-/* Helper */
-#define _doconc(a,b) a ## b
-#define _conc(a,b) _doconc(a,b)
+#define INCL_DOS
+#define INCL_DOSERRORS
+#define INCL_DOSMEMMGR
+#include <os2.h>
 
-/* Macro to define overriden methods from parent classes. Since we don't want to
-   rewrite orbit2, we just create a special method here which is marked in the
-   name as an override. In orbit2 we just discard this method and create some
-   override info instead. */
-#define NOMOVERRIDE(a) _conc(void _, _conc(a,_conc(__OVERRIDE__,__LINE__())))
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-/* The ',' in 'attri,bute' is no typo */
-#define NOMINSTANCEVAR(a) _conc(attri,bute _conc(a, _conc(__INSTANCEVAR__, _conc(__LINE__, __NOMCLSNAME__))))
+/* For nomToken etc. */
+#include <nom.h>
+#include "nomtk.h"
 
-/* */
-#define NOMCLASSVERSION(a, b ) const long MajorVersion = (a) ; const long MinorVersion = (b) 
+/* Garbage collector */
+#include <gc.h>
 
-#define DEFAULTMETACLASS "NOMClass"
+gboolean bUseGC=FALSE; /* MArk if we use the garbage collector */
 
-#define NOMMETACLASS( a ) const string METACLASS_TO_USE = (a)  
+static gpointer  gcMalloc(gulong ulBytes)
+{
+  //printf("Hi there...\n");
+  // return malloc(ulBytes);
+  return (gpointer) GC_malloc(ulBytes);
+}
 
-/* Define a pointer on a class for IDL using the classname. This is only one half of the work.
-   The rest is done by the IDL compiler which typedefs this in the *.h file so it can be used
-   in the C code. */
-#define NOMCLASSNAME( a ) native P ## a 
+static gpointer  gcRealloc(gpointer mem, gulong ulBytes)
+{
+  // printf("...and here\n");
+  //  return realloc(mem, ulBytes);
+  return (gpointer) GC_realloc(mem, ulBytes); 
+}
 
-/* #warning !!!!! NOMCLASSNAME macro is missing !!!!! */
+static void  gcFree(gpointer mem)
+{
+  //  printf("free(): %x\n", mem);
+  return;
+  GC_free(mem); 
+}
 
-/* Native types we want to use in the IDL */
-native  gulong;
-native  gpointer;
-native  PGData;
-native  nomId; /* This is a typedef for a GQuark */
-#endif /* NOMBASE_IDL_INCLUDED */
+
+/*
+  This is called from the EMX wrapper to set the garbage collector
+  memory functions as the GLIB default allocation function.
+ */
+void _System  nomInitGarbageCollection(void* pMemInExe)
+{
+ GMemVTable vtbl={0};
+
+ /* Init the garbage collector */
+ GC_init();
+
+ vtbl.malloc=(gpointer)gcMalloc;
+ vtbl.realloc=(gpointer)gcRealloc;
+ vtbl.free=(gpointer)gcFree; 
+
+ g_mem_set_vtable(&vtbl);
+ fprintf(stderr, "   GC memory functions set for GLIB. (%s: %d)\n", __FILE__, __LINE__);
+
+ bUseGC=TRUE;
+}
+
+NOMEXTERN void NOMLINK  nomRegisterDataAreaForGC(char* pStart, char* pEnd)
+{
+  GC_add_roots(pStart, pEnd);
+}
+

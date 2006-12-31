@@ -61,52 +61,11 @@
 PNOM_ENV pGlobalNomEnv;
 /* Global class manager object */
 NOMClassMgr* NOMClassMgrObject; /* Referenced from different files */
-gboolean bUseGC=FALSE; /* MArk if we use the garbage collector */
 
 /********************************************************/
 /*   Toolkit functions, exported                        */
 /********************************************************/
 
-static gpointer  gcMalloc(gulong ulBytes)
-{
-  //printf("Hi there...\n");
-  // return malloc(ulBytes);
-  return (gpointer) GC_malloc(ulBytes);
-}
-
-static gpointer  gcRealloc(gpointer mem, gulong ulBytes)
-{
-  // printf("...and here\n");
-  //  return realloc(mem, ulBytes);
-  return (gpointer) GC_realloc(mem, ulBytes); 
-}
-
-static void  gcFree(gpointer mem)
-{
-  //  printf("free(): %x\n", mem);
-  return;
-  GC_free(mem); 
-}
-
-/*
-  This is called from the EMX wrapper to set the garbage collector
-  memory functions as the GLIB default allocation function.
- */
-void _System  nomInitGarbageCollection()
-{
- GMemVTable vtbl={0};
-
- /* Init the garbage collector */
- GC_init();
-
- vtbl.malloc=(gpointer)gcMalloc;
- vtbl.realloc=(gpointer)gcRealloc;
- vtbl.free=(gpointer)gcFree; 
-
- g_mem_set_vtable(&vtbl);
- fprintf(stderr, "   GC memory functions set for GLIB. (%s: %d)\n", __FILE__, __LINE__);
- bUseGC=TRUE;
-}
 
 /*
 
