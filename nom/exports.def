@@ -11,6 +11,10 @@ EXPORTS
 
 	nomInitGarbageCollection
 	nomRegisterDataAreaForGC
+	nomBeginRegisterDLLWithGC
+	nomEndRegisterDLLWithGC
+	nomRegisterDLLByName
+
 	nomPrintf		
 
 ;	somDataResolve	@11
