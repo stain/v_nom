@@ -110,8 +110,8 @@ typedef GQuark nomId;
 
 typedef GData* PGData;
 
-typedef gchar **nomID;                  
-typedef void *nomToken;                /* Use a gpointer instead of void* here?  */
+typedef gchar **nomID;                 /* This will be reomoved later. Don't use anymore */ 
+typedef void *nomToken;                /* Use a gpointer instead of void* here?          */
 
 #ifndef NOM_BOOLEAN
   #define NOM_BOOLEAN

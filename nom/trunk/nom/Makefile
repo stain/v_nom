@@ -32,7 +32,8 @@ TKOBJECTS	= 	$(OBJDIR)/nomtkinit.o \
 			$(OBJDIR)/nomdebug.o \
 			$(OBJDIR)/nombuildnomobj.o \
 			$(OBJDIR)/nombuildnomcls.o \
-			$(OBJDIR)/nomid.o
+			$(OBJDIR)/nomid.o \
+			$(OBJDIR)/nomgc.o
 
 #			$(OBJDIR)/nomlistmgr.o \
 

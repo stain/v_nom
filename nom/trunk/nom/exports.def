@@ -10,8 +10,9 @@ EXPORTS
 ;	somIsObj               
 
 	nomInitGarbageCollection
-
+	nomRegisterDataAreaForGC
 	nomPrintf		
+
 ;	somDataResolve	@11
 ;	somStringFromId	@12
 ;
