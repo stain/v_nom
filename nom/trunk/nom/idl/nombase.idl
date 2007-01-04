@@ -63,6 +63,7 @@
 /* #warning !!!!! NOMCLASSNAME macro is missing !!!!! */
 
 /* Native types we want to use in the IDL */
+native  gint;
 native  gulong;
 native  gpointer;
 native  PGData;
