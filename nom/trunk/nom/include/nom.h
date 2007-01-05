@@ -109,6 +109,7 @@ typedef unsigned long NOM_ulong;
 typedef GQuark nomId;
 
 typedef GData* PGData;
+typedef gulong* pgulong;
 
 typedef gchar **nomID;                 /* This will be reomoved later. Don't use anymore */ 
 typedef void *nomToken;                /* Use a gpointer instead of void* here?          */

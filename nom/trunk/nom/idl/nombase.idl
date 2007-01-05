@@ -65,7 +65,11 @@
 /* Native types we want to use in the IDL */
 native  gint;
 native  gulong;
+native  pgulong;
 native  gpointer;
 native  PGData;
 native  nomId; /* This is a typedef for a GQuark */
 #endif /* NOMBASE_IDL_INCLUDED */
+
+
+
