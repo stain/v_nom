@@ -51,7 +51,7 @@
 #include <nomclassmanager.h>
 
 /* Define if you want to have messages from somBuildClass() and friends */
-#define DEBUG_NOMBUILDCLASS
+//#define DEBUG_NOMBUILDCLASS
 /* Define if you want to have messages from building NOMObject */
 //#define DEBUG_BUILDNOMOBJECT
 /* Define if you want to have messages from building NOMClass */
@@ -178,8 +178,8 @@ gulong priv_getIndexOfMethodInEntries(NOMClassPriv* nClass, nomStaticClassInfo *
           gulong ulNumMethods;
 
           /* Found class introducing the method */
-          nomPrintf(" %s, %d: Found %s in %s\n", __FUNCTION__, __LINE__,
-                    gstr->str, sci->chrParentClassNames[a]);
+          //nomPrintf(" %s, %d: Found %s in %s\n", __FUNCTION__, __LINE__,
+          //        gstr->str, sci->chrParentClassNames[a]);
           if(NULL==NOMClassMgrObject)
             g_error("%s line %d: No overriding for base classes yet(%s)!\n",
                     __FUNCTION__, __LINE__, gstr->str);

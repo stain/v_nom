@@ -54,19 +54,17 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Env
   NOMClassPriv *ncp;
   string nObj;
   
-  nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
-            __FUNCTION__, impl_NOMClass_nomNew, nomSelf, nomSelf->mtab->nomClassName);
+  //nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
+  //        __FUNCTION__, impl_NOMClass_nomNew, nomSelf, nomSelf->mtab->nomClassName);
 
   if(!nomSelf)
     return NULLHANDLE;
 
-  //  nomPrintf("instanceVar: %x\n", _ncpObject);
 
   if(!_ncpObject)
     return NULLHANDLE;
 
   ncp=(NOMClassPriv*)_ncpObject;
-  //  nomPrintf("_ncpObject: %x size %d \n", ncp, ncp->mtab->ulInstanceSize);
 
   if((nObj=_nomAllocate(nomSelf, ncp->mtab->ulInstanceSize, NULLHANDLE))==NULLHANDLE)
     return NULLHANDLE;
@@ -133,8 +131,8 @@ NOM_Scope void NOMLINK impl_NOMClass_nomSetObjectCreateInfo(NOMClass* nomSelf, c
 {
   NOMClassData* nomThis=NOMClassGetData(nomSelf);
 
-  nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
-            __FUNCTION__,  nomSelf, nomSelf->mtab->nomClassName);
+  //nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
+  //          __FUNCTION__,  nomSelf, nomSelf->mtab->nomClassName);
 
   _ncpObject=ncpObject;
 }
@@ -223,7 +221,7 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
                 _nomRegisterMethod(NOMClassMgrObject, ncPriv->mtab,
                                    *ncPriv->sci->nomSMethods[a].chrMethodDescriptor, NULLHANDLE);
             }
-          nomPrintf("%s %s \n", nomSelf->mtab->nomClassName, ncPriv->mtab->nomClassName);
+          //nomPrintf("%s %s \n", nomSelf->mtab->nomClassName, ncPriv->mtab->nomClassName);
           _nomRegisterClass(NOMClassMgrObject, ncPriv->mtab, NULLHANDLE);
         }
       }
@@ -237,11 +235,9 @@ NOM_Scope void NOMLINK impl_NOMClass_nomInit(NOMClass* nomSelf, CORBA_Environmen
 {
 /* NOMClassData* nomThis=NOMClassGetData(nomSelf); */
 
-  nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
-            __FUNCTION__, nomSelf, nomSelf->mtab->nomClassName);
+  //nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
+  //           __FUNCTION__, nomSelf, nomSelf->mtab->nomClassName);
 
-  //#if 0
-  /* orbit-idl-c-stubs.c, VoyagerWriteProtoForParentCall line 84 */
   NOMClass_nomInit_parent(nomSelf,  ev);
-  //#endif
 }
+
