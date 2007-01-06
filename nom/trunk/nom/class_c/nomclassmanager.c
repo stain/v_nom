@@ -118,11 +118,10 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
   if(NULL==_gdataClassList)
     g_datalist_init(&_gdataClassList);
 
-  //  g_datalist_set_data(&_gdataClassList, mtab->nomClassName, classMtab);
   g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
   //  g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
-  //g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
-  nomPrintf("%s: registering %lx, %s classList: %lx\n", __FUNCTION__, classMtab, mtab->nomClassName, _gdataClassList);
+  //nomPrintf("%s: registering %lx, %s classList: %lx\n", __FUNCTION__, 
+  //classMtab, mtab->nomClassName, _gdataClassList);
 }
 
 
@@ -184,13 +183,13 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterMethod(NOMClassMgr* nomSelf,
   if(NULL==_gdataMethodList)
     g_datalist_init(&_gdataMethodList);
 
-  //  g_datalist_set_data(&_gdataClassList, mtab->nomClassName, classMtab);
   g_datalist_set_data_full(&_gdataMethodList, chrMethodName, classMtab, priv_handleMethodRemoveFromList);
-  //  g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
   //g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
-  nomPrintf("%s: registering %lx, %s methodList: %lx\n", __FUNCTION__, classMtab, chrMethodName, _gdataMethodList);
+  // nomPrintf("%s: registering %lx, %s methodList: %lx\n", __FUNCTION__, classMtab, chrMethodName, _gdataMethodList);
 
 }
+
+
 
 
 

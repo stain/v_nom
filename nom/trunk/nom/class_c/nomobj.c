@@ -47,8 +47,8 @@
 
 NOM_Scope void  NOMLINK impl_NOMObject_nomInit(NOMObject *nomSelf, CORBA_Environment *ev)
 {  
-  nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
-            __FUNCTION__, impl_NOMObject_nomInit, nomSelf , nomSelf->mtab->nomClassName);
+  //nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
+  //        __FUNCTION__, impl_NOMObject_nomInit, nomSelf , nomSelf->mtab->nomClassName);
 }
 
 NOM_Scope void  NOMLINK impl_NOMObject_nomUninit(NOMObject *nomSelf, CORBA_Environment *ev)
@@ -61,8 +61,8 @@ NOM_Scope void  NOMLINK impl_NOMObject_nomUninit(NOMObject *nomSelf, CORBA_Envir
 
 NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA_Environment *ev)
 {
-  nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
-            __FUNCTION__, impl_NOMObject_nomGetSize, nomSelf , nomSelf->mtab->nomClassName);
+  //nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
+  //          __FUNCTION__, impl_NOMObject_nomGetSize, nomSelf , nomSelf->mtab->nomClassName);
 
   if(!nomSelf) {
     return 0;
