@@ -36,6 +36,8 @@
 
 #include "nomobj.idl"
 
+//NOMCLASSNAME(NOMClass);
+
 interface NOMClass:NOMObject
 {
 

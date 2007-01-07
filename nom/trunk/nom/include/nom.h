@@ -128,8 +128,25 @@ typedef struct NOMAnyObj_struct {
 } NOMAnyObj;
 
 
-#define NOMObject NOMAnyObj
-#define NOMClass NOMAnyObj
+#ifndef NOMClass
+typedef struct NOMClass_struct {
+  struct nomMethodTabStruct  *mtab;
+  gulong body[1];
+} NOMClassObj;
+#define NOMClass NOMClassObj
+typedef NOMClass *PNOMClass;
+#endif
+
+#ifndef NOMObject
+typedef struct NOMObject_struct {
+  struct nomMethodTabStruct  *mtab;
+  gulong body[1];
+} NOMObjectObj;
+#define NOMObject NOMObjectObj
+typedef NOMObject *PNOMObject;
+#endif
+
+//#define NOMObject NOMAnyObj
 #define NOMClassMgr NOMAnyObj
 
 typedef NOMObject *CORBA_Object;
