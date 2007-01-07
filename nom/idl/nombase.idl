@@ -63,6 +63,9 @@
 /* #warning !!!!! NOMCLASSNAME macro is missing !!!!! */
 
 /* Native types we want to use in the IDL */
+native PNOMObject;
+native PNOMClass;
+
 native  gint;
 native  gulong;
 native  pgulong;

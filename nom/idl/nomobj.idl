@@ -36,16 +36,20 @@
 
 #include "nombase.idl"
 
+//NOMCLASSNAME(NOMObject);
+
 interface NOMObject
 {
 
-	NOMCLASSVERSION(1, 0 );
+  NOMCLASSVERSION(1, 0 );
 
-	void nomInit();
-	void nomUninit();
-	/* Return the size of the object. That is sizeof(mTab*)+sizeof(all instance vars) */
-	long nomGetSize();
+  void nomInit();
+  void nomUninit();
+  /* Return the size of the object. That is sizeof(mTab*)+sizeof(all instance vars) */
+  long nomGetSize();
   void delete();
+  PNOMClass nomGetClass();
+  PNOMObject new();
 #if 0
 	NOMOVERRIDE(wpEchoString);
 	NOMINSTANCEVAR(long theLong);

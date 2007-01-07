@@ -37,12 +37,10 @@
 #include <string.h>
 #include <gtk/gtk.h>
 
-
 #include "nom.h"
 #include "nomtk.h"
 
 #include "nomobj.ih"
-
 
 
 NOM_Scope void  NOMLINK impl_NOMObject_nomInit(NOMObject *nomSelf, CORBA_Environment *ev)
@@ -85,5 +83,31 @@ NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environme
    */
   NOMFree(nomSelf);
 }
+
+NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomGetClass(NOMObject* nomSelf, CORBA_Environment *ev)
+{
+/* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+
+  return nomSelf->mtab->nomClassObject;
+}
+
+/*
+  Create a new class of the kind the caller is. This method ensures that subclasses
+  are properly handled without the need to override this class in every subclass.
+ */
+NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Environment *ev)
+{
+/* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+  PNOMObject nomRetval;
+  NOMClass* nomCls;
+
+  /* We don't know which class we're actually. So we can't just create a new object using
+     <CkassName>New() here.
+     It is possible that we are called by a subclass. So get the class object and let the
+     class object create the correct class. */
+  nomCls=NOMObject_nomGetClass(nomSelf, NULLHANDLE);
+  return NOMClass_nomNew(nomCls, NULLHANDLE);
+}
+
 
 
