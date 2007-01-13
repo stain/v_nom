@@ -7,7 +7,7 @@ EXPORTS
 	NOMMalloc             @2
 	NOMCalloc		@3
 	NOMFree		
-;	somIsObj               
+	nomIsObj               
 
 	nomInitGarbageCollection
 	nomRegisterDataAreaForGC

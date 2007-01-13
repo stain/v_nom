@@ -71,7 +71,10 @@ native  gulong;
 native  pgulong;
 native  gpointer;
 native  PGData;
+native  PGTree;
+
 native  nomId; /* This is a typedef for a GQuark */
+
 #endif /* NOMBASE_IDL_INCLUDED */
 
 

@@ -68,8 +68,17 @@ NOMClassMgr* NOMClassMgrObject; /* Referenced from different files */
 
 
 /*
-
+  Some of these functions should be moved to other source files...
  */
+
+NOMEXTERN gboolean NOMLINK nomIsObj(NOMObject*nomObj)
+{
+  if(!nomObj)
+    return FALSE;
+
+  return TRUE;
+}
+
 NOMEXTERN int NOMLINK nomPrintf(string chrFormat, ...)
 {
   long rc;
