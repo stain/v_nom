@@ -153,5 +153,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass (gulong ulReserved,
                                             nomStaticClassInfo *sci,
                                             gulong ulMajorVersion,
                                             gulong ulMinorVersion);
+
+//#define nomIsObj(a) ((a)!= 0)
 #endif /* NOMAPI_H_INCLUDED */
 

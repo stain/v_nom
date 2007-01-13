@@ -108,8 +108,9 @@ typedef struct CORBA_Object_type *CORBA_Object;
 typedef unsigned long NOM_ulong;
 typedef GQuark nomId;
 
-typedef GData* PGData;
+typedef GData*  PGData;
 typedef gulong* pgulong;
+typedef GTree*  PGTree;
 
 typedef gchar **nomID;                 /* This will be reomoved later. Don't use anymore */ 
 typedef void *nomToken;                /* Use a gpointer instead of void* here?          */

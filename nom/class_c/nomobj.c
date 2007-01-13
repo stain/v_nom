@@ -84,6 +84,9 @@ NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environme
   NOMFree(nomSelf);
 }
 
+/*
+  Gets the class object of this object.
+*/
 NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomGetClass(NOMObject* nomSelf, CORBA_Environment *ev)
 {
 /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
@@ -93,7 +96,7 @@ NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomGetClass(NOMObject* nomSelf, CORBA
 
 /*
   Create a new class of the kind the caller is. This method ensures that subclasses
-  are properly handled without the need to override this class in every subclass.
+  are properly handled without the need to override this method in every subclass.
  */
 NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Environment *ev)
 {

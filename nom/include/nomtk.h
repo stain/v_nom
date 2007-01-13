@@ -67,7 +67,7 @@ NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void);
 NOMEXTERN nomToken NOMLINK NOMMalloc(const ULONG size);
 NOMEXTERN boolean NOMLINK NOMFree(const nomToken memPtr);
 NOMEXTERN nomToken NOMLINK  NOMCalloc(const ULONG num, const ULONG size);
-NOMEXTERN boolean NOMLINK nomIsObj(NOMObject * nomObj);
+NOMEXTERN gboolean NOMLINK nomIsObj(NOMObject * nomObj);
 NOMEXTERN int NOMLINK nomPrintf(string chrFormat, ...);
 NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void);
 NOMEXTERN void NOMLINK dumpClasses(void);
