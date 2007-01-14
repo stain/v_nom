@@ -60,5 +60,16 @@
 #define END_CATCH(a)  sigaction (SIGSEGV, &a ## _saOld, NULL); \
                       } /* if(1==1) */
 
+#ifdef __OS2__
+#define LOUD DosBeep(1000, 20); DosBeep(2000, 20); DosBeep(3000, 20);
+#else
+#define LOUD
+#endif
 
 #endif /* EXCEPTION_H_INCLUDED */
+
+
+
+
+
+
