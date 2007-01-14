@@ -60,7 +60,7 @@
 /********************************************************/
 PNOM_ENV pGlobalNomEnv;
 /* Global class manager object */
-NOMClassMgr* NOMClassMgrObject; /* Referenced from different files */
+NOMClassMgr* NOMClassMgrObject=NULLHANDLE; /* Referenced from different files */
 
 /********************************************************/
 /*   Toolkit functions, exported                        */
@@ -73,9 +73,13 @@ NOMClassMgr* NOMClassMgrObject; /* Referenced from different files */
 
 NOMEXTERN gboolean NOMLINK nomIsObj(gpointer nomObj)
 {
+  if(NOMClassMgrObject)
+    return NOMClassMgr_nomIsObject(NOMClassMgrObject, (PNOMObject)nomObj, NULLHANDLE);
+
   if(!nomObj)
     return FALSE;
 
+  /* We assume that here... */
   return TRUE;
 }
 

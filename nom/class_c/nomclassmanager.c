@@ -115,10 +115,11 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
 
   mtab=(nomMethodTab*) classMtab;
 
-  if(NULL==_gdataClassList)
-    g_datalist_init(&_gdataClassList);
-
   g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
+  g_tree_insert(_pClassListTree, mtab, mtab->nomClassName); /* key is the mtab because we want to use
+                                                               this tree for fast lookup of mtabs to 
+                                                               check for objects. */
+
   //  g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
   //nomPrintf("%s: registering %lx, %s classList: %lx\n", __FUNCTION__, 
   //classMtab, mtab->nomClassName, _gdataClassList);
@@ -180,14 +181,54 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterMethod(NOMClassMgr* nomSelf,
 
   mtab=(nomMethodTab*) classMtab;
 
-  if(NULL==_gdataMethodList)
-    g_datalist_init(&_gdataMethodList);
-
   g_datalist_set_data_full(&_gdataMethodList, chrMethodName, classMtab, priv_handleMethodRemoveFromList);
   //g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
   // nomPrintf("%s: registering %lx, %s methodList: %lx\n", __FUNCTION__, classMtab, chrMethodName, _gdataMethodList);
 
 }
+
+NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomIsObject(NOMClassMgr* nomSelf, const PNOMObject nomObject,
+                                                             CORBA_Environment *ev)
+{
+  NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf);
+
+  if(NULLHANDLE==nomObject)
+    return FALSE;
+
+  return (g_tree_lookup(_pClassListTree, nomObject->mtab)!= NULLHANDLE); 
+}
+
+static
+int nomClassMgrCompareFunc(gconstpointer a, gconstpointer b)
+{
+  if(a < b )
+    return -1;
+  if(a > b )
+    return 1;
+  return 0;
+}
+NOM_Scope void NOMLINK impl_NOMClassMgr_nomInit(NOMClassMgr* nomSelf, CORBA_Environment *ev)
+{
+  NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf);
+
+  NOMClassMgr_nomInit_parent((NOMObject*)nomSelf,  ev);
+
+  g_datalist_init(&_gdataMethodList);
+  g_datalist_init(&_gdataClassList);
+
+  /* This balanced binary tree holds the objects in this folder. We create a tree
+     which may be searched using the name of the file/directory */
+
+  _pClassListTree=g_tree_new((GCompareFunc)nomClassMgrCompareFunc);
+
+}
+
+
+
+
+
+
+
 
 
 
