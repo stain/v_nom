@@ -41,7 +41,7 @@
 #include "nomtk.h"
 
 
-nomId nomIdFromString(string inString)
+NOMEXTERN nomId NOMLINK nomIdFromString(gchar* inString)
 {
   nomId tmpId;
 
@@ -52,7 +52,7 @@ nomId nomIdFromString(string inString)
     return tmpId;
 }
 
-string nomStringFromId(nomId inId)
+NOMEXTERN gchar* NOMLINK nomStringFromId(nomId inId)
 {
   g_return_val_if_fail(inId, "");
 

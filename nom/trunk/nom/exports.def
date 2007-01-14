@@ -17,8 +17,10 @@ EXPORTS
 
 	nomPrintf		
 
+	nomStringFromId	
+	nomIdFromString	
+
 ;	somDataResolve	@11
-;	somStringFromId	@12
 ;
 ;	somParentNumResolve   
 ;        _NOMClassMgrObject     

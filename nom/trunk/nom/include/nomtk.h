@@ -72,6 +72,8 @@ NOMEXTERN gboolean NOMLINK nomIsObj(gpointer nomObj);
 NOMEXTERN int NOMLINK nomPrintf(string chrFormat, ...);
 NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void);
 NOMEXTERN void NOMLINK dumpClasses(void);
+NOMEXTERN nomId NOMLINK nomIdFromString(gchar* inString);
+NOMEXTERN gchar* NOMLINK nomStringFromId(nomId inId);
 
 /* Functions used by nomBuildClass() */
 ULONG priv_requestSomEnvMutex(PNOM_ENV pEnv);

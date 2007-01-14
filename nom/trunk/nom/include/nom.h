@@ -107,6 +107,7 @@ typedef struct CORBA_Object_type *CORBA_Object;
 
 typedef unsigned long NOM_ulong;
 typedef GQuark nomId;
+typedef nomId* pnomId;
 
 typedef GData*  PGData;
 typedef gulong* pgulong;

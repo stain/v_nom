@@ -71,7 +71,7 @@ NOMClassMgr* NOMClassMgrObject; /* Referenced from different files */
   Some of these functions should be moved to other source files...
  */
 
-NOMEXTERN gboolean NOMLINK nomIsObj(NOMObject*nomObj)
+NOMEXTERN gboolean NOMLINK nomIsObj(gpointer nomObj)
 {
   if(!nomObj)
     return FALSE;
