@@ -50,6 +50,14 @@ extern gboolean bUseGC; /* Set during initialization */
 
 NOMEXTERN nomToken NOMLINK NOMMalloc(ULONG size)
 {
+  gchar* memPtr;
+
+  if((memPtr=g_malloc(size))==NULLHANDLE)
+    return NULLHANDLE;
+
+  return (nomToken) memPtr;
+
+#if 0
   PULONG memPtr;
 
   if((memPtr=g_malloc(size+sizeof(gpointer)))==NULLHANDLE)
@@ -58,10 +66,22 @@ NOMEXTERN nomToken NOMLINK NOMMalloc(ULONG size)
   *memPtr=size;
   memPtr++;
   return (nomToken) memPtr;
+#endif
 }
 
 nomToken NOMLINK NOMCalloc(const ULONG num, const ULONG size)
 {
+  gchar* memPtr;
+
+  if((memPtr=g_malloc(size*num ))==NULLHANDLE)
+    return NULLHANDLE; /* We won't end here because GLib just terminates the process :-/ 
+                          A really sick idea imho. */
+  if(!bUseGC)
+    memset(memPtr, 0, size*num); /* GC always returns zeroed memory */
+
+  return (nomToken) memPtr;
+
+#if 0
   PULONG memPtr;
 
   if((memPtr=g_malloc(size*num + sizeof(ULONG)))==NULLHANDLE)
@@ -73,6 +93,7 @@ nomToken NOMLINK NOMCalloc(const ULONG num, const ULONG size)
   *memPtr=size;
   memPtr++;
   return (nomToken) memPtr;
+#endif
 }
 
 /*
@@ -80,11 +101,13 @@ nomToken NOMLINK NOMCalloc(const ULONG num, const ULONG size)
  */
 NOMEXTERN boolean NOMLINK NOMFree(const nomToken memPtr)
 {
+#if 0
   ULONG* pul=(PULONG)memPtr;
 
   pul--;
-
   g_free(pul);
+#endif
+  g_free(memPtr);
   return TRUE;
 }
 
