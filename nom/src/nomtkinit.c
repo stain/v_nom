@@ -47,8 +47,6 @@
 #include "nomtk.h"
 #include "nomobj.h"
 #include "nomcls.h"
-/* #include "nomtst.h"
-   #include "nomtst2.h" */
 #include <nomclassmanager.h>
 /* Garbage collector */
 #include <gc.h>
@@ -71,6 +69,11 @@ NOMClassMgr* NOMClassMgrObject=NULLHANDLE; /* Referenced from different files */
   Some of these functions should be moved to other source files...
  */
 
+/*
+  This function asks the NOMClassMgrObject to search in the internal lists
+  for the mtab of the given object. If that mtab is found the pointer points to a
+  valid object.
+ */
 NOMEXTERN gboolean NOMLINK nomIsObj(gpointer nomObj)
 {
   if(NOMClassMgrObject)
@@ -106,8 +109,8 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
 {
   NOMClassPriv* ncPriv;
   NOMClass* nomCls;
-  NOMObject *nomObj;
 #if 0
+  NOMObject *nomObj;
   NOMTest* nomTst;
   NOMTest* nomTstObj;
   NOMTest* nomTst2Obj;
@@ -147,41 +150,14 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
   /* Do not register the NOMObject metaclass here. It's already registered because it's 
      NOMClass in fact. */
   //_nomRegisterClass(NOMClassMgrObject, pGlobalNomEnv->nomObjectMetaClass->mtab, NULLHANDLE); //NOMObject
-  //_nomRegisterClass(NOMClassMgrObject, pGlobalNomEnv->ncpNOMObject->mtab, NULLHANDLE); //NOMObject
   _nomClassReady(_NOMObject, NULLHANDLE); //NOMObject
 
 
 #if 0
-  nomPrintf("\n**** Building NOMTest class...\n");
-  nomTst=NOMTestNewClass(NOMTest_MajorVersion, NOMTest_MinorVersion);
-  nomPrintf("NOMTest class: %x\n", nomTst);
-
-  nomPrintf("Now building a NOMTest object from %x...\n", _NOMTest);
-  nomTstObj=    NOMTestNew();
-  nomPrintf("NOMTest object: %x\n", nomTstObj);
-#endif
-
-#if 0
-  nomPrintf("Calling _nomTestFunc() 1\n", nomTstObj);
-  _nomTestFunc(nomTstObj, NULLHANDLE);
-  nomPrintf("Calling _nomTestFuncString() 1\n", nomTstObj);
-  nomPrintf("--> %s\n",_nomTestFuncString(nomTstObj, NULLHANDLE));
-
-  nomPrintf("Calling _nomTestFunc() 2\n", nomTstObj);
-  _nomTestFunc(nomTstObj, NULLHANDLE);
-  nomPrintf("Calling _nomTestFuncString() 2\n", nomTstObj);
-  nomPrintf("--> %s\n",_nomTestFuncString(nomTstObj, NULLHANDLE));
-#endif
-
-#if 0
-  //#if 0
   nomPrintf("\n**** Building NOMTest2 class...\n");
   nomPrintf("\nNow building a NOMTest2 object...\n");
-  //  NOMTest2NewClass(NOMTest2_MajorVersion, NOMTest2_MinorVersion);
   nomTst2Obj=    NOMTest2New();
   nomPrintf("NOMTest2 object: %x\n", nomTst2Obj);
-  //#endif
-
 
   nomPrintf("\nCalling _nomTestFunc_NOMTest2() 1\n", nomTst2Obj);
   _nomTestFunc_NOMTest2(nomTst2Obj, NULLHANDLE);
@@ -199,25 +175,6 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
   _nomTestFunc_NOMTest2(nomTst2Obj, NULLHANDLE);
 #endif
 
-#if 0
-  _dumpMtab(nomTstObj->mtab);
-  _dumpMtab(nomTst2Obj->mtab);
-  //  _dumpMtab(NOMClassMgrObject->mtab);
-  //  _dumpClasses();
-  _nomTestFunc(nomTstObj, NULLHANDLE);
-  _nomTestFunc(nomTst2Obj, NULLHANDLE);
-  _nomTestFunc(nomTstObj, NULLHANDLE);
-  _nomTestFunc(nomTst2Obj, NULLHANDLE);
-#endif
-
-#if 0
-  nomPrintf("NOMTest object: %x, %x\n", nomTstObj, NOMTestClassData.classObject);
-  nomTstObj=_nomNew((_NOMTest ? _NOMTest : NOMTestNewClass(NOMTest_MajorVersion, NOMTest_MinorVersion)), (void*) 0);
-  nomPrintf("NOMTest object: %x\n", nomTstObj);
-  nomTstObj=    NOMTestNew();
-  nomPrintf("NOMTest object: %x\n", nomTstObj);
-#endif
-
   return NOMClassMgrObject;
 }
 
@@ -225,12 +182,28 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
 
 NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void)
 {
-
-
   PVOID memPtr;
-  PVOID memPool;
+  //PVOID memPool;
 
   nomPrintf("Entering %s...\n", __FUNCTION__);
+
+  memPtr=g_malloc(sizeof(NOM_ENV)); /* g_malloc() can't fail... */
+
+  nomPrintf("%s: Got root memory: %x\n", __FUNCTION__, memPtr);
+
+  /* Now init the structure */
+  /* GC memory is zeroed... */
+  ((PNOM_ENV)memPtr)->cbSize=sizeof(NOM_ENV);
+  pGlobalNomEnv=(PNOM_ENV)memPtr;
+  if(NO_ERROR!=DosCreateMutexSem(NULL, &((PNOM_ENV)memPtr)->hmtx, DC_SEM_SHARED, FALSE))
+    {
+      g_free(memPtr);
+      return NULL;
+    }
+
+  return (PNOM_ENV)memPtr;
+
+#if 0
   nomPrintf("*************************************\n");
   nomPrintf("!! This function must be rewritten !!\n");
   nomPrintf("!! It's using OS/2 only memory     !!\n");
@@ -287,6 +260,7 @@ NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void)
   pGlobalNomEnv=(PNOM_ENV)memPtr;
 
   return (PNOM_ENV)memPtr;
+#endif
 }
 
 

@@ -95,6 +95,21 @@ void fillCClassDataStructParentMtab(nomStaticClassInfo *sci, NOMClassPriv *nClas
 void priv_resolveOverrideMethods(NOMClassPriv *nClass, nomStaticClassInfo *sci);
 
 /* Debug function */
+//#define METHOD_DEBUG
+
+#ifdef METHOD_DEBUG
+#define NOMMethodDebug(a) g_message("Line %d: class %s, entering  %s", __LINE__, a, __FUNCTION__)
+#define TST_OBJECT(a)  if(!nomIsObj(a)){ \
+                       g_message("Line %d: in %s given object (0x%x) is NO NOMObject",\
+                       __LINE__, __FUNCTION__, (UINT)a);\
+                       }else{ \
+                       g_message("Line %d: in %s given object (0x%x) is NOMObject, class: %s", \
+                       __LINE__, __FUNCTION__, (UINT)a, ((PNOMObject)a)->mtab->nomClassName);}
+#else
+#define NOMMethodDebug(a)
+#define TST_OBJECT(a)
+#endif
+
 void _dumpClassDataStruct(nomClassDataStructure* cds, ULONG ulNumMethods);
 void _dumpSci(nomStaticClassInfo* sci);
 void  _dumpMtab(nomMethodTab* mtab);

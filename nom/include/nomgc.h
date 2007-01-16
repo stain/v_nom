@@ -35,14 +35,21 @@
 #ifndef NOMGC_H_INCLUDED
 #define NOMGC_H_INCLUDED
 
-typedef qsPtrRec_t * HREGDLL;
+typedef struct _REGDLL
+{
+  GSList*      dllList;
+  qsPtrRec_t * pMainAnchor;
+}REGDLL,*HREGDLL;
 
 /* Garbage collector */
 NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void);
 NOMEXTERN void NOMLINK nomEndRegisterDLLWithGC(const HREGDLL hRegisterDLL );
 NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName);
 NOMEXTERN void NOMLINK  nomRegisterDataAreaForGC(char* pStart, char* pEnd);
-
+#if 0
+NOMEXTERN BOOL NOMLINK nomRegisterDLLByHandle(const HREGDLL hRegisterDLL, const gpointer pDLLHandle);
+NOMEXTERN BOOL NOMLINK nomQueryIsDLLRegisteredUsingHandle(const gpointer pDLLHandle);
+#endif
 #endif /* NOMGC_H_INCLUDED */
 
 
