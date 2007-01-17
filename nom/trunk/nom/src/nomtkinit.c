@@ -179,7 +179,6 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
 }
 
 
-
 NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void)
 {
   PVOID memPtr;
@@ -195,72 +194,16 @@ NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void)
   /* GC memory is zeroed... */
   ((PNOM_ENV)memPtr)->cbSize=sizeof(NOM_ENV);
   pGlobalNomEnv=(PNOM_ENV)memPtr;
+
+#if 0
   if(NO_ERROR!=DosCreateMutexSem(NULL, &((PNOM_ENV)memPtr)->hmtx, DC_SEM_SHARED, FALSE))
     {
       g_free(memPtr);
       return NULL;
     }
-
-  return (PNOM_ENV)memPtr;
-
-#if 0
-  nomPrintf("*************************************\n");
-  nomPrintf("!! This function must be rewritten !!\n");
-  nomPrintf("!! It's using OS/2 only memory     !!\n");
-  nomPrintf("!! functions.                      !!\n");
-  nomPrintf("*************************************\n");
-
-  /* Check if we already allocated our shared mem */
-  if(NO_ERROR==DosGetNamedSharedMem(&memPtr,SOMTK_SHARED_MEM_NAME_ROOT , PAG_EXECUTE|PAG_READ|PAG_WRITE)) {
-    nomPrintf("%s: Found root shared mem: %x.\n", __FUNCTION__, memPtr);
-    /* Give process access to memory pool*/
-    DosGetSharedMem(  ((PNOM_ENV)memPtr)->pMemPool, PAG_READ|PAG_WRITE|PAG_EXECUTE);
-    if(NO_ERROR!=DosSubSetMem(((PNOM_ENV)memPtr)->pMemPool, DOSSUB_SPARSE_OBJ|DOSSUB_SERIALIZE, SOMTK_SHARED_MEM_SIZE_POOL)) {
-      DosFreeMem(memPool);
-      DosFreeMem(memPtr);
-      return NULL;
-    }
-    pGlobalNomEnv=(PNOM_ENV)memPtr;
-    return (PNOM_ENV)memPtr;
-  }
-  nomPrintf("%s: No root memory yet\n", __FUNCTION__);
-
-  /* Get the mem for the root structure in a shared memory area */
-  if(NO_ERROR!=DosAllocSharedMem(&memPtr, SOMTK_SHARED_MEM_NAME_ROOT, SOMTK_SHARED_MEM_SIZE_ROOT,
-                                 PAG_COMMIT | PAG_EXECUTE | PAG_READ | PAG_WRITE))
-    return NULL;
-
-  nomPrintf("%s: Got root memory: %x\n", __FUNCTION__, memPtr);
-
-  /* Get our shared memory pool */
-  if(NO_ERROR!=DosAllocSharedMem(&memPool, NULL, SOMTK_SHARED_MEM_SIZE_POOL,OBJ_GETTABLE | PAG_EXECUTE|PAG_READ|PAG_WRITE)) {
-    DosFreeMem(memPtr);
-    return NULL;
-  }
-  nomPrintf("%s: Got shared memory pool: %x\n", __FUNCTION__, memPool);
-
-  /* Now init the structure */
-  memset(memPtr, 0, 1 /*SOMTK_SHARED_MEM_SIZE_ROOT*/);
-  nomPrintf("%s: zeroed memory\n", __FUNCTION__);
-
-  ((PNOM_ENV)memPtr)->cbSize=sizeof(NOM_ENV);
-  /* Init memory pool */
-  if(NO_ERROR!=DosSubSetMem(memPool, DOSSUB_INIT|DOSSUB_SPARSE_OBJ|DOSSUB_SERIALIZE, SOMTK_SHARED_MEM_SIZE_POOL)) {
-    DosFreeMem(memPool);
-    DosFreeMem(memPtr);
-    return NULL;
-  }
-  ((PNOM_ENV)memPtr)->pMemPool=memPool;
-  if(NO_ERROR!=DosCreateMutexSem(NULL, &((PNOM_ENV)memPtr)->hmtx, DC_SEM_SHARED, FALSE))
-    {
-      DosFreeMem(memPool);
-      DosFreeMem(memPtr);
-      return NULL;
-    }
-  pGlobalNomEnv=(PNOM_ENV)memPtr;
-
-  return (PNOM_ENV)memPtr;
 #endif
+
+  return (PNOM_ENV)memPtr;
 }
 
 

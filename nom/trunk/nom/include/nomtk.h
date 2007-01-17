@@ -47,7 +47,7 @@
 typedef struct _nomEnv {
   ULONG cbSize;      /* Size of this struct */
   PVOID pMemPool;    /* Shared memory heap for sub alloc */
-  HMTX  hmtx;        /* Mutex sem to protect this structure */
+  HMTX  hmtx_obsolete;  /* Mutex sem to protect this structure -Will go away! */
   ULONG ulNumRegIds; /* Number of registered somIDs */
   NOMClassPriv  *ncpNOMObject;  /* This is for NOMObject*/
   nomClasses livingMetaClasses; /* List of created meta classes. */

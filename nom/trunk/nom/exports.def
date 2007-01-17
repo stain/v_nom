@@ -14,6 +14,7 @@ EXPORTS
 	nomBeginRegisterDLLWithGC
 	nomEndRegisterDLLWithGC
 	nomRegisterDLLByName
+	nomQueryUsingNameIsDLLRegistered
 
 	nomPrintf		
 
