@@ -1271,10 +1271,20 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
           fprintf(ski->of, "\n#include \"%s.h\"\n\n", chrTemp);
           g_free(chrTemp);
         }
+        fprintf(ski->of, "#include \"nomgc.h\"\n");
         fprintf(ski->of, "NOMClass* NOMLINK %sNewClass(gulong ulMajor, gulong ulMinor)\n{\n", id);
         fprintf(ski->of, "  NOMClass* result;\n\n");
-        //fprintf(ski->of, "%s* NOMLINK %sNewClass(gulong ulMajor, gulong ulMinor)\n{\n", id, id);
-        // fprintf(ski->of, "  %s* result;\n\n", id);
+
+        fprintf(ski->of, "#ifdef __OS2__\n");
+        fprintf(ski->of, "  gulong ulObj, ulOffset;\n  gchar thePath[CCHMAXPATH];\n  HMODULE hModule;\n\n");
+        fprintf(ski->of,
+                "  g_assert(DosQueryModFromEIP( &hModule, &ulObj, CCHMAXPATH, thePath, &ulOffset, (ULONG)%sNewClass)==0);\n", id);
+        fprintf(ski->of, "  g_strlcat(thePath, \".DLL\", sizeof(thePath));\n");
+        fprintf(ski->of, "  if(!nomQueryUsingNameIsDLLRegistered(thePath))\n    {\n");
+        fprintf(ski->of, "    HREGDLL hReg=nomBeginRegisterDLLWithGC();\n");
+        fprintf(ski->of, "    g_assert(nomRegisterDLLByName(hReg, thePath));\n");
+        fprintf(ski->of, "    nomEndRegisterDLLWithGC(hReg);\n    }\n");
+        fprintf(ski->of, "#else\n#error DLL must be registered with the garbage collector!\n#endif\n\n");
 
         /* Make sure meta class is created if specified by the user */
         if(NULL!=gsMetaClassName[ulCurInterface]){

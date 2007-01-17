@@ -48,8 +48,10 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
 NOMEXTERN void NOMLINK  nomRegisterDataAreaForGC(char* pStart, char* pEnd);
 #if 0
 NOMEXTERN BOOL NOMLINK nomRegisterDLLByHandle(const HREGDLL hRegisterDLL, const gpointer pDLLHandle);
-NOMEXTERN BOOL NOMLINK nomQueryIsDLLRegisteredUsingHandle(const gpointer pDLLHandle);
 #endif
+
+NOMEXTERN BOOL NOMLINK nomQueryUsingNameIsDLLRegistered(const gchar *chrName);
+
 #endif /* NOMGC_H_INCLUDED */
 
 

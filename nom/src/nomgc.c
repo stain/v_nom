@@ -54,6 +54,7 @@
 #include <gc.h>
 
 gboolean bUseGC=FALSE; /* Mark if we use the garbage collector */
+GTree* treeRegisteredDLL;
 
 static gpointer  gcMalloc(gulong ulBytes)
 {
@@ -95,7 +96,24 @@ void _System  nomInitGarbageCollection(void* pMemInExe)
  g_mem_set_vtable(&vtbl);
  /* fprintf(stderr, "   GC memory functions set for GLIB. (%s: %d)\n", __FILE__, __LINE__); */
 
+ /* Cretea tree holding the already registered DLLs */
+ treeRegisteredDLL=g_tree_new((GCompareFunc)stricmp);
+
  bUseGC=TRUE;
+}
+
+
+void test()
+{
+  gulong ulObj, ulOffset;
+  gchar thePath[CCHMAXPATH];
+  HMODULE hModule;
+
+  if(DosQueryModFromEIP( &hModule, &ulObj, CCHMAXPATH, thePath, &ulOffset, (ULONG)test)!=0) {
+    hModule=0;
+    return NULLHANDLE; /* Error */
+  }
+
 }
 
 NOMEXTERN void NOMLINK  nomRegisterDataAreaForGC(char* pStart, char* pEnd)
@@ -270,7 +288,7 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
 {
   GSList* lTemp;
 
-  //printf("Trying to register DLL %s\n", chrDLLName);
+  //g_message("Trying to register DLL %s\n", chrDLLName);
   lTemp=hRegisterDLL->dllList;
   while(lTemp)
     {
@@ -278,7 +296,7 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
       
       pModRec=(qsLrec_t*)lTemp->data;
       if(pModRec){
-            //  printf("DLL name: %s\n", pModRec->pName);
+        //g_message("DLL name: %s\n", pModRec->pName);
         if(pModRec->pName && (NULLHANDLE!=strstr( pModRec->pName, chrDLLName)))
           {
             qsLObjrec_t  *pObjInfo;
@@ -296,6 +314,7 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
                     //        iObj, pObjInfo[iObj].oaddr, pObjInfo[iObj].osize, pObjInfo[iObj].oflags); 
                     nomRegisterDataAreaForGC((char*)pObjInfo[iObj].oaddr,
                                              (char*)(pObjInfo[iObj].oaddr+pObjInfo[iObj].osize));
+                    g_tree_insert(treeRegisteredDLL, g_strdup(chrDLLName), GUINT_TO_POINTER((guint)pModRec->hmte));
                   }
               }
             return TRUE;
@@ -306,140 +325,11 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
     return FALSE;
 }
 
-#if 0
-#define BUFSIZE 1024*1024
-NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
+
+NOMEXTERN BOOL NOMLINK nomQueryUsingNameIsDLLRegistered(const gchar *chrName)
 {
-  ULONG rc;
-  HREGDLL hReg=NULLHANDLE;
-  PTIB     ptib;
-  PPIB     ppib;
-  char *  buf;
+  if(NULLHANDLE!=g_tree_lookup(treeRegisteredDLL, chrName))
+    return TRUE;
 
-  rc = DosGetInfoBlocks(&ptib, &ppib);
-  if (rc!=NO_ERROR)
-    return NULLHANDLE;
-
-  buf = malloc(BUFSIZE);
-  if(!buf)
-    return NULLHANDLE;
-
-  memset(buf,0,BUFSIZE);
-
-  rc = DosQuerySysState(QS_PROCESS | QS_SEMAPHORE | QS_MTE | QS_FILESYS | QS_SHMEMORY ,
-                        QS_MTE, /*0x96*/ ppib->pib_ulpid , 1UL, (PCHAR)buf, BUFSIZE);
-  if (rc==NO_ERROR) {
-    hReg=(qsPtrRec_t*) buf;
-  }
-  else
-    free(buf);
-
-  return hReg;
-}
-/*
-  FIXME:
-
-  This function will not find every given DLL because it doesn't follow every import of
-  each DLL.
-  It's only meant for registering the GTK+, GLIB and friends DLLs. This works because GTK2.DLL
-  is directly loaded by the exe and all the friends DLLs are imported by it.
-
-  Feel free to make this function really useful...
-
-  Oh, and some refactoring would be nice, too.
-
- */
-#define OBJREAD         0x0001L
-#define OBJWRITE        0x0002L
-#define OBJINVALID      0x0080L
-NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName)
-{
-  qsPrec_t * p;
-  int a=0;
-
-  //printf("Trying to register DLL %s\n", chrDLLName);
-
-  p=hRegisterDLL->pProcRec;
-  while(p && p->RecType == 1)
-    {
-      a++;
-      if (p->cLib) {
-        int i;
-
-        for (i=0; i<p->cLib; i++){
-          qsLrec_t * pModRec;
-
-          //printf("%d %04X (p: %04x %04X, %04X) ",i, p->pLibRec[i], p, &p->pLibRec[i], &p->pLibRec);
-
-          pModRec=qsFindModuleRec(hRegisterDLL,  p->pLibRec[i]);
-          if(pModRec){
-            //  printf("DLL name: %s\n", pModRec->pName);
-            if(NULLHANDLE!=strstr( pModRec->pName, chrDLLName))
-              {
-                qsLObjrec_t  *pObjInfo;
-                //printf("    --> Found DLL %s\n", pModRec->pName);
-                pObjInfo=pModRec->pObjInfo;
-                if(NULLHANDLE!=pObjInfo)
-                  {
-                    int iObj;
-                    for(iObj=0; iObj<pModRec->ctObj ;iObj++)
-                      {
-                        if (!(pObjInfo[iObj].oflags & OBJWRITE)) continue;
-                        if (!(pObjInfo[iObj].oflags & OBJREAD)) continue;
-                        if ((pObjInfo[iObj].oflags & OBJINVALID)) continue;
-                        printf("    #%d: %04lX, size: %04lX %04lX",
-                               iObj, pObjInfo[iObj].oaddr, pObjInfo[iObj].osize, pObjInfo[iObj].oflags); 
-                        nomRegisterDataAreaForGC((char*)pObjInfo[iObj].oaddr,
-                                                 (char*)(pObjInfo[iObj].oaddr+pObjInfo[iObj].osize));
-                      }
-                  }
-                return TRUE;
-              }
-            /* Check the imports of this DLL if any */
-            if(pModRec->ctImpMod >0)
-              {
-                int iImps;
-                PUSHORT   pImpHmte;
-
-                pImpHmte=(PUSHORT)((void*)pModRec + sizeof(qsLrec_t));
-
-                for(iImps=0; iImps < pModRec->ctImpMod; iImps++)
-                  {
-                    qsLrec_t * pModImp;
-                    // printf("  Trying import #%d (%04X)\n", iImps, pImpHmte[iImps]);
-                    pModImp=qsFindModuleRec(hRegisterDLL,  pImpHmte[iImps]);
-                    if(pModImp){
-                      //printf("  DLL name: %s\n", pModImp->pName);
-                      if(NULLHANDLE!=strstr( pModImp->pName, chrDLLName))
-                        {
-                          qsLObjrec_t  *pObjInfo;
-                          //printf("    --> Found DLL %s\n", pModImp->pName);
-                          pObjInfo=pModImp->pObjInfo;
-                          if(NULLHANDLE!=pObjInfo)
-                            {
-                              int iObj;
-                              for(iObj=0; iObj<pModImp->ctObj ;iObj++)
-                                {
-                                  if (!(pObjInfo[iObj].oflags & OBJWRITE)) continue;
-                                  if (!(pObjInfo[iObj].oflags & OBJREAD)) continue;
-                                  if ((pObjInfo[iObj].oflags & OBJINVALID)) continue;
-                                  
-                                  //printf("    #%d: %04lX, size: %04lX %04lX\n",
-                                  //     iObj, pObjInfo[iObj].oaddr, pObjInfo[iObj].osize, pObjInfo[iObj].oflags); 
-                                  nomRegisterDataAreaForGC((char*)pObjInfo[iObj].oaddr,
-                                                           (char*)(pObjInfo[iObj].oaddr+pObjInfo[iObj].osize));
-                                }
-                            }
-                          return TRUE;
-                        }
-                    }/* for() */
-                  }/* for()*/
-              }/* if() */
-          }
-        }/* For() */
-      }
-      break;
-    }
   return FALSE;
 }
-#endif
