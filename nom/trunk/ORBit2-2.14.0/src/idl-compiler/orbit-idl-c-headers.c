@@ -4,6 +4,13 @@
 #include <string.h>
 #include <ctype.h>
 
+/*
+  Voyager implementation notes:
+
+  The name of the explicit metaclass is found in ch_output_const_dcl(). That
+  function is responsible for putting constants into the header file.
+*/
+
 /* ch = C header */
 static void ch_output_types(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
 #ifdef USE_LIBIDL_CODE
@@ -14,6 +21,8 @@ static void ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_In
 static void ch_output_skel_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
 static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
 static void ch_VoyagerOutputClassDeclaration(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci);
+
+static GString *gsMetaClassName=NULL; /* Holding an explicit metaclass if any */
 
 void
 orbit_idl_output_c_headers (IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
@@ -116,8 +125,11 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
               id);
       fprintf(ci->fh, "\n");
 
-      /* fprintf(ci->fh, "#define %s_classObject %sClassData.classObject\n", id, id); */
-      fprintf(ci->fh, "#define _%s %sClassData.classObject\n", id, id);
+      fprintf(ci->fh, "/* Line %d %s */\n", __LINE__, __FUNCTION__);
+      if(NULL==gsMetaClassName)
+        fprintf(ci->fh, "#define _%s %sClassData.classObject\n", id, id);
+      else
+        fprintf(ci->fh, "#define _%s (%s*)%sClassData.classObject\n", id, gsMetaClassName->str, id);
       /* New() macro */
       fprintf(ci->fh, "\n/*\n * New macro for %s\n */\n", id);
       fprintf(ci->fh, "#define %sNew() \\\n", id);
@@ -642,7 +654,19 @@ ch_output_const_dcl(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
 
 	fprintf(ci->fh, "\n");
 	fprintf(ci->fh, "#endif /* !%s */\n\n", id);
-
+    
+    /* Get the name of our explicit metaclass if any */
+    if(IDLN_STRING==IDL_NODE_TYPE(IDL_CONST_DCL(tree).const_exp))
+      {
+        /* Our metaclass info is a string */
+        if(!strcmp(NOM_METACLASS_STRING, IDL_IDENT(ident).str))
+          {
+            gsMetaClassName=g_string_new(NULL);
+            g_string_printf(gsMetaClassName, "%s", IDL_STRING(IDL_CONST_DCL(tree).const_exp).value);
+            //    printf(" %d    --- > %s %s (%x)\n",
+            //     __LINE__, id, IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value, gsMetaClassName[ulCurInterface]);
+          }
+      }
 	g_free(id);
 }
 
