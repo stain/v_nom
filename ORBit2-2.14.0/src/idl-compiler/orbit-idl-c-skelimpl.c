@@ -343,7 +343,7 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
       id = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS (ident), "_", 0);
 
 #if 0
-      printf("%s %s %s, %s %d\n",
+      printf(" %d --- > %s %s %s, %s %d\n", __LINE__,
              id, IDL_IDENT(ident).str, IDL_IDENT(IDL_INTERFACE(intf).ident).str,
              passnames[ski->pass], IDL_NODE_TYPE(IDL_CONST_DCL(ski->tree).const_exp));
 #endif
@@ -355,6 +355,8 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
             {
               gsMetaClassName[ulCurInterface]=g_string_new(NULL);
               g_string_printf(gsMetaClassName[ulCurInterface], "%s", IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value);
+              //    printf(" %d    --- > %s %s (%x)\n",
+              //     __LINE__, id, IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value, gsMetaClassName[ulCurInterface]);
             }
         }
       g_free(id);
@@ -1317,16 +1319,15 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
       }
     case PASS_VOYAGER_METACLASS:
       {
-        gsMetaClassName[ulCurInterface]=(void*)0;
+        //   gsMetaClassName[ulCurInterface]=(void*)0;
 		subski.tree = IDL_INTERFACE(ski->tree).body;
         cbe_ski_do_list(&subski);
 		IDL_tree_traverse_parents(ski->tree, (GFunc)&cbe_ski_do_inherited_methods, ski);
 
-        printf("%d: --->%d\n", __LINE__, ulCurInterface);        
         if(NULL!=gsMetaClassName[ulCurInterface])
           {
             /* Metaclass id */
-            fprintf(ski->of, "/* The meta class this class is using */\n");
+            fprintf(ski->of, "/* The meta class this class is using (line %d %s) */\n", __LINE__, __FILE__);
             fprintf(ski->of, "static char * nomIdStringMetaClass_%s = \"%s\";\n\n",  id, gsMetaClassName[ulCurInterface]->str);
           }
         break;
