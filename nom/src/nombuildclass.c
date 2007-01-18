@@ -537,7 +537,7 @@ NOMClass * NOMLINK priv_buildWithExplicitMetaClass(glong ulReserved,
   /* Search for meta class. */
 #warning !!!!! Change this when nomID is a GQuark !!!!!
   nomClassParent=_nomFindClassFromName(NOMClassMgrObject, *sci->nomExplicitMetaId, majorVersion, minorVersion, NULLHANDLE);
-  
+    printf("  2 ----------------- %d %x %s %s\n", __LINE__, nomClassParent, *sci->nomClassId, *sci->nomExplicitMetaId);
   if(!nomClassParent)
     return NULLHANDLE;
 
@@ -548,7 +548,6 @@ NOMClass * NOMLINK priv_buildWithExplicitMetaClass(glong ulReserved,
   if((nomClass=(NOMClass*)NOMCalloc(1, _nomGetSize(nomClassParent, NULLHANDLE)))==NULLHANDLE)
     return NULLHANDLE;
 
-  
   /* Mabe we should just copy the whole struct here? */
   nomClass->mtab=nomClassParent->mtab;
 #warning !!!!! No call of _nomSetInstanceSize  !!!!!
@@ -712,9 +711,9 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   nomParentMtabStructPtr pParentMtab;
   nomMethodTabs psmTab;
   /* Print some info for debbuging */
-  nomPrintf("\n%d: Entering %s to build class %s. ---> SCMO: %x (NOMClassManagerObject)\n",
-            __LINE__, __FUNCTION__, *sci->nomClassId, NULL /*NOMClassMgrObject*/);
-  nomPrintf("cds: %x nomClassObject: %x\n", sci->nomCds, sci->nomCds->nomClassObject);
+  nomPrintf("\n%d: Entering %s to build class %s. ---> SCMO: 0x%x (NOMClassManagerObject)\n",
+            __LINE__, __FUNCTION__, *sci->nomClassId, NOMClassMgrObject);
+  nomPrintf("d: cds: 0x%x nomClassObject: 0x%x\n", __LINE__, sci->nomCds, sci->nomCds->nomClassObject);
 #endif
 
   /* Check if already built */
@@ -774,15 +773,14 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   _dumpClassDataStruct(sci->nomCds, sci->ulNumStaticMethods);
 #endif
 
-  /* Do we want to build SOMObject the mother of all classes? */
+  /* Do we want to build NOMObject the mother of all classes? */
   if(!strcmp(*sci->nomClassId, "NOMObject")){
 #ifdef DEBUG_NOMBUILDCLASS
     nomPrintf("%d: Trying to build  %s\n", __LINE__, *sci->nomClassId);
 #endif
     priv_buildNOMObjectClassInfo(ulReserved, sci, /* yes */
                                  ulMajorVersion, ulMinorVersion);
-    return NULLHANDLE; /* We can't return a SOMClass for SOMObject because SOMClass isn't
-                          built yet. */
+    return NULLHANDLE; /* We can't return a SOMClass for SOMObject because SOMClass isn't built yet. */
   }
 
   /* Do we want to build NOMClass? */
@@ -834,7 +832,8 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
     /* No parent is normal object so we have either to use NOMClass as parent
        or an explicit meta class if given. */
 #ifdef DEBUG_NOMBUILDCLASS
-    nomPrintf("Class %x (ncpParent->mtab->nomClassName: %s) is not a NOMClass\n", ncpParent, ncpParent->mtab->nomClassName);
+    nomPrintf("%d: Class %x (ncpParent->mtab->nomClassName: %s) is not a NOMClass\n",
+              __LINE__, ncpParent, ncpParent->mtab->nomClassName);
 #endif
 
     if(sci->nomExplicitMetaId)
@@ -848,14 +847,12 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 #ifdef DEBUG_NOMBUILDCLASS
         nomPrintf("sci->nomExplicitMetaId is set\n");
 #endif
-        
-
-
+    
         nomClass= priv_buildWithExplicitMetaClass(ulReserved, sci,
                                                   ulMajorVersion, ulMinorVersion);
         if(nomClass){
 #ifdef DEBUG_NOMBUILDCLASS
-          nomPrintf("%s: class is %x\n", nomClass->mtab->nomClassName, nomClass);
+          nomPrintf("%d: %s: class is 0x%x\n", __LINE__, nomClass->mtab->nomClassName, nomClass);
 #endif    
           _nomInit(nomClass, NULLHANDLE);
           _nomClassReady(nomClass, NULLHANDLE);
@@ -883,15 +880,14 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   /* Child of some NOMClass */
 
-
   /**** From this point we are building a new class object (derived from NOMClass ****/
   ulMemSize=sizeof(NOMClassPriv)-sizeof(nomMethodTab); /* start size class struct */
 
   /* Calculate size of new class object */
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("Parent class %x (ncpParent->mtab->nomClassName: %s) is a NOMClass (or derived)\n",
-            ncpParent, ncpParent->mtab->nomClassName);
-  nomPrintf("ncParent->mtab->mtabSize: %d\n", ncpParent->mtab->mtabSize);
+  nomPrintf("%d: Parent class 0x%x (ncpParent->mtab->nomClassName: %s) is a NOMClass (or derived)\n",
+            __LINE__, ncpParent, ncpParent->mtab->nomClassName);
+  nomPrintf("      ncParent->mtab->mtabSize: %d\n", ncpParent->mtab->mtabSize);
 #endif
   mtabSize=ncpParent->mtab->mtabSize+sizeof(nomMethodProc*)*(sci->ulNumStaticMethods)+sizeof(NOMClass*);/* ulNumStaticMethods is correct here!
                                                                                                         NOT numStaticMethods-1!
@@ -902,19 +898,21 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   ulParentDataSize=ncpParent->mtab->ulInstanceSize; /* Parent instance size */
   
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%s mtabSize is: %d, ulParentDataSize is: %d\n", *sci->nomClassId, mtabSize, ulParentDataSize);
+  nomPrintf("%d: %s mtabSize is: %d, ulParentDataSize is: %d\n", __LINE__, *sci->nomClassId, mtabSize, ulParentDataSize);
 #endif
 
 
-  /* Alloc class struct using SOMCalloc. This means the struct is allocated in shared mem */
+  /* Alloc class struct using NOMCalloc. This means the struct is allocated in shared mem */
   if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
     return NULLHANDLE;
 
-  /* Get mem for method thunking code */
-  nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
-  if(!nClass->mThunk) {
-    NOMFree(nClass);
-    return NULLHANDLE;
+  if(0!=sci->ulNumStaticMethods){
+    /* Get mem for method thunking code */
+    nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
+    if(!nClass->mThunk) {
+      NOMFree(nClass);
+      return NULLHANDLE;
+    }
   }
 
   nClass->ulClassSize=sci->ulInstanceDataSize+ulParentDataSize;
@@ -931,13 +929,12 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   /* Add class struct of this class. This includes resolving the method adresses. */
   addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci) ;
 
-  /* Resolve ovverrides if any */
-  //#warning !!!!! no resolving of overriden methods here !!!!!
+  /* Resolve overrides if any */
   priv_resolveOverrideMethods(nClass, sci);
 
   nomClass->mtab=nClass->mtab;  
-#ifdef DEBUG_nOMBUILDCLASS
-  nomPrintf("mtab: %x\n", nClass->mtab);
+#ifdef DEBUG_NOMBUILDCLASS
+  nomPrintf("%d: mtab: %x\n", __LINE__, nClass->mtab);
 #endif
   sci->nomCds->nomClassObject=nomClass; /* Put class pointer in static struct */
 
@@ -962,7 +959,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   // _nomSetInstanceSize(nomClass, sci->ulInstanceDataSize+ulParentDataSize);
 
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("New class ptr (class object): %x (NOMClassPriv: %x) for %s\n", nomClass, nClass, *sci->nomClassId);
+  nomPrintf("%d: New class ptr (class object): %x (NOMClassPriv: %x) for %s\n", __LINE__, nomClass, nClass, *sci->nomClassId);
 #endif
 
   //priv_addPrivClassToGlobalClassList(pGlobalNomEnv, nClass);
@@ -981,67 +978,6 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 #if 0
 #include <cwsomcls.h>
 #include <somclassmanager.h>
-/********************************************************/
-/*  Internal functions                                  */
-/********************************************************/
-
-/* String manager functions */
-static BOOL priv_addSomIdToIdList(PSOM_ENV pEnv, somIdItem * sid)
-{
-  somIdItem *tmpList;
-
-  if(!sid || !pEnv)
-    return FALSE;
-
-  if(NO_ERROR != priv_requestSomEnvMutex(pEnv))
-     return FALSE;
-
-  if(!pEnv->livingSomIds)
-    {
-      /* Add first class */
-      pEnv->livingSomIds=sid;
-      priv_releaseSomEnvMutex(pEnv);
-      return TRUE;
-    }
-  tmpList=sid;
-  
-  tmpList->next=(somIdItem*)pEnv->livingSomIds;
-  pEnv->livingSomIds=tmpList;
-  pEnv->ulNumRegIds++;
-
-  priv_releaseSomEnvMutex(pEnv);
-  return TRUE;
-}
-
-/* This returns the ID of a string, this means the hash of this string if
-   already registered. */
-static somIdItem* priv_findSomIdInList(PSOM_ENV pEnv, string aString)
-{
-  somIdItem *tmpItem;
-  ULONG ulHash;
-
-  if(!pEnv|| aString)
-    return 0;
-
-  ulHash=calculateNameHash(aString);
-
-  if(NO_ERROR != priv_requestSomEnvMutex(pEnv))
-    return NULL;
-
-  tmpItem=pEnv->livingSomIds;
-  while(tmpItem)
-    {
-      if(tmpItem->id == ulHash) {
-        priv_releaseSomEnvMutex(pEnv);
-        return tmpItem;  /* We have found the string return somId */
-      }
-      tmpItem=tmpItem->next;
-    };
-  priv_releaseSomEnvMutex(pEnv);
-
-  return NULL; /* No id yet. */
-}
-
 /********************************************************/
 /*   Toolkit functions, exported                        */
 /********************************************************/
@@ -1101,20 +1037,6 @@ somId SOMLINK somIdFromString (string aString)
 
   *sID=(char*)sid;
   return sID;
-}
-
-/* Returns the total number of ids that have been registered so far, */
-unsigned long SOMLINK somTotalRegIds(void)
-{
-  long numIds;
-
-  if(NO_ERROR != priv_requestSomEnvMutex(pGlobalSomEnv))
-    return 0;
-
-  numIds=pGlobalSomEnv->ulNumRegIds;
-  priv_releaseSomEnvMutex(pGlobalSomEnv);
-
-  return numIds;
 }
 
 /*
