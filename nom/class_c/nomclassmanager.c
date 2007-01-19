@@ -75,15 +75,17 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr
   if(strchr(className, ':'))
     return NULLHANDLE;
 
-  
   mtab=g_datalist_get_data(&_gdataClassList, className);
+
+  nomPrintf("-----> %s %s %x\n", __FUNCTION__, className, mtab);
+
   if(mtab){
     NOMClassPriv* ncPriv;
     ncPriv=(NOMClassPriv*)mtab->nomClsInfo;
-    if(1==ncPriv->ulIsMetaClass){
-      //    nomPrintf("%s: found %s\n", __FUNCTION__, mtab->nomClassName);
-      nomRetval=(CORBA_Object)ncPriv->sci->nomCds->nomClassObject;
-    }
+    //if(1==ncPriv->ulIsMetaClass){
+    //    nomPrintf("%s: found %s\n", __FUNCTION__, mtab->nomClassName);
+    nomRetval=(CORBA_Object)ncPriv->sci->nomCds->nomClassObject;
+    //}
 
   }
   return nomRetval;

@@ -50,7 +50,7 @@
 #include <nomcls.h>
 #include <nomclassmanager.h>
 
-/* Define if you want to have messages from somBuildClass() and friends */
+/* Define if you want to have messages from nomBuildClass() and friends */
 //#define DEBUG_NOMBUILDCLASS
 /* Define if you want to have messages from building NOMObject */
 //#define DEBUG_BUILDNOMOBJECT
@@ -63,6 +63,12 @@
 #else
     #define BUILDNOMCLASS_ENTER
     #define BUILDNOMCLASS_LEAVE
+#endif
+
+#ifdef DEBUG_NOMBUILDCLASS
+#define DBG_NOMBUILDCLASS(a, b, ...)   if(a) nomPrintf("%d: " b , __LINE__, __VA_ARGS__);
+#else
+#define DBG_NOMBUILDCLASS(a, b, ...)
 #endif
 
 #define DBGBUILDNOMCLASS_ENTER BUILDNOMCLASS_ENTER
@@ -456,8 +462,8 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
   ulMemSize=sizeof(NOMClassPriv)-sizeof(nomMethodTab); /* start size class struct */
 
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("  ncpParent->mtab->mtabSize: %d. Parent is: %x (priv) %s\n",
-            ncpParent->mtab->mtabSize, ncpParent, ncpParent->mtab->nomClassName);
+  nomPrintf("  %d: ncpParent->mtab->mtabSize: %d. Parent is: %x (priv) %s\n",
+            __LINE__, ncpParent->mtab->mtabSize, ncpParent, ncpParent->mtab->nomClassName);
 #endif
   mtabSize=ncpParent->mtab->mtabSize+sizeof(nomMethodProc*)*(sci->ulNumStaticMethods)+
     sizeof(NOMObject*);/* numStaticMethods is correct here!
@@ -468,19 +474,20 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
   ulMemSize+=mtabSize; /* add place for new procs and the new class pointer */
   ulParentDataSize=ncpParent->mtab->ulInstanceSize; /* Parent instance size */
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("  %s: mtabSize will be: %d, ulParentDataSize is: %d\n", __FUNCTION__, mtabSize, ulParentDataSize);
+  nomPrintf("  %d: %s: mtabSize will be: %d, ulParentDataSize is: %d\n", __LINE__, __FUNCTION__, mtabSize, ulParentDataSize);
 #endif
-  /* Alloc object struct using NOMCalloc. */
+  /* Alloc private class struct using NOMCalloc. */
   if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
     return NULLHANDLE;
 
   /* Get mem for method thunking code */
-  nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
-  if(!nClass->mThunk) {
-    NOMFree(nClass);
-    return NULLHANDLE;
+  if(0!=sci->ulNumStaticMethods){
+    nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
+    if(!nClass->mThunk) {
+      NOMFree(nClass);
+      return NULLHANDLE;
+    }
   }
-
   /* Add class struct of this class.
      This includes 
      -resolving the new method adresses
@@ -489,11 +496,11 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
   addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci) ;
 
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%s:  mtab: %x\n", __FUNCTION__, nClass->mtab);
+  nomPrintf("%d: %s:  mtab: %x\n", __LINE__, __FUNCTION__, nClass->mtab);
 #endif
   /*
-    We don't create a class object here so the following isn't done:
-    sci->cds->classObject=somClass;
+    Note: We don't create a class object here so the following isn't done:
+          sci->cds->classObject=nomClass;
   */
 
   /* Resolve ovverrides if any */
@@ -513,7 +520,7 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
   fillCClassDataStructParentMtab(sci, nClass, nomClass);
 
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("  New NOMClassPriv*: %x\n", nClass);
+  nomPrintf("  %d: New NOMClassPriv*: %x\n", __LINE__, nClass);
 #endif
 
   _nomSetObjectCreateInfo(nomClass, nClass, NULLHANDLE);
@@ -529,32 +536,36 @@ NOMClass * NOMLINK priv_buildWithExplicitMetaClass(glong ulReserved,
                                                     gulong majorVersion,
                                                     gulong minorVersion)
 {
-  NOMClass *nomClass, *nomClassParent;
+  NOMClass *nomClass, *nomClassMeta;
   
   if(NULL==NOMClassMgrObject)
     return NULLHANDLE;
 
   /* Search for meta class. */
 #warning !!!!! Change this when nomID is a GQuark !!!!!
-  nomClassParent=_nomFindClassFromName(NOMClassMgrObject, *sci->nomExplicitMetaId, majorVersion, minorVersion, NULLHANDLE);
-    printf("  2 ----------------- %d %x %s %s\n", __LINE__, nomClassParent, *sci->nomClassId, *sci->nomExplicitMetaId);
-  if(!nomClassParent)
+  nomClassMeta=_nomFindClassFromName(NOMClassMgrObject, *sci->nomExplicitMetaId, majorVersion, minorVersion, NULLHANDLE);
+
+#ifdef DEBUG_NOMBUILDCLASS
+  nomPrintf("%d: %x %s %s\n", __LINE__, nomClassMeta, *sci->nomClassId, *sci->nomExplicitMetaId);
+#endif
+
+  if(!nomClassMeta)
     return NULLHANDLE;
 
   /* Create a new class object. We create a copy here because we may change the mtab entries
      through overriding or two classes may use the same meta class but have different
      sizes, methods etc. I wonder how IBM SOM manages to use the same metaclass
      for different classes without (apparently) copying it for different uses... */
-  if((nomClass=(NOMClass*)NOMCalloc(1, _nomGetSize(nomClassParent, NULLHANDLE)))==NULLHANDLE)
+  if((nomClass=(NOMClass*)NOMCalloc(1, _nomGetSize(nomClassMeta, NULLHANDLE)))==NULLHANDLE)
     return NULLHANDLE;
 
-  /* Mabe we should just copy the whole struct here? */
-  nomClass->mtab=nomClassParent->mtab;
+  /* Maybe we should just copy the whole struct here? */
+  nomClass->mtab=nomClassMeta->mtab;
 #warning !!!!! No call of _nomSetInstanceSize  !!!!!
 #warning !!!!! No call of _nomSetObjectsSCI   !!!!!
 #if 0
   /* Set object data */
-  _nomSetInstanceSize(nomClass, _nomGetSize(nomClassParent));
+  _nomSetInstanceSize(nomClass, _nomGetSize(nomClassMeta));
   /* Save objects sci pointer. We need it when we create instances  */
   _nomSetObjectsSCI(somClass, sci);
 #endif
@@ -569,36 +580,79 @@ NOMClass * NOMLINK priv_buildWithExplicitMetaClass(glong ulReserved,
                             nomClass);
   
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("New class Object (SOMClass): %x \n", nomClass);
+  nomPrintf("%d: New class Object (child of NOMClass): %x \n", __LINE__, nomClass);
 #endif
 
   /* nomClassReady() is called in nomBuildClass() */
   return nomClass;
 }
 
+/*
+  This function climbs the chain of parents and looks for a parent introducing
+  an explicit metaclass. If found, this metaclass is returned otherwise NOMClass.
+ */
+static
+NOMClass * NOMLINK priv_findExplicitMetaClassFromParents(nomStaticClassInfo *sci)
+{
+  int a;
+
+  if(1==sci->ulNumParentsInChain)
+    {
+      /* One parent only. That must be NOMObject and NOMObject has NOMClass
+         as metaclass. */
+      return pGlobalNomEnv->defaultMetaClass;;
+    }
+
+  /* Climb the list of parents... */
+
+  /* NOMClassMgrObject==NULL shouldn't ever happen here! */
+  g_assert(NOMClassMgrObject);
+
+  for(a=sci->ulNumParentsInChain-1;a>=0; a--)
+    {
+      NOMObject *nObject;
+      nObject=_nomFindClassFromName(NOMClassMgrObject, sci->chrParentClassNames[a], 0, 0, NULLHANDLE);
+
+      DBG_NOMBUILDCLASS( TRUE , "  %s %x %x\n" , sci->chrParentClassNames[a], nObject, NOMClassMgrObject);
+
+      if(nObject){
+        DBG_NOMBUILDCLASS( TRUE , " %s\n" , nObject->mtab->nomClassName);
+        if(strcmp(nObject->mtab->nomClassName, "NOMClass"))
+          return nObject; /* Not NOMClass return */
+      } /* if(nObject) */
+    } /* for() */
+  return pGlobalNomEnv->defaultMetaClass;;;
+}
 
 /*
   This function is called when a class for a given sci should be build with a parent
-   which isn't derived from SOMClass. In that case SOMClass is the class to be used for
-   the class object. This doesn't mean we reuse the SOMClass structs. Instead a new
-   copy is created so individula overriding is possible.
+   which isn't derived from NOMClass. In that case some NOMClass ccild is the class to
+   be used for the class object. We have to climb the parent list of this object class
+   to check if one parent introduced an explicit metaclass. If yes, we have to use that
+   one as the metaclass. If no parent did that we just use NOMClass. 
+   This doesn't mean we reuse the found structs directly. Instead a new copy is created
+   so individula overriding is possible.
 */
 static
-NOMClass * NOMLINK priv_buildWithNOMClassAsMeta(gulong ulReserved,
-                                                nomStaticClassInfo *sci,
-                                                long majorVersion,
-                                                long minorVersion)
+NOMClass * NOMLINK priv_buildWithNOMClassChildAsMeta(gulong ulReserved,
+                                                     nomStaticClassInfo *sci,
+                                                     long majorVersion,
+                                                     long minorVersion)
 {
   NOMClass  *nomClass, *nomClassDefault;
   NOMClassPriv *nClass;
 
 #ifdef DEBUG_NOMBUILDCLASS
 #warning !!!!! Change this when nomId is a GQuark !!!!!
-  nomPrintf("\n\n\nEntering %s to build %s\n", __FUNCTION__, *sci->nomClassId);
+  nomPrintf("\n\n%d: Entering %s to build %s\n", __LINE__, __FUNCTION__, *sci->nomClassId);
 #endif
 
+  /* Search parents for a an explicit metaclass. If no explicit metaclass return
+     NOMClass. */
+  nomClassDefault=priv_findExplicitMetaClassFromParents(sci);// this gives a NOMClass* not a NOMClassPriv*
+
   /**** Create the meta class object ****/
-  nomClassDefault=pGlobalNomEnv->defaultMetaClass; // this gives a NOMClass* not a NOMClassPriv*
+  //nomClassDefault=pGlobalNomEnv->defaultMetaClass; // this gives a NOMClass* not a NOMClassPriv*
 
   if(!nomClassDefault)
     return NULLHANDLE;
@@ -711,9 +765,9 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   nomParentMtabStructPtr pParentMtab;
   nomMethodTabs psmTab;
   /* Print some info for debbuging */
-  nomPrintf("\n%d: Entering %s to build class %s. ---> SCMO: 0x%x (NOMClassManagerObject)\n",
+  nomPrintf("\n%d: Entering %s to build class %s. ---> NOMClassManagerObject: 0x%x\n",
             __LINE__, __FUNCTION__, *sci->nomClassId, NOMClassMgrObject);
-  nomPrintf("d: cds: 0x%x nomClassObject: 0x%x\n", __LINE__, sci->nomCds, sci->nomCds->nomClassObject);
+  nomPrintf("%d: cds: 0x%x nomClassObject: 0x%x\n", __LINE__, sci->nomCds, sci->nomCds->nomClassObject);
 #endif
 
   /* Check if already built */
@@ -829,8 +883,8 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   /* Check if parent is a class object (derived from NOMClass). */
   if(!priv_nomIsA((NOMObject*)ncpParent, pGlobalNomEnv->defaultMetaClass)) {
-    /* No parent is normal object so we have either to use NOMClass as parent
-       or an explicit meta class if given. */
+    /* No, parent of class to build is normal object so we have to use either an explicit meta class if given or
+       another NOMClass derived class for the class object. */
 #ifdef DEBUG_NOMBUILDCLASS
     nomPrintf("%d: Class %x (ncpParent->mtab->nomClassName: %s) is not a NOMClass\n",
               __LINE__, ncpParent, ncpParent->mtab->nomClassName);
@@ -839,13 +893,10 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
     if(sci->nomExplicitMetaId)
       {
         /* The explicit metaclass is created at this point. Now it will be filled
-           with the info how to create objects.
-           sClass=(SOMClassPriv*)priv_findClassInClassList(pGlobalSomEnv, *(sci->explicitMetaId));
-           
-           if(!scParent)
-           return NULLHANDLE;  Every class except SOMObject must have a parent!! */
+           with the info how to create objects. */
+
 #ifdef DEBUG_NOMBUILDCLASS
-        nomPrintf("sci->nomExplicitMetaId is set\n");
+        nomPrintf("%d: sci->nomExplicitMetaId is set. Calling priv_buildWithExplicitMetaClass().\n", __LINE__);
 #endif
     
         nomClass= priv_buildWithExplicitMetaClass(ulReserved, sci,
@@ -861,11 +912,13 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
         return nomClass;
       }/* nomExplicitMetaId */
     else {
-      /* Use NOMClass as meta class. The following call will create the
-         class object and will also fill in the necessary object info for
+      /* Use NOMClass derived class as meta class. We have to climb the parent list of this object class
+         to check if one parent introduced an explicit metaclass. If yes, we have to use that one as
+         the metaclass. IF no parent did that we just use NOMClass. 
+         The following call will create the class object and will also fill in the necessary object info for
          creating instances. */
-      nomClass= priv_buildWithNOMClassAsMeta(ulReserved, sci,
-                                             ulMajorVersion, ulMinorVersion);
+      nomClass= priv_buildWithNOMClassChildAsMeta(ulReserved, sci,
+                                                  ulMajorVersion, ulMinorVersion);
 
       if(nomClass){
         //#warning !!!!! No call of  _nomClassReady() here !!!!!
@@ -902,7 +955,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 #endif
 
 
-  /* Alloc class struct using NOMCalloc. This means the struct is allocated in shared mem */
+  /* Alloc class struct using NOMCalloc. */
   if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
     return NULLHANDLE;
 
@@ -925,7 +978,6 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   nClass->ulPrivClassSize=ulMemSize;
 
-  
   /* Add class struct of this class. This includes resolving the method adresses. */
   addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci) ;
 
@@ -934,7 +986,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   nomClass->mtab=nClass->mtab;  
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%d: mtab: %x\n", __LINE__, nClass->mtab);
+  nomPrintf("%d: mtab: %x, nClass: 0x%x, nomClass: 0x%x\n", __LINE__, nClass->mtab, nClass, nomClass);
 #endif
   sci->nomCds->nomClassObject=nomClass; /* Put class pointer in static struct */
 
