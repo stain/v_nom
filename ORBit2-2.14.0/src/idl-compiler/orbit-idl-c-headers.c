@@ -378,20 +378,21 @@ ch_output_interface(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
 
 #ifdef USE_LIBIDL_CODE
     if ( tree->declspec & IDLF_DECLSPEC_PIDL ) {
-        /* PIDL interfaces are not normal CORBA Objects */
-    	fprintf(ci->fh, "typedef struct %s_type *%s;\n", fullname, fullname);
-	fprintf(ci->fh, "#ifndef TC_%s\n", fullname);
-	fprintf(ci->fh, "#  define TC_%s TC_CORBA_Object\n", fullname);
-	fprintf(ci->fh, "#endif\n");
+      /* PIDL interfaces are not normal CORBA Objects */
+      fprintf(ci->fh, "typedef struct %s_type *%s;\n", fullname, fullname);
+      fprintf(ci->fh, "#ifndef TC_%s\n", fullname);
+      fprintf(ci->fh, "#  define TC_%s TC_CORBA_Object\n", fullname);
+      fprintf(ci->fh, "#endif\n");
     } else {
-    	fprintf(ci->fh, "#define %s__freekids CORBA_Object__freekids\n", fullname);
-
-    	fprintf(ci->fh, "typedef CORBA_Object %s;\n\n", fullname);
-    	fprintf(ci->fh, "extern CORBA_unsigned_long %s__classid;\n", fullname);
-	ch_type_alloc_and_tc(tree, rinfo, ci, FALSE);
+      fprintf(ci->fh, "#define %s__freekids CORBA_Object__freekids\n", fullname);
+      
+      fprintf(ci->fh, "typedef CORBA_Object %s;\n\n", fullname);
+      fprintf(ci->fh, "extern CORBA_unsigned_long %s__classid;\n", fullname);
+      ch_type_alloc_and_tc(tree, rinfo, ci, FALSE);
     }
 #else
     fprintf(ci->fh, "#ifndef %s\n", fullname);
+#if 0
     /* For being more typesave when calling methods */
     fprintf(ci->fh, "typedef struct %s_struct {\n", fullname);
     fprintf(ci->fh, "  struct nomMethodTabStruct  *mtab;\n");
@@ -399,6 +400,9 @@ ch_output_interface(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
     fprintf(ci->fh, "} %sObj;\n", fullname);
 
     fprintf(ci->fh, "#define %s %sObj\n", fullname, fullname);
+    fprintf(ci->fh, "typedef %s *P%s;\n", fullname, fullname);
+#endif
+    fprintf(ci->fh, "#define %s NOMObject\n", fullname);
     fprintf(ci->fh, "typedef %s *P%s;\n", fullname, fullname);
     fprintf(ci->fh, "#endif\n");
 #endif
