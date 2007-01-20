@@ -122,6 +122,7 @@ orbit_cbe_write_skelimpl(FILE *outfile, IDL_tree tree, const char *hdrname)
 		fprintf(ski.of, "\n/*** %s ***/\n\n", passnames[ski.pass]);
 		orbit_cbe_ski_process_piece(&ski);
 	}
+    fprintf(outfile, "\n#endif /* NOM_CLASS_IMPLEMENTATION_FILE */\n");
 }
 
 static
@@ -1256,6 +1257,7 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
       {
         /* Create the static class data structs */
         fprintf(ski->of, "/* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
+        fprintf(ski->of, "#ifdef NOM_%s_IMPLEMENTATION_FILE\n\n", id);
         fprintf(ski->of, "struct %sClassDataStructure %sClassData = {0};\n", id, id);
         fprintf(ski->of, "static struct %sCClassDataStructure %sCClassData = {0};\n\n", id, id);
 
@@ -1411,7 +1413,6 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
           
           /* Get data macro */
           fprintf(ski->of, "\n/*\n * Get data macros for %s\n */\n", id);
-          fprintf(ski->of, "#warning NOM kernel devs: these macros are preliminary\n\n");
           fprintf(ski->of, "typedef %sData* NOMLINK nomTP_%s_DataThunk(void*);\n", id, id);
           fprintf(ski->of, "typedef nomTP_%s_DataThunk *nomTD_%s_DataThunk;\n", id, id);
           fprintf(ski->of, "#define %sGetData(nomSelf) \\\n", id);
