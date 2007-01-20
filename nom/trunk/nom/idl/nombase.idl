@@ -53,7 +53,8 @@
 
 #define DEFAULTMETACLASS "NOMClass"
 
-#define NOMMETACLASS( a ) const string METACLASS_TO_USE = (a)  
+//#define NOMMETACLASS( a ) const string METACLASS_TO_USE = (a)
+#define NOMMETACLASS( a ) const string _conc(_conc(METACLASS_TO_USE_,__LINE__), a) = (#a)
 
 /* Define a pointer on a class for IDL using the classname. This is only one half of the work.
    The rest is done by the IDL compiler which typedefs this in the *.h file so it can be used
