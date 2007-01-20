@@ -920,7 +920,18 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                 fprintf(ski->of, ") \\\n    %s_parent_resolved)", id);
                 /* output params for macro */
                 // VoyagerWriteParamsForParentCall (ski->of, ski->tree );
-                fprintf(ski->of, "(nomSelf, ");
+                fprintf(ski->of, "((");
+                /* Output name of introducing class */
+                if(IDL_INTERFACE(tmptree).inheritance_spec) {
+                  InheritedOutputInfo ioi;
+
+                  ioi.of = ski->of;
+                  ioi.realif = tmptree;
+                  ioi.chrOverridenMethodName=gstr->str;
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerOutputIntroducingClass, &ioi);
+                }
+                fprintf(ski->of, "*)nomSelf, ");
+                //fprintf(ski->of, "(nomSelf, ");
                 if(IDL_INTERFACE(tmptree).inheritance_spec) {
                   InheritedOutputInfo ioi;
                   
