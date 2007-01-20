@@ -351,7 +351,7 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
       if(IDLN_STRING==IDL_NODE_TYPE(IDL_CONST_DCL(ski->tree).const_exp))
         {
           /* Our metaclass info is a string */
-          if(!strcmp(NOM_METACLASS_STRING, IDL_IDENT(ident).str))
+          if(strstr( IDL_IDENT(ident).str, NOM_METACLASS_STRING))
             {
               gsMetaClassName[ulCurInterface]=g_string_new(NULL);
               g_string_printf(gsMetaClassName[ulCurInterface], "%s", IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value);

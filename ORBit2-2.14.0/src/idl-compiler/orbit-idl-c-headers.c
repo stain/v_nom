@@ -659,7 +659,7 @@ ch_output_const_dcl(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
     if(IDLN_STRING==IDL_NODE_TYPE(IDL_CONST_DCL(tree).const_exp))
       {
         /* Our metaclass info is a string */
-        if(!strcmp(NOM_METACLASS_STRING, IDL_IDENT(ident).str))
+        if(strstr( IDL_IDENT(ident).str, NOM_METACLASS_STRING))
           {
             gsMetaClassName=g_string_new(NULL);
             g_string_printf(gsMetaClassName, "%s", IDL_STRING(IDL_CONST_DCL(tree).const_exp).value);
