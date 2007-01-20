@@ -447,16 +447,75 @@ cs_output_stubs (IDL_tree     tree,
 	}
 }
 
+/*
+  This function returns the interface name from the given tree. It returns the first
+  name found. Works for what it's build for (getting the toplevel name for single class
+  IDL files). No idea what happens with files containing several interfaces...
+ */
+static void
+VoyagerFindInterfaceName(IDL_tree tree, char** iface_id)
+{
+
+	if (!tree)
+      return;
+
+	switch (IDL_NODE_TYPE (tree)) {
+	case IDLN_MODULE:
+		break;
+	case IDLN_LIST: {
+		IDL_tree sub;
+		for (sub = tree; sub; sub = IDL_LIST (sub).next){
+          VoyagerFindInterfaceName((IDL_LIST (sub).data), iface_id);
+        }
+		break;
+		}
+	case IDLN_ATTR_DCL: {
+		break;
+		}
+	case IDLN_INTERFACE: {
+      VoyagerFindInterfaceName(IDL_INTERFACE (tree).body, iface_id);
+		break;
+		}
+	case IDLN_OP_DCL:
+      {
+        char *priviface_id = IDL_ns_ident_to_qstring (
+                                            IDL_IDENT_TO_NS (IDL_INTERFACE (
+                                            IDL_get_parent_node (tree, IDLN_INTERFACE, NULL)
+                                            ).ident), "_", 0);
+        //printf("----------> %s\n", priviface_id);
+        if(priviface_id)
+          *iface_id=priviface_id; /* This is a copy */
+		break;
+      }
+	default:
+		break;
+	}
+    return;
+}
+
 void
 orbit_idl_output_c_stubs (IDL_tree       tree,
 			  OIDL_Run_Info *rinfo,
 			  OIDL_C_Info   *ci)
 {
-	fprintf (ci->fh, OIDL_C_WARNING);
-	fprintf (ci->fh, "#include <string.h>\n");
+  char     *iface_id=NULL;
+  fprintf (ci->fh, OIDL_C_WARNING);
+  VoyagerFindInterfaceName(tree, &iface_id); /* get name of this interface/class */
+  g_assert(iface_id);
+  fprintf (ci->fh, "#ifndef NOM_%s_IMPLEMENTATION_FILE\n", iface_id);
+  fprintf (ci->fh, "#define NOM_%s_IMPLEMENTATION_FILE\n#endif\n\n", iface_id);
+
+  fprintf (ci->fh, "#include <string.h>\n");    
 #ifdef USE_LIBIDL_CODE
     fprintf (ci->fh, "#define ORBIT2_STUBS_API\n");
 #endif
 	fprintf (ci->fh, "#include \"%s.ih\"\n\n", ci->base_name);
 	cs_output_stubs (tree, ci, NULL);
+
 }
+
+
+
+
+
+
