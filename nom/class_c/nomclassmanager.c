@@ -34,6 +34,9 @@
 /*
  * And remember, phase 3 is near...
  */
+#ifndef NOM_NOMClassMgr_IMPLEMENTATION_FILE
+#define NOM_NOMClassMgr_IMPLEMENTATION_FILE
+#endif
 
 #define INCL_DOS
 #include <os2.h>

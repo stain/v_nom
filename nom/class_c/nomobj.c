@@ -31,6 +31,9 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+#ifndef NOM_NOMObject_IMPLEMENTATION_FILE
+#define NOM_NOMObject_IMPLEMENTATION_FILE
+#endif
 
 #define INCL_DOS
 #include <os2.h>
