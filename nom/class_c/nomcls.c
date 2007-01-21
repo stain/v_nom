@@ -48,21 +48,31 @@
 #include "nomcls.ih"
 #include "nomclassmanager.h"
 
+#include "gc.h"
+
 extern NOMClassMgr* NOMClassMgrObject;
 
+static void nomObjectFinalizer(GC_PTR obj, GC_PTR client_data)
+{
+  NOMObject* nObj;
+  nObj=(NOMObject*)obj;
+
+  if(nomIsObj(nObj)){
+    //nomPrintf("Finalizing 0x%x: %s \n", nObj, nObj->mtab->nomClassName);
+    _nomUnInit(nObj, NULLHANDLE);
+  }
+  //else
+  //nomPrintf("Finalizing 0x%x: no object! \n", nObj);
+}
 
 NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Environment *ev)
 {
   NOMClassData* nomThis=NOMClassGetData(nomSelf);
   NOMClassPriv *ncp;
-  string nObj;
-  
-  //nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
-  //        __FUNCTION__, impl_NOMClass_nomNew, nomSelf, nomSelf->mtab->nomClassName);
+  gchar* nObj;
 
   if(!nomSelf)
     return NULLHANDLE;
-
 
   if(!_ncpObject)
     return NULLHANDLE;
@@ -82,6 +92,8 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenewNoInit(NOMClass* nomSelf,
 {
   NOMClassPriv *ncp;
   NOMClassData *nomThis = NOMClassGetData(nomSelf);
+  GC_PTR oldData;
+  GC_finalization_proc oldFinalizerFunc;
 
   ncp=(NOMClassPriv*)_ncpObject;
 
@@ -91,13 +103,20 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenewNoInit(NOMClass* nomSelf,
   /* Set mtab so it's an object */
   ((NOMObject*)nomObj)->mtab=ncp->mtab;
 
+  /* Register finalizer if the class uses nomUnInit */
+  ncp=(NOMClassPriv*)ncp->mtab->nomClsInfo;
+  if(ncp->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN){
+    //nomPrintf("Registering finalizer for %s\n", ((NOMObject*)nomObj)->mtab->nomClassName);
+    GC_register_finalizer(nomObj,  nomObjectFinalizer, NULL, &oldFinalizerFunc, &oldData);
+  }
   /* NO call to _nomInit() */
 
   /* Return statement to be customized: */
   return nomObj;
 }
 
-NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const CORBA_Object nomObj, CORBA_Environment *ev)
+NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const CORBA_Object nomObj,
+                                                      CORBA_Environment *ev)
 {
   _nomRenewNoInit(nomSelf, nomObj, NULLHANDLE);
 
@@ -108,13 +127,11 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const C
 }
 
 
-NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomAllocate(NOMClass* nomSelf, const CORBA_long ulSize, CORBA_Environment *ev)
+NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomAllocate(NOMClass* nomSelf, const CORBA_long ulSize,
+                                                         CORBA_Environment *ev)
 {
-  NOMClassPriv *ncp;
-  NOMClassData *nomThis = NOMClassGetData(nomSelf);
+  /* NOMClassData *nomThis = NOMClassGetData(nomSelf); */
 
-  ncp=(NOMClassPriv*)_ncpObject;
-  //  nomPrintf("%s: size %d\n", __FUNCTION__, ulSize);
   return NOMMalloc(ulSize);
 }
 
@@ -130,7 +147,8 @@ NOM_Scope void NOMLINK impl_NOMClass_nomDeallocate(NOMClass* nomSelf, const CORB
 }
 
 
-NOM_Scope void NOMLINK impl_NOMClass_nomSetObjectCreateInfo(NOMClass* nomSelf, const gpointer ncpObject, CORBA_Environment *ev)
+NOM_Scope void NOMLINK impl_NOMClass_nomSetObjectCreateInfo(NOMClass* nomSelf, const gpointer ncpObject,
+                                                            CORBA_Environment *ev)
 {
   NOMClassData* nomThis=NOMClassGetData(nomSelf);
 
@@ -177,7 +195,8 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
 
           /* No, not in the list, so register it */
           ncPriv=(NOMClassPriv*)nomSelf->mtab->nomClsInfo;
-          ncPriv->ulIsMetaClass=1; /* Mark that we are a metaclass */
+          //ncPriv->ulIsMetaClass=1; /* Mark that we are a metaclass */
+          ncPriv->ulClassFlags|=NOM_FLG_IS_METACLASS; /* Mark that we are a metaclass */
           _nomRegisterClass(NOMClassMgrObject, nomSelf->mtab, NULLHANDLE);
           /* Register all the methods this class introduces */
           ulNumIntroducedMethods=ncPriv->sci->ulNumStaticMethods;
@@ -192,7 +211,8 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
           ncPriv=(NOMClassPriv*)_nomGetObjectCreateInfo(nomSelf, NULLHANDLE);//nomSelf->mtab->nomClsInfo;
           if(ncPriv){
 #warning !!!!! NOMClass does not have this pointer, this is a bug !!!!!
-            ncPriv->ulIsMetaClass=0; /* Mark that we are not a metaclass (should be 0 already) */
+            //ncPriv->ulIsMetaClass=0; /* Mark that we are not a metaclass (should be 0 already) */
+            ncPriv->ulClassFlags&=~NOM_FLG_IS_METACLASS; /* Mark that we are not a metaclass (should be 0 already) */
             _nomRegisterClass(NOMClassMgrObject, ncPriv->mtab, NULLHANDLE);
 
             /* Register all the methods this class introduces */
@@ -213,7 +233,8 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
         nomPrintf("%s: Metaclass already registered, registering normal object class now.\n", __FUNCTION__);
 
         ncPriv=(NOMClassPriv*)_nomGetObjectCreateInfo(nomSelf, NULLHANDLE);//nomSelf->mtab->nomClsInfo;
-        ncPriv->ulIsMetaClass=0; /* Mark that we are not a metaclass (should be 0 already) */
+        // ncPriv->ulIsMetaClass=0; /* Mark that we are not a metaclass (should be 0 already) */
+        ncPriv->ulClassFlags&=~NOM_FLG_IS_METACLASS; /* Mark that we are not a metaclass (should be 0 already) */
         if(ncPriv){
           gulong a, ulNumIntroducedMethods;
           /* Register all the methods this class introduces */

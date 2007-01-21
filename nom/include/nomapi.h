@@ -118,6 +118,9 @@ typedef struct
   ULONG thunk[4];
 }nomMethodThunk;
 
+#define NOM_FLG_IS_METACLASS         0x00000001
+#define NOM_FLG_NOMUNINIT_OVERRIDEN  0x00000002
+
 /* This structure holds additional informationen about class not to be found in nomMethodTab.
    It holds the default method table of the class and the thunking code necessary to access
    data and methods.
@@ -129,7 +132,8 @@ typedef struct
   gulong            ulClassSize;        /* The size of an instance (mtab+ instance vars)                  */
   gulong        ulPrivClassSize;        /* The size of this private struct including mtab (not pointr but
                                            real filled structure. Do we need this?                         */
-  gulong        ulIsMetaClass;          /* Set to 1 if this is a metaclass                                 */
+  // gulong        ulIsMetaClass;          /* Set to 1 if this is a metaclass                                 */
+  gulong        ulClassFlags;           /* Set to 1 if this is a metaclass                                 */
   nomStaticClassInfo *sci;              /* Class description                                               */
   nomMethodTabList mtabList;            /* The (private) internal list of mtabs we maintain 
                                            struct nomMethodTabList {

@@ -44,7 +44,7 @@ interface NOMObject
   NOMCLASSVERSION(1, 0 );
 
   void nomInit();
-  void nomUninit();
+  void nomUnInit();
   /* Return the size of the object. That is sizeof(mTab*)+sizeof(all instance vars) */
   long nomGetSize();
   void delete();
