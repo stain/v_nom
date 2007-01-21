@@ -125,7 +125,7 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
               id);
       fprintf(ci->fh, "\n");
 
-      fprintf(ci->fh, "/* Line %d %s */\n", __LINE__, __FUNCTION__);
+      fprintf(ci->fh, "/* %s: Line %d %s */\n", __FUNCTION__, __LINE__, __FUNCTION__);
       if(NULL==gsMetaClassName)
         fprintf(ci->fh, "#define _%s %sClassData.classObject\n", id, id);
       else
@@ -134,8 +134,8 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
       fprintf(ci->fh, "\n/*\n * New macro for %s\n */\n", id);
       fprintf(ci->fh, "#define %sNew() \\\n", id);
       /* Changed for typesafetyness */
-      fprintf(ci->fh, "        ((%s*)_nomNew((_%s ? _%s : %sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
-              id, id, id, id, id ,id);
+      fprintf(ci->fh, "        ((%s*)_nomNew((_%s ? _%s : (%s*)%sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
+              id, id, id, id, id, id ,id);
       //  fprintf(ci->fh, "        (_nomNew((_%s ? _%s : %sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n",
       //      id, id, id, id ,id);
 
