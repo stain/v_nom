@@ -504,8 +504,14 @@ orbit_idl_output_c_stubs (IDL_tree       tree,
   g_assert(iface_id);
   fprintf (ci->fh, "#ifndef NOM_%s_IMPLEMENTATION_FILE\n", iface_id);
   fprintf (ci->fh, "#define NOM_%s_IMPLEMENTATION_FILE\n#endif\n\n", iface_id);
+  /* Output include files always needed */
+  fprintf (ci->fh, "#define INCL_DOS\n");
+  fprintf (ci->fh, "#include <os2.h>\n\n");
 
-  fprintf (ci->fh, "#include <string.h>\n");    
+  fprintf (ci->fh, "#include \"nom.h\"\n");
+  fprintf (ci->fh, "#include <nomtk.h>\n\n");
+
+  //fprintf (ci->fh, "#include <string.h>\n");
 #ifdef USE_LIBIDL_CODE
     fprintf (ci->fh, "#define ORBIT2_STUBS_API\n");
 #endif
