@@ -52,12 +52,12 @@ NOM_Scope void  NOMLINK impl_NOMObject_nomInit(NOMObject *nomSelf, CORBA_Environ
   //        __FUNCTION__, impl_NOMObject_nomInit, nomSelf , nomSelf->mtab->nomClassName);
 }
 
-NOM_Scope void  NOMLINK impl_NOMObject_nomUninit(NOMObject *nomSelf, CORBA_Environment *ev)
+NOM_Scope void  NOMLINK impl_NOMObject_nomUnInit(NOMObject *nomSelf, CORBA_Environment *ev)
 {
   /* NOMObjectData *nomThis = NOMObjectGetData(nomSelf); */
   
   nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. SomSelf is: %s.\n",
-            __FUNCTION__, impl_NOMObject_nomUninit, nomSelf , nomSelf->mtab->nomClassName);
+            __FUNCTION__, impl_NOMObject_nomUnInit, nomSelf , nomSelf->mtab->nomClassName);
 }
 
 NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA_Environment *ev)
@@ -77,7 +77,7 @@ NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environme
 /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
 
   /* Give object the chance to free resources */
-  _nomUninit(nomSelf, NULLHANDLE);
+  _nomUnInit(nomSelf, NULLHANDLE);
 
   /* And now delete the object */
   /*
@@ -104,7 +104,6 @@ NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomGetClass(NOMObject* nomSelf, CORBA
 NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Environment *ev)
 {
 /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
-  PNOMObject nomRetval;
   NOMClass* nomCls;
 
   /* We don't know which class we're actually. So we can't just create a new object using

@@ -66,9 +66,10 @@
 #endif
 
 #ifdef DEBUG_NOMBUILDCLASS
-#define DBG_NOMBUILDCLASS(a, b, ...)   if(a) nomPrintf("%d: " b , __LINE__, __VA_ARGS__);
+#define DBG_BUILD_LINE(a)
+#define DBG_NOMBUILDCLASS(a, b,...)   if(a) nomPrintf("%d: " b , __LINE__,  __VA_ARGS__);
 #else
-#define DBG_NOMBUILDCLASS(a, b, ...)
+#define DBG_NOMBUILDCLASS(a, b,...)
 #endif
 
 #define DBGBUILDNOMCLASS_ENTER BUILDNOMCLASS_ENTER
@@ -187,7 +188,7 @@ gulong priv_getIndexOfMethodInEntries(NOMClassPriv* nClass, nomStaticClassInfo *
           //nomPrintf(" %s, %d: Found %s in %s\n", __FUNCTION__, __LINE__,
           //        gstr->str, sci->chrParentClassNames[a]);
           if(NULL==NOMClassMgrObject)
-            g_error("%s line %d: No overriding for base classes yet(%s)!\n",
+            g_error("%s line %d: No overriding for base classes yet (%s)!\n",
                     __FUNCTION__, __LINE__, gstr->str);
           idx++; /* This is the position for the class pointer */
           ncPriv=_nomGetClassInfoPtrFromName(NOMClassMgrObject, sci->chrParentClassNames[a], NULLHANDLE);
@@ -265,9 +266,7 @@ void priv_resolveOverrideMethods(NOMClassPriv *nClass, nomStaticClassInfo *sci)
   if(sci->ulNumStaticOverrides) {
     int b;
 
-#ifdef DEBUG_NOMBUILDCLASS
-    nomPrintf(" %d: %d method(s) to override\n", __LINE__, sci->ulNumStaticOverrides);
-#endif
+    DBG_NOMBUILDCLASS(TRUE, "%d method(s) to override\n", sci->ulNumStaticOverrides);
 
     /* There're some methods to override */
     for(b=0;b<sci->ulNumStaticOverrides;b++) {/* For every overriden method do */
@@ -276,9 +275,7 @@ void priv_resolveOverrideMethods(NOMClassPriv *nClass, nomStaticClassInfo *sci)
 
       entries=&nClass->mtab->entries[0];  /* Adress of array where we enter our resoved method */
 
-#ifdef DEBUG_NOMBUILDCLASS
-      nomPrintf(" %d: Going to override \"%s\"\n", __LINE__, *sci->nomOverridenMethods[b].nomMethodId);
-#endif
+      DBG_NOMBUILDCLASS(TRUE,"Going to override \"%s\"\n", *sci->nomOverridenMethods[b].nomMethodId);
 
       index=priv_getIndexOfMethodInEntries(nClass, sci, *sci->nomOverridenMethods[b].nomMethodId);
       if(0==index){
@@ -290,6 +287,14 @@ void priv_resolveOverrideMethods(NOMClassPriv *nClass, nomStaticClassInfo *sci)
       *sci->nomOverridenMethods[b].nomParentMethod=entries[index];
       /* Using the found index we insert our new method address into the mtab. */
       entries[index]=sci->nomOverridenMethods[b].nomMethod;
+      /* Do we just overrid nomUnInit()? Mark it because we need this info for the
+         grabage collecting. */
+      if(strstr(*sci->nomOverridenMethods[b].nomMethodId, ":nomUnInit"))
+        {
+          DBG_NOMBUILDCLASS(TRUE, "  nomUnInit() overriden.\n", "");
+          nClass->ulClassFlags|=NOM_FLG_NOMUNINIT_OVERRIDEN; /* This flag has to be propagated down to
+                                                                each child class. */
+        }
     } /* for(b) */  
   }/* if(sci->numStaticOverrides) */
 
@@ -419,6 +424,51 @@ static NOMClassPriv* priv_getClassFromName(gchar* chrClassName)
   return ncpParent;
 }
 
+#if 0
+static void priv_checkForNomUnInitOverride(  NOMClass *nomClass,  NOMClassPriv *ncpParent)
+{
+  /* Mark the class as using nomUnInit() if any parent did that. We just have to
+     check the flag and the flag of the parent class. This information is important
+     because if this method is overriden the garbage collector has to run a finalizer
+     on the object when collecting memory so the object may do its uninit stuff. */
+  if(nomClass && !(((NOMClassPriv*)nomClass->mtab->nomClsInfo)->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN))
+    {
+      /* Flag not set. Try parent */
+      if(ncpParent && ncpParent->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN)
+        ((NOMClassPriv*)nomClass->mtab->nomClsInfo)->ulClassFlags|= NOM_FLG_NOMUNINIT_OVERRIDEN;
+    }
+
+  DBG_NOMBUILDCLASS(TRUE, "nomUnInit overriden in class %s: %s\n",
+                    nomClass->mtab->nomClassName,
+                    (((NOMClassPriv*)nomClass->mtab->nomClsInfo)->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN ?
+                     "Yes" : "No"));
+
+};
+#endif
+
+static void priv_checkForNomUnInitOverride(  NOMClassPriv *nomClassPriv,  NOMClassPriv *ncpParent)
+{
+  /* Mark the class as using nomUnInit() if any parent did that. We just have to
+     check the flag and the flag of the parent class. This information is important
+     because if this method is overriden the garbage collector has to run a finalizer
+     on the object when collecting memory so the object may do its uninit stuff. */
+  DBG_NOMBUILDCLASS(TRUE, " %s (%x): %x, %s (%x): %x ", nomClassPriv->mtab->nomClassName, nomClassPriv,
+                    nomClassPriv->ulClassFlags, 
+                    ncpParent->mtab->nomClassName, ncpParent, ncpParent->ulClassFlags);
+  if(nomClassPriv && !(nomClassPriv->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN))
+    {
+      /* Flag not set. Try parent */
+      if(ncpParent && ncpParent->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN)
+        nomClassPriv->ulClassFlags|= NOM_FLG_NOMUNINIT_OVERRIDEN;
+    }
+
+  DBG_NOMBUILDCLASS(TRUE, "   %x nomUnInit overriden in class %s: %s\n",
+                    nomClassPriv->ulClassFlags, nomClassPriv->mtab->nomClassName,
+                    (nomClassPriv->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN ?
+                     "Yes" : "No"));
+};
+
+
 /*
   This function creates a private class structure for an object from the given sci with 
   correctly resolved methods which holds the mtab. This struct is kept by the metaclass
@@ -455,16 +505,15 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
     g_warning("We are supposed to create a NOMClassPriv but there's no parent!\n");
     /* FIXME:       
        Maybe we should panic here.  */
-    return NULLHANDLE; /* Only SOMObject has no parent, so we have a problem here. */
+    return NULLHANDLE; /* Only NOMObject has no parent, so we have a problem here. */
   }
 
   /* Calculate size of new class object */
   ulMemSize=sizeof(NOMClassPriv)-sizeof(nomMethodTab); /* start size class struct */
 
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("  %d: ncpParent->mtab->mtabSize: %d. Parent is: %x (priv) %s\n",
-            __LINE__, ncpParent->mtab->mtabSize, ncpParent, ncpParent->mtab->nomClassName);
-#endif
+  DBG_NOMBUILDCLASS(TRUE, "  ncpParent->mtab->mtabSize: %d. Parent is: %x (priv) %s\n",
+                    ncpParent->mtab->mtabSize, ncpParent, ncpParent->mtab->nomClassName);
+
   mtabSize=ncpParent->mtab->mtabSize+sizeof(nomMethodProc*)*(sci->ulNumStaticMethods)+
     sizeof(NOMObject*);/* numStaticMethods is correct here!
                           NOT numStaticMethods-1!
@@ -473,9 +522,10 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
                           pointer. */  
   ulMemSize+=mtabSize; /* add place for new procs and the new class pointer */
   ulParentDataSize=ncpParent->mtab->ulInstanceSize; /* Parent instance size */
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("  %d: %s: mtabSize will be: %d, ulParentDataSize is: %d\n", __LINE__, __FUNCTION__, mtabSize, ulParentDataSize);
-#endif
+
+  DBG_NOMBUILDCLASS(TRUE, "  %s: mtabSize will be: %d, ulParentDataSize is: %d\n"
+                    , __FUNCTION__, mtabSize, ulParentDataSize);
+
   /* Alloc private class struct using NOMCalloc. */
   if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
     return NULLHANDLE;
@@ -495,9 +545,8 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
   */
   addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci) ;
 
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%d: %s:  mtab: %x\n", __LINE__, __FUNCTION__, nClass->mtab);
-#endif
+  DBG_NOMBUILDCLASS(TRUE, "%s:  mtab: %x\n", __FUNCTION__, nClass->mtab);
+
   /*
     Note: We don't create a class object here so the following isn't done:
           sci->cds->classObject=nomClass;
@@ -519,14 +568,17 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
                                                                             object but the entry is used when creating the objects. */
   fillCClassDataStructParentMtab(sci, nClass, nomClass);
 
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("  %d: New NOMClassPriv*: %x\n", __LINE__, nClass);
-#endif
+  DBG_NOMBUILDCLASS(TRUE, "New NOMClassPriv*: %x\n", nClass);
 
   _nomSetObjectCreateInfo(nomClass, nClass, NULLHANDLE);
 
-  DBGBUILDNOMCLASS_LEAVE
+  /* Mark the class as using nomUnInit() if any parent did that. We just have to
+     check the flag and the flag of the parent class. This information is important
+     because if this method is overriden the garbage collector has to run a finalizer
+     on the object when collecting memory so the object may do its uninit stuff. */
+  priv_checkForNomUnInitOverride( nClass,  ncpParent);
 
+  DBGBUILDNOMCLASS_LEAVE
   return nClass;
 }
 
@@ -613,15 +665,15 @@ NOMClass * NOMLINK priv_findExplicitMetaClassFromParents(nomStaticClassInfo *sci
       NOMObject *nObject;
       nObject=_nomFindClassFromName(NOMClassMgrObject, sci->chrParentClassNames[a], 0, 0, NULLHANDLE);
 
-      DBG_NOMBUILDCLASS( TRUE , "  %s %x %x\n" , sci->chrParentClassNames[a], nObject, NOMClassMgrObject);
-
+      DBG_NOMBUILDCLASS( TRUE , "   Parent %d: %s, class object: %x\n" ,
+                         a, sci->chrParentClassNames[a], nObject);
       if(nObject){
-        DBG_NOMBUILDCLASS( TRUE , " %s\n" , nObject->mtab->nomClassName);
+        DBG_NOMBUILDCLASS( TRUE , "  Class object name: %s\n" , nObject->mtab->nomClassName);
         if(strcmp(nObject->mtab->nomClassName, "NOMClass"))
-          return nObject; /* Not NOMClass return */
+          return (NOMClass*)nObject; /* Not NOMClass so return */
       } /* if(nObject) */
     } /* for() */
-  return pGlobalNomEnv->defaultMetaClass;;;
+  return pGlobalNomEnv->defaultMetaClass;
 }
 
 /*
@@ -644,7 +696,7 @@ NOMClass * NOMLINK priv_buildWithNOMClassChildAsMeta(gulong ulReserved,
 
 #ifdef DEBUG_NOMBUILDCLASS
 #warning !!!!! Change this when nomId is a GQuark !!!!!
-  nomPrintf("\n\n%d: Entering %s to build %s\n", __LINE__, __FUNCTION__, *sci->nomClassId);
+  nomPrintf("\n%d: Entering %s to build %s\n", __LINE__, __FUNCTION__, *sci->nomClassId);
 #endif
 
   /* Search parents for a an explicit metaclass. If no explicit metaclass return
@@ -686,9 +738,11 @@ NOMClass * NOMLINK priv_buildWithNOMClassChildAsMeta(gulong ulReserved,
                                    nomClass);
 
 #ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%s: New class Object (NOMClass): %x NOMClassPriv*: %x\n", __FUNCTION__, nomClass, nomClass->mtab->nomClsInfo);
-  _dumpMtab(nomClass->mtab);
-  _dumpObjShort(nomClass);
+  DBG_NOMBUILDCLASS(TRUE, "%s: New class Object (NOMClass): %x NOMClassPriv*: %x ulClassFlags: %x\n",
+                    __FUNCTION__, nomClass, nomClass->mtab->nomClsInfo,
+                    ((NOMClassPriv*)nomClass->mtab->nomClsInfo)->ulClassFlags);
+  //_dumpMtab(nomClass->mtab);
+  //_dumpObjShort(nomClass);
 #endif
 
   /* nomClassReady() is called in nomBuildClass(), so don't call it here. Same goes for _nomInit(). */
@@ -772,9 +826,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   /* Check if already built */
   if(sci->nomCds->nomClassObject) {
-#ifdef DEBUG_NOMBUILDCLASS
-    nomPrintf("%d: Class %s already built. returning 0x%x\n", __LINE__, *sci->nomClassId, sci->nomCds->nomClassObject);
-#endif
+    DBG_NOMBUILDCLASS(TRUE, "Class %s already built. returning 0x%x\n", *sci->nomClassId, sci->nomCds->nomClassObject);
     return (sci->nomCds)->nomClassObject; /* Yes,return the object */
   }
 
@@ -787,16 +839,15 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   if(!strcmp(*sci->nomClassId, "NOMObject")){
     if(pGlobalNomEnv->ncpNOMObject!=NULLHANDLE){
-#ifdef DEBUG_NOMBUILDCLASS
-      nomPrintf("%d: Class %s already built. returning 0x%x\n", __LINE__, *sci->nomClassId, sci->nomCds->nomClassObject);
-#endif
+      DBG_NOMBUILDCLASS(TRUE, "Class %s already built. returning 0x%x\n",
+                        *sci->nomClassId, sci->nomCds->nomClassObject);
       /* FIXME: this seems to be broken!! */
-      return NULLHANDLE; /* SOMObject already built */
+      return NULLHANDLE; /* NOMObject already built */
     }
   }
 
 #ifdef _DEBUG_NOMBUILDCLASS
-  nomPrintf("%d: Dumping sci:\n", __LINE__);
+  DBG_NOMBUILDCLASS(TRUE, "Dumping sci:\n");
   _dumpSci(sci);
 #endif
 
@@ -829,9 +880,9 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   /* Do we want to build NOMObject the mother of all classes? */
   if(!strcmp(*sci->nomClassId, "NOMObject")){
-#ifdef DEBUG_NOMBUILDCLASS
-    nomPrintf("%d: Trying to build  %s\n", __LINE__, *sci->nomClassId);
-#endif
+
+    DBG_NOMBUILDCLASS(TRUE, "Trying to build  %s\n", *sci->nomClassId);
+
     priv_buildNOMObjectClassInfo(ulReserved, sci, /* yes */
                                  ulMajorVersion, ulMinorVersion);
     return NULLHANDLE; /* We can't return a SOMClass for SOMObject because SOMClass isn't built yet. */
@@ -868,9 +919,10 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
 #ifdef DEBUG_NOMBUILDCLASS
   /* Do some debugging here... */
-  nomPrintf("%d: Found parent private class info struct. Dumping parentMTabStruct...\n", __LINE__);
+  DBG_NOMBUILDCLASS(TRUE, "Found parent private class info struct. Dumping parentMTabStruct...\n", NULL);
   pParentMtab=&ncpParent->parentMtabStruct;
-  nomPrintf("     parent class: %s (priv %x), pParentMtab: %x, pParentMtab->mtab %x, next: %x\n", ncpParent->mtab->nomClassName,
+  nomPrintf("     parent class: %s (priv %x), pParentMtab: %x, pParentMtab->mtab %x, next: %x\n",
+            ncpParent->mtab->nomClassName,
             ncpParent, pParentMtab, pParentMtab->mtab, pParentMtab->next);
   /* climb parent list */
   psmTab=pParentMtab->next;
@@ -885,27 +937,29 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   if(!priv_nomIsA((NOMObject*)ncpParent, pGlobalNomEnv->defaultMetaClass)) {
     /* No, parent of class to build is normal object so we have to use either an explicit meta class if given or
        another NOMClass derived class for the class object. */
-#ifdef DEBUG_NOMBUILDCLASS
-    nomPrintf("%d: Class %x (ncpParent->mtab->nomClassName: %s) is not a NOMClass\n",
-              __LINE__, ncpParent, ncpParent->mtab->nomClassName);
-#endif
+
+    DBG_NOMBUILDCLASS(TRUE, "Class %x (ncpParent->mtab->nomClassName: %s) is not a NOMClass\n",
+                      ncpParent, ncpParent->mtab->nomClassName);
 
     if(sci->nomExplicitMetaId)
       {
         /* The explicit metaclass is created at this point. Now it will be filled
            with the info how to create objects. */
 
-#ifdef DEBUG_NOMBUILDCLASS
-        nomPrintf("%d: sci->nomExplicitMetaId is set. Calling priv_buildWithExplicitMetaClass().\n", __LINE__);
-#endif
+        DBG_NOMBUILDCLASS(TRUE, "sci->nomExplicitMetaId is set. Calling priv_buildWithExplicitMetaClass().\n", "");
     
         nomClass= priv_buildWithExplicitMetaClass(ulReserved, sci,
                                                   ulMajorVersion, ulMinorVersion);
         if(nomClass){
-#ifdef DEBUG_NOMBUILDCLASS
-          nomPrintf("%d: %s: class is 0x%x\n", __LINE__, nomClass->mtab->nomClassName, nomClass);
-#endif    
-          _nomInit(nomClass, NULLHANDLE);
+          DBG_NOMBUILDCLASS(TRUE, "%s: class is 0x%x\n", nomClass->mtab->nomClassName, nomClass);
+#if 0
+          /* Mark the class as using nomUnInit() if any parent did that. We just have to
+             check the flag and the flag of the parent class. This information is important
+             because if this method is overriden the garbage collector has to run a finalizer
+             on the object when collecting memory so the object may do its uninit stuff. */
+          priv_checkForNomUnInitOverride( (NOMClassPriv*)nomClass->mtab->nomClsInfo,  ncpParent);
+#endif     
+          _nomInit((NOMObject*)nomClass, NULLHANDLE);
           _nomClassReady(nomClass, NULLHANDLE);
         }
 
@@ -914,18 +968,15 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
     else {
       /* Use NOMClass derived class as meta class. We have to climb the parent list of this object class
          to check if one parent introduced an explicit metaclass. If yes, we have to use that one as
-         the metaclass. IF no parent did that we just use NOMClass. 
+         the metaclass. If no parent did that we just use NOMClass. 
          The following call will create the class object and will also fill in the necessary object info for
          creating instances. */
       nomClass= priv_buildWithNOMClassChildAsMeta(ulReserved, sci,
                                                   ulMajorVersion, ulMinorVersion);
 
       if(nomClass){
-        //#warning !!!!! No call of  _nomClassReady() here !!!!!
-        //#if 0
-        _nomInit(nomClass, NULLHANDLE);
-        _nomClassReady(nomClass, NULLHANDLE);   
-        //#endif
+        _nomInit((NOMObject*)nomClass, NULLHANDLE);
+        _nomClassReady(nomClass, NULLHANDLE);
       }
       return nomClass;
     }
@@ -937,11 +988,10 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   ulMemSize=sizeof(NOMClassPriv)-sizeof(nomMethodTab); /* start size class struct */
 
   /* Calculate size of new class object */
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%d: Parent class 0x%x (ncpParent->mtab->nomClassName: %s) is a NOMClass (or derived)\n",
-            __LINE__, ncpParent, ncpParent->mtab->nomClassName);
-  nomPrintf("      ncParent->mtab->mtabSize: %d\n", ncpParent->mtab->mtabSize);
-#endif
+  DBG_NOMBUILDCLASS(TRUE, "Parent class 0x%x (ncpParent->mtab->nomClassName: %s) is a NOMClass (or derived)\n",
+                    ncpParent, ncpParent->mtab->nomClassName);
+  DBG_NOMBUILDCLASS(TRUE, "      ncParent->mtab->mtabSize: %d\n", ncpParent->mtab->mtabSize);
+
   mtabSize=ncpParent->mtab->mtabSize+sizeof(nomMethodProc*)*(sci->ulNumStaticMethods)+sizeof(NOMClass*);/* ulNumStaticMethods is correct here!
                                                                                                         NOT numStaticMethods-1!
                                                                                                         entries[0] in fact contains the 
@@ -950,10 +1000,8 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   ulMemSize+=mtabSize; /* add place for new procs and the new class pointer */
   ulParentDataSize=ncpParent->mtab->ulInstanceSize; /* Parent instance size */
   
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%d: %s mtabSize is: %d, ulParentDataSize is: %d\n", __LINE__, *sci->nomClassId, mtabSize, ulParentDataSize);
-#endif
-
+  DBG_NOMBUILDCLASS(TRUE, "%s mtabSize is: %d, ulParentDataSize is: %d\n", 
+                    *sci->nomClassId, mtabSize, ulParentDataSize);
 
   /* Alloc class struct using NOMCalloc. */
   if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
@@ -985,9 +1033,9 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   priv_resolveOverrideMethods(nClass, sci);
 
   nomClass->mtab=nClass->mtab;  
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%d: mtab: %x, nClass: 0x%x, nomClass: 0x%x\n", __LINE__, nClass->mtab, nClass, nomClass);
-#endif
+
+  DBG_NOMBUILDCLASS(TRUE,"mtab: %x, nClass: 0x%x, nomClass: 0x%x\n", nClass->mtab, nClass, nomClass);
+
   sci->nomCds->nomClassObject=nomClass; /* Put class pointer in static struct */
 
   /**********************************/
@@ -1010,23 +1058,30 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 #warning !!!!! No call of _nomSetInstanceSize() here !!!!!
   // _nomSetInstanceSize(nomClass, sci->ulInstanceDataSize+ulParentDataSize);
 
-#ifdef DEBUG_NOMBUILDCLASS
-  nomPrintf("%d: New class ptr (class object): %x (NOMClassPriv: %x) for %s\n", __LINE__, nomClass, nClass, *sci->nomClassId);
-#endif
+  DBG_NOMBUILDCLASS(TRUE, "New class ptr (class object): %x (NOMClassPriv: %x) for %s\n"
+                    , nomClass, nClass, *sci->nomClassId);
 
-  //priv_addPrivClassToGlobalClassList(pGlobalNomEnv, nClass);
-  _nomInit(nomClass, NULLHANDLE);
-  _nomClassReady(nomClass, NULLHANDLE);
+  if(nomClass){
+    /* Mark the class as using nomUnInit() if any parent did that. We just have to
+       check the flag and the flag of the parent class. This information is important
+       because if this method is overriden the garbage collector has to run a finalizer
+       on the object when collecting memory so the object may do its uninit stuff. */
+    priv_checkForNomUnInitOverride( (NOMClassPriv*)nomClass->mtab->nomClsInfo,  ncpParent);
+    
+    _nomInit(nomClass, NULLHANDLE);
+    _nomClassReady(nomClass, NULLHANDLE);
+  }
   return nomClass;
 };
+
+
+
+
 
 
 /*********************************************************************************************************************/
 /*     Unused stuff */
 /*********************************************************************************************************************/
-
-
-
 #if 0
 #include <cwsomcls.h>
 #include <somclassmanager.h>

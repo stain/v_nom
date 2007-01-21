@@ -234,10 +234,10 @@ NOMClass * NOMLINK priv_buildNOMClass(gulong ulReserved,
   sci->nomCds->nomClassObject=nomClass; /* Put class pointer in static struct. Meta class of SOMClass is SOMClass */
   *nClass->entries0=nomClass;
   /* Mark that we are a metaclass */
-  nClass->ulIsMetaClass=1;
+  //nClass->ulIsMetaClass=1;
+  nClass->ulClassFlags|=NOM_FLG_IS_METACLASS;
 
   fillCClassDataStructParentMtab(sci, nClass, nomClass);
-
 
   /* 
      Note:
