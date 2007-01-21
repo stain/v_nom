@@ -129,7 +129,7 @@ typedef struct NOMAnyObj_struct {
   gulong body[1];
 } NOMAnyObj;
 
-
+#if 0
 #ifndef NOMClass
 typedef struct NOMClass_struct {
   struct nomMethodTabStruct  *mtab;
@@ -137,6 +137,7 @@ typedef struct NOMClass_struct {
 } NOMClassObj;
 #define NOMClass NOMClassObj
 typedef NOMClass *PNOMClass;
+#endif
 #endif
 
 #ifndef NOMObject
@@ -147,6 +148,9 @@ typedef struct NOMObject_struct {
 #define NOMObject NOMObjectObj
 typedef NOMObject *PNOMObject;
 #endif
+
+#define NOMClass NOMObject
+typedef NOMClass *PNOMClass;
 
 //#define NOMObject NOMAnyObj
 #define NOMClassMgr NOMAnyObj
