@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -99,6 +99,27 @@ NOMEXTERN int NOMLINK nomPrintf(string chrFormat, ...)
 }
 
 
+NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void)
+{
+  PVOID memPtr;
+
+  if(pGlobalNomEnv)
+    return pGlobalNomEnv; /* Already done */
+
+  nomPrintf("Entering %s...\n", __FUNCTION__);
+
+  memPtr=g_malloc(sizeof(NOM_ENV)); /* g_malloc() can't fail... */
+
+  nomPrintf("%s: Got root memory: %x\n", __FUNCTION__, memPtr);
+
+  /* Now init the structure */
+  /* GC memory is zeroed... */
+  ((PNOM_ENV)memPtr)->cbSize=sizeof(NOM_ENV);
+  pGlobalNomEnv=(PNOM_ENV)memPtr;
+
+  return (PNOM_ENV)memPtr;
+}
+
 
 /*
   This function is called to initialize the NOM runtime. 
@@ -116,10 +137,13 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
   NOMTest* nomTst2Obj;
 #endif
 
+
 #ifdef DEBUG_NOMENVNEW
   nomPrintf("Entering %s to initialize NOM runtime.\n\n", __FUNCTION__);
   nomPrintf("**** Building NOMObject class...\n");
 #endif
+  nomTkInit();
+
   nomCls=NOMObjectNewClass(NOMObject_MajorVersion, NOMObject_MinorVersion);
 
 #ifdef DEBUG_NOMENVNEW
@@ -141,15 +165,12 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
 #endif
 
   /* Now register the classes we already have */
-  //  _nomRegisterClass(NOMClassMgrObject,   pGlobalNomEnv->defaultMetaClass->mtab, NULLHANDLE); //NOMClass
   _nomClassReady(pGlobalNomEnv->defaultMetaClass, NULLHANDLE); //NOMClass
-  //_nomRegisterClass(NOMClassMgrObject,   NOMClassMgrObject->mtab, NULLHANDLE); //NOMClassMgr
   _nomClassReady(  _NOMClassMgr, NULLHANDLE); //NOMClassMgr
   ncPriv=(NOMClassPriv*)pGlobalNomEnv->nomObjectMetaClass->mtab->nomClsInfo;
 
   /* Do not register the NOMObject metaclass here. It's already registered because it's 
      NOMClass in fact. */
-  //_nomRegisterClass(NOMClassMgrObject, pGlobalNomEnv->nomObjectMetaClass->mtab, NULLHANDLE); //NOMObject
   _nomClassReady(_NOMObject, NULLHANDLE); //NOMObject
 
 
@@ -179,33 +200,15 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
 }
 
 
-NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void)
+NOMEXTERN void NOMLINK nomTkUnInit(gpointer pReserved)
 {
-  PVOID memPtr;
-  //PVOID memPool;
-
-  nomPrintf("Entering %s...\n", __FUNCTION__);
-
-  memPtr=g_malloc(sizeof(NOM_ENV)); /* g_malloc() can't fail... */
-
-  nomPrintf("%s: Got root memory: %x\n", __FUNCTION__, memPtr);
-
-  /* Now init the structure */
-  /* GC memory is zeroed... */
-  ((PNOM_ENV)memPtr)->cbSize=sizeof(NOM_ENV);
-  pGlobalNomEnv=(PNOM_ENV)memPtr;
-
-#if 0
-  if(NO_ERROR!=DosCreateMutexSem(NULL, &((PNOM_ENV)memPtr)->hmtx, DC_SEM_SHARED, FALSE))
-    {
-      g_free(memPtr);
-      return NULL;
-    }
-#endif
-
-  return (PNOM_ENV)memPtr;
+  /* Nothing yet...*/
 }
 
+NOMEXTERN void NOMLINK nomEnvironmentEnd (void)
+{
+  nomTkUnInit(NULL);
+}
 
 
 

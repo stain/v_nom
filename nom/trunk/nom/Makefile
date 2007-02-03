@@ -52,7 +52,8 @@ NOMINCLUDES	=	$(INCDIR)/nomtk.h \
 
 TSTHFILES	=	$(CLASSINC)/nomobj.h $(CLASSINC)/nomcls.h
 
-IHFILES		=	$(CLASSINC)/nomobj.ih $(CLASSINC)/nomcls.ih \
+IHFILES		=	$(CLASSINC)/nomobj.ih \
+			$(CLASSINC)/nomcls.ih \
 			$(CLASSINC)/nomclassmanager.ih
 
 
@@ -71,7 +72,7 @@ all:	$(BINDIR)/nobjtk.dll
 #all:	$(CLASSINC)/nomobj.h
 
 
-$(BINDIR)/nobjtk.dll:	 $(OBJDIR)/o.dep $(NOMOBJECTS) $(OBJECTS) $(GCLIB) ./exports.def
+$(BINDIR)/nobjtk.dll:	 $(OBJDIR)/o.dep $(IHFILES) $(NOMOBJECTS) $(OBJECTS) $(GCLIB) ./exports.def
 	@echo "[33;1;mLinking "$@"...[0;m"
 	cmd.exe /C create_vobjtk_def $(OBJDIR)/nobjtk.def
 	$(CC) $(GCCLDFLAGS)  -o $@ $(OBJECTS) $(LIBS) $(GCLIB) $(OBJDIR)/nobjtk.def
@@ -100,7 +101,7 @@ BASE_NOMCOMPILEIH	=	$(IDLCOMP) --showcpperrors --ihfile --output-dir=$(CLASSINC)
 BASE_NOMCOMPILEC	=	$(IDLCOMP) --showcpperrors --c-template --output-dir=$(CLASSTEMPLATEDIR) $< 
  
 
-$(OBJDIR)/%.o:	$(CLASSCDIR)/%.c $(CLASSINC)/%.ih $(NOMINCLUDES)
+$(OBJDIR)/%.o:	$(CLASSCDIR)/%.c $(NOMINCLUDES)
 	$(CC) -I $(INC) $(GCCFLAGS)  -o$@ $<
 
 $(OBJDIR)/%.o:	$(CDIR)/%.c $(NOMINCLUDES)
@@ -136,6 +137,9 @@ $(OBJDIR)/o.dep:
 
 $(GCLIB):
 	cp $(GCPATH)/.libs/gc.a $(GCLIB)
+
+dox:
+	doxygen nom.dox
 
 clean:
 	@cd $(OBJDIR) && rm *

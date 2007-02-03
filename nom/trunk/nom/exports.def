@@ -3,10 +3,13 @@ CODE PRELOAD DISCARDABLE
 DATA SHARED LOADONCALL
 
 EXPORTS  
-	nomTkInit		@1
-	NOMMalloc             @2
-	NOMCalloc		@3
+	nomTkInit
+        nomTkUnInit
+
+	NOMMalloc
+	NOMCalloc
 	NOMFree		
+
 	nomIsObj               
 
 	nomInitGarbageCollection
@@ -26,7 +29,9 @@ EXPORTS
 ;	somParentNumResolve   
 ;        _NOMClassMgrObject     
 
-        nomEnvironmentNew     
+        nomEnvironmentNew
+	nomEnvironmentEnd
+
 	nomBuildClass		
 
 	_NOMObjectClassData    
