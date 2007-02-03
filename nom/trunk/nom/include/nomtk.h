@@ -89,7 +89,7 @@ NOMClassPriv * NOMLINK priv_buildNOMObjectClassInfo(NOM_ulong ulReserved,
                                                     nomStaticClassInfo *sci,
                                                     NOM_ulong majorVersion,
                                                     NOM_ulong minorVersion);
-void addMethodAndDataToThisPrivClassStruct(NOMClassPriv* nClass, NOMClassPriv* ncpParent, nomStaticClassInfo *sci);
+boolean addMethodAndDataToThisPrivClassStruct(NOMClassPriv* nClass, NOMClassPriv* ncpParent, nomStaticClassInfo *sci);
 NOMClass*  createNOMObjectClassObjectAndUpdateNOMObject(NOMClass* nomClass, NOMClassPriv* nClass, NOM_ulong ulSize);
 void fillCClassDataStructParentMtab(nomStaticClassInfo *sci, NOMClassPriv *nClass, NOMClass *nomClass);
 void priv_resolveOverrideMethods(NOMClassPriv *nClass, nomStaticClassInfo *sci);

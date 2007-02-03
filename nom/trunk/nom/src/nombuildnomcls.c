@@ -48,7 +48,7 @@
 
 /********************************************************/
 
-/* Define if you want to have messages from somBuildClass() and friends */
+/* Define if you want to have messages from nomBuildClass() and friends */
 //#define DEBUG_NOMBUILDCLASS
 /* Define if you want to have messages from building NOMObject */
 //#define DEBUG_BUILDNOMOBJECT
@@ -58,9 +58,11 @@
 #ifdef DEBUG_BUILDNOMCLASS
     #define BUILDNOMCLASS_ENTER nomPrintf("\n%d: *** entering %s...\n",__LINE__,  __FUNCTION__);
     #define BUILDNOMCLASS_LEAVE nomPrintf("%d: *** Leaving %s...\n\n",__LINE__,  __FUNCTION__);
+    #define DBG_BUILDNOMCLASS(a, b,...)   if(a) nomPrintf("%d: " b , __LINE__,  __VA_ARGS__);
 #else
     #define BUILDNOMCLASS_ENTER
     #define BUILDNOMCLASS_LEAVE
+    #define DBG_BUILDNOMCLASS(a, b,...)
 #endif
 
 /********************************************************/
@@ -100,9 +102,7 @@ BUILDNOMCLASS_ENTER
   gulMemSize=sizeof(NOMClassPriv)-sizeof(nomMethodTab); /* start size class struct. somMethodTab will be calculated later */
 
   /* Calculate size of new class object */
-#ifdef DEBUG_BUILDNOMCLASS
-  nomPrintf("%d: ncParent->mtab->mtabSize: %d\n", __LINE__, ncpParent->mtab->mtabSize);
-#endif
+  DBG_BUILDNOMCLASS(TRUE, "ncParent->mtab->mtabSize: %d\n", ncpParent->mtab->mtabSize);
 
   mtabSize=ncpParent->mtab->mtabSize+sizeof(nomMethodProc*)*(sci->ulNumStaticMethods)+sizeof(NOMClass*);/* numStaticMethods is correct here!
                                                                                                            NOT numStaticMethods-1!
@@ -113,23 +113,28 @@ BUILDNOMCLASS_ENTER
 
   gulParentDataSize=ncpParent->mtab->ulInstanceSize; /* Parent instance size. This is the mtab pointer + instance vars */
 
-#ifdef DEBUG_BUILDNOMCLASS
-  nomPrintf("%d: mtabSize is: %d, ulParentDataSize is: %d (instance vars + mtab ptr)\n",
-            __LINE__, mtabSize, gulParentDataSize);
-  nomPrintf("%d: sci->numStaticMethods: %d\n", __LINE__, sci->ulNumStaticMethods);
-#endif
+  DBG_BUILDNOMCLASS(TRUE,"mtabSize is: %d, ulParentDataSize is: %d (instance vars + mtab ptr)\n",
+                    mtabSize, gulParentDataSize);
+  DBG_BUILDNOMCLASS(TRUE, "sci->numStaticMethods: %d\n", sci->ulNumStaticMethods);
 
   /* Alloc private class struct using SOMCalloc. */
   if((nClass=(NOMClassPriv*)NOMCalloc(1, gulMemSize))==NULLHANDLE)
     return NULLHANDLE;
 
-  /* Get mem for method thunking code */
-  nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
-  if(!nClass->mThunk) {
-    NOMFree(nClass);
-    return NULLHANDLE;
+  /* Get mem for method thunking code. This assembler code is needed so the indirect
+     jump to the methods from the object pointer which is known does work. For each class
+     an individual thunking code must be calculated because the number of instance
+     variables is not defined. */
+#if 0
+  //Moved to addMethodAndDataToThisPrivClassStruct()
+  if(0!=sci->ulNumStaticMethods){
+    nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
+    if(!nClass->mThunk) {
+      NOMFree(nClass);
+      return NULLHANDLE;
+    }
   }
-
+#endif
   /* The size of each instance of this class. A NOM object has a method tab pointer
      at the beginning followed by the instance variables. */
   nClass->ulClassSize=sci->ulInstanceDataSize+gulParentDataSize;
@@ -141,8 +146,11 @@ BUILDNOMCLASS_ENTER
      code . This is essentially done by just copying the parents
      mtab-entries[] to our new one before adding our own methods.
      sci will be saved in nClass->sci */
-#warning !!!!! Move mem alloc for thunking into this func !!!!!
-  addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci);
+  //#warning !!!!! Move mem alloc for thunking into this func !!!!!
+  if(!addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci)){
+    NOMFree(nClass);
+    return NULLHANDLE;
+  };
 
   /**********************************/
   /*     Fill methodtable mtab      */
@@ -260,10 +268,8 @@ NOMClass * NOMLINK priv_buildNOMClass(gulong ulReserved,
 
   pGlobalNomEnv->nomObjectMetaClass=(NOMClass*)nomClass->mtab->entries[0];
 
-#ifdef DEBUG_BUILDNOMCLASS
-  nomPrintf("%d: mtab: %x New class ptr (class object SOMClass): %x (SOMClassPriv: %x) for %s\n",
-            __LINE__, nomClass->mtab, nomClass, nClass, *sci->nomClassId);
-#endif
+    DBG_BUILDNOMCLASS(TRUE, "mtab: %x New class ptr (class object SOMClass): %x (SOMClassPriv: %x) for %s\n",
+                      nomClass->mtab, nomClass, nClass, *sci->nomClassId);
 
   pGlobalNomEnv->defaultMetaClass=nomClass;
 
@@ -272,7 +278,6 @@ NOMClass * NOMLINK priv_buildNOMClass(gulong ulReserved,
   /* Set this class size into instance var */
   _somSetInstanceSize(somClass, sClass->ulClassSize /* sci->instanceDataSize+ulParentDataSize*/ ); /* This includes exactly one mtab pointer */
 #endif
-
 
   /* Run initialization code if any */
   _nomInit(nomClass, NULLHANDLE);
