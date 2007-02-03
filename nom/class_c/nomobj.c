@@ -45,13 +45,20 @@
 
 #include "nomobj.ih"
 
+/**
 
+    \brief This function implements the method nomInit() of class NOMObject.
+ */
 NOM_Scope void  NOMLINK impl_NOMObject_nomInit(NOMObject *nomSelf, CORBA_Environment *ev)
 {  
   //nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
   //        __FUNCTION__, impl_NOMObject_nomInit, nomSelf , nomSelf->mtab->nomClassName);
 }
 
+/**
+
+    \brief This function implements the method nomUnInit() of class NOMObject.
+ */
 NOM_Scope void  NOMLINK impl_NOMObject_nomUnInit(NOMObject *nomSelf, CORBA_Environment *ev)
 {
   /* NOMObjectData *nomThis = NOMObjectGetData(nomSelf); */
@@ -60,6 +67,10 @@ NOM_Scope void  NOMLINK impl_NOMObject_nomUnInit(NOMObject *nomSelf, CORBA_Envir
             __FUNCTION__, impl_NOMObject_nomUnInit, nomSelf , nomSelf->mtab->nomClassName);
 }
 
+/**
+
+    \brief This function implements the method nomGetSize() of class NOMObject.
+ */
 NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA_Environment *ev)
 {
   //nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
@@ -72,6 +83,14 @@ NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA
   return nomSelf->mtab->ulInstanceSize;
 }
 
+/**
+
+    \brief This function implements the method delete() of class NOMObject.
+
+    It calls nomUnInit() to give the object a chance of freeing system resources. Afterwards
+    the memory occupied by the object is given back to the system and the object is not
+    accessible anymore.
+ */
 NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environment *ev)
 {
 /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
@@ -87,9 +106,15 @@ NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environme
   NOMFree(nomSelf);
 }
 
-/*
-  Gets the class object of this object.
-*/
+/**
+
+    \brief This function implements the method nomGetClass() of class NOMObject.
+    It returns a pointer to the class object of this object.
+
+    \param nomSelf The pointer to the object.
+    \param ev      Environment pointer or NULL.
+    \retval PNOMClass A pointer to the class object for this object. This can never be NULL.
+ */
 NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomGetClass(NOMObject* nomSelf, CORBA_Environment *ev)
 {
 /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
@@ -97,9 +122,16 @@ NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomGetClass(NOMObject* nomSelf, CORBA
   return nomSelf->mtab->nomClassObject;
 }
 
-/*
-  Create a new class of the kind the caller is. This method ensures that subclasses
-  are properly handled without the need to override this method in every subclass.
+/**
+
+   \brief This function implements the method new() of class NOMObject.
+
+  Create a new class of the kind the caller is. This method ensures that subclassing
+  is properly handled without the need to override this method in every subclass.
+  
+  This method will get the class object of nomSelf () which may be any subclass
+  of NOMObject) and call nomNew() on it creating
+  a new object which has exactly the same class hierarchy as nomSelf.
  */
 NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Environment *ev)
 {

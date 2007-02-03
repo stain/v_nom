@@ -43,17 +43,79 @@ interface NOMObject
 
   NOMCLASSVERSION(1, 0 );
 
+  /**
+     This method is intended to be overriden by classes which need some initialization.
+
+     \par How to override
+     The parent class must always be called first when overriden.
+
+     \sa impl_NOMObject_nomInit()
+   */
   void nomInit();
+
+  /**
+     This method is intended to be overriden by classes which need some uninitialization.
+     Note that when overriding the method the garbage collector will add the object
+     to the list of objects with a finalizer. The finalizer will be run when the object is
+     collected and calls nomUnInit() to give the object a chance for cleanup. 
+
+     \note It's not necessary to free memory in nomUnInit(). This is the job of the garbage collector.
+     Only system resources like file handles etc. must be explicitely freed.
+
+     \par How to override
+     The parent method must be called after doing the own processing.
+
+     \sa impl_NOMObject_nomUnInit()
+   */
   void nomUnInit();
-  /* Return the size of the object. That is sizeof(mTab*)+sizeof(all instance vars) */
+
+  /** 
+     Return the size of the object. That is sizeof(mTab*)+sizeof(all instance vars)
+
+     \par How to override
+     This method is usually not overriden.
+
+     \sa impl_NOMObject_nomGetSize()
+  */
   long nomGetSize();
+
+  /**
+     This method calls nomUnInit() to give the object a chance of freeing system resources.
+     Afterwards the memory occupied by the object is given back to the system and the
+     object is not accessible anymore.
+
+     \sa impl_NOMObject_delete()
+   */
   void delete();
+
+  /**
+     This method returns a pointer to the class object of this object.
+
+     \par How to override
+     This method is usually not overriden.
+
+     \return Pointer to the class object
+
+     \sa impl_NOMObject_nomGetClass()
+   */
   PNOMClass nomGetClass();
+
+  /**
+     Create a new class of the kind the caller is. This method ensures that subclasses
+     are properly handled without the need to override this method in every subclass.
+
+     This method will get the class object of nomSelf and call nomNew() on it creating
+     a new object which has exactly the same class hierarchy of nomSelf.
+
+     \par How to override
+     This method is usually not overriden.
+
+     \return Pointer to a new object of the same kind as nomSelf. Note that this won't
+     create an exact copy but a completely new objecct.
+
+     \sa impl_NOMObject_new()
+   */
   PNOMObject new();
-#if 0
-	NOMOVERRIDE(wpEchoString);
-	NOMINSTANCEVAR(long theLong);
-#endif
 };
 
 #endif /* NOMOBJ_IDL_INCLUDED */

@@ -43,15 +43,100 @@ interface NOMClass:NOMObject
 
   NOMCLASSVERSION(1, 0 );
 
-  Object nomNew();
-  string nomGetName();
-  Object nomRenew(in Object nomObj);
-  Object nomRenewNoInit(in Object nomObj);
+  /**
+    This method is called to create an object of the class this metaclass
+    is the class object for.
+    The method uses nomAllocate() to get the amount of storage necessary to
+    hold one instance of the object to be built. When successful nomRenew()
+    is called with the allocated storage block to initalize the object.
 
-  string nomAllocate(in long size);
-  void nomDeallocate(in string memptr);
+    \sa nomRenew(), nomRenewNoInit(), impl_NOMClass_nomNew()
+   */
+  PNOMObject nomNew();
+
+  /**
+     This method returns the name of the class this class object is an instance of.
+
+     \par How to override
+     This method is usually not overriden.
+
+     \sa impl_NOMClass_nomGetName()
+   */
+  string nomGetName();
+
+  /**
+     This method is called for example by nomNew() when creating a new object. It may be
+     used to create an object from a given memory block. If doing so be sure the storage
+     area is big enough to hold an objects instance.
+ 
+     The method first calls nomRenewNoInit() to set important object info on the memory block
+     and then calls nomInit() on the newly created object.
+
+     \par How to override
+     This method is usually not overriden.
+     
+     \sa nomNew, nomRenewNoInit(), impl_NOMClass_nomRenew()
+   */
+  PNOMObject nomRenew(in gpointer nomObj);
+
+  /**
+     Most of object creation is done in this method which is indirectly called by nomNew().
+     The block of storage given to the method is set to zero first. Setting the pointer to the
+     mtab actually makes an object from the memory.
+     If the class this object is an instance of (or any of the parent classes) did override
+     nomUnInit() the object is registered for finalization with the garbage collector. By doing
+     so it is ensured that nomUnInit() is called on the object when it's collected eventually.
+
+     This method can be used to create an object from any block of memory. It may be faster
+     creating numerous objects from one huge memory area than calling nomNew() for every single
+     object.
+
+     \remark This method does not call nomInit() on the new object. It is guaranteed that this
+     method is always called during object creation.
+
+     \par How to override
+     This method can be overriden to track the creation of objects. When doing so
+     the parent should be called first.
+
+     \sa nomNew, nomRenew(), impl_NOMClass_nomRenewNoInit()
+   */
+  PNOMObject nomRenewNoInit(in gpointer nomObj);
+
+  /**
+     Allocate size bytes for using when creating objects.
+
+     This method uses NOMMalloc() to allocate the memory. Because NOMMalloc() is just a wrapper
+     around g_malloc() which is replaced by a garbage collected memory allocation routine the returned block of
+     memory is zeroed similar to using NOMCalloc().
+
+     \par How to override
+     This method is usually not overriden.
+     
+     \sa impl_NOMClass_nomAllocate()
+   */
+  gpointer nomAllocate(in long size);
+
+  /**
+     Free a block of memory allocated using nomAllocate(). Because NOM is using a garbage collector
+     this method does nothing. It's for compatibility with ported code.
+
+     \par How to override
+     This method is usually not overriden.
+ 
+     \sa impl_NOMClass_nomDeallocate()
+   */
+  void nomDeallocate(in gpointer memptr);
   void nomSetObjectCreateInfo(in gpointer ncpObject);
   gpointer nomGetObjectCreateInfo();
+
+  /**
+     This method is called after the class object is built. It registers the new
+     class with the NOMClassMagrObj.
+     In addition to registering the class object the class this metaclass can create will
+     also be registered.
+
+     \sa impl_NOMClass_nomClassReady()
+   */
   void nomClassReady();
 
   NOMINSTANCEVAR(string ncpObject);     //NOMClassPriv structure holding info about the object this class can create

@@ -65,7 +65,10 @@ static void nomObjectFinalizer(GC_PTR obj, GC_PTR client_data)
   //nomPrintf("Finalizing 0x%x: no object! \n", nObj);
 }
 
-NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Environment *ev)
+/**
+   \brief Function which implements the nomNew() method of NOMClass.
+ */
+NOM_Scope PNOMObject NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Environment *ev)
 {
   NOMClassData* nomThis=NOMClassGetData(nomSelf);
   NOMClassPriv *ncp;
@@ -86,9 +89,12 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Env
   return _nomRenew(nomSelf, (CORBA_Object)nObj, NULLHANDLE); /* This will also init the object */
 }
 
-NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenewNoInit(NOMClass* nomSelf,
-                                                            const CORBA_Object nomObj,
-                                                            CORBA_Environment *ev)
+/**
+   \brief Function which implements the nomRenewNoInit() method of NOMClass.
+ */
+NOM_Scope PNOMObject NOMLINK impl_NOMClass_nomRenewNoInit(NOMClass* nomSelf,
+                                                          const gpointer nomObj,
+                                                          CORBA_Environment *ev)
 {
   NOMClassPriv *ncp;
   NOMClassData *nomThis = NOMClassGetData(nomSelf);
@@ -115,8 +121,11 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenewNoInit(NOMClass* nomSelf,
   return nomObj;
 }
 
-NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const CORBA_Object nomObj,
-                                                      CORBA_Environment *ev)
+/**
+   \brief Function which implements the nomRenew() method of NOMClass.
+ */
+NOM_Scope PNOMObject NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const gpointer nomObj,
+                                                    CORBA_Environment *ev)
 {
   _nomRenewNoInit(nomSelf, nomObj, NULLHANDLE);
 
@@ -127,7 +136,10 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const C
 }
 
 
-NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomAllocate(NOMClass* nomSelf, const CORBA_long ulSize,
+/**
+   \brief Function which implements the nomAllocate() method of NOMClass.
+ */
+NOM_Scope gpointer NOMLINK impl_NOMClass_nomAllocate(NOMClass* nomSelf, const CORBA_long ulSize,
                                                          CORBA_Environment *ev)
 {
   /* NOMClassData *nomThis = NOMClassGetData(nomSelf); */
@@ -135,18 +147,27 @@ NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomAllocate(NOMClass* nomSelf, cons
   return NOMMalloc(ulSize);
 }
 
+/**
+   Function which implements the nomGetName() method of NOMClass.
+*/
 NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomGetName(NOMClass* nomSelf, CORBA_Environment *ev)
 {
   return nomSelf->mtab->nomClassName;
 }
 
 
-NOM_Scope void NOMLINK impl_NOMClass_nomDeallocate(NOMClass* nomSelf, const CORBA_char * memptr, CORBA_Environment *ev)
+/**
+   \brief Function which implements the nomDeallocate() method of NOMClass.
+ */
+NOM_Scope void NOMLINK impl_NOMClass_nomDeallocate(NOMClass* nomSelf, const gpointer memptr, CORBA_Environment *ev)
 {
   NOMFree((nomToken)memptr);
 }
 
 
+/**
+   \brief Function which implements the nomSetObjectCreateInfo() method of NOMClass.
+ */
 NOM_Scope void NOMLINK impl_NOMClass_nomSetObjectCreateInfo(NOMClass* nomSelf, const gpointer ncpObject,
                                                             CORBA_Environment *ev)
 {
@@ -158,6 +179,9 @@ NOM_Scope void NOMLINK impl_NOMClass_nomSetObjectCreateInfo(NOMClass* nomSelf, c
   _ncpObject=ncpObject;
 }
 
+/**
+   \brief Function which implements the nomGetObjectCreateInfo() method of NOMClass.
+ */
 NOM_Scope gpointer NOMLINK impl_NOMClass_nomGetObjectCreateInfo(NOMClass* nomSelf, CORBA_Environment *ev)
 {
   NOMClassData* nomThis=NOMClassGetData(nomSelf);
@@ -165,6 +189,9 @@ NOM_Scope gpointer NOMLINK impl_NOMClass_nomGetObjectCreateInfo(NOMClass* nomSel
   return _ncpObject;
 }
 
+/**
+   \brief Function which implements the nomClassReady() method of NOMClass.
+ */
 NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Environment *ev)
 {
 
