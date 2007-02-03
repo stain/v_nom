@@ -43,23 +43,132 @@ interface NOMClassMgr : NOMObject
 
   NOMCLASSVERSION(1, 0 );
 
+  /**
+     Find the class with the given nomId in the internal class list managed by the
+     class manager.
+
+     \remark This method is only a stub for now.
+
+     \par How to override
+     This method is usually not overriden.
+
+     \param classId The id of the class to be found.
+     \param ulMajorVersion This parameter is not used at the moment and should be set to 0.
+     \param ulMinorVersion This parameter is not used at the moment and should be set to 0.
+     \return
+     The class with the given name or NULL if not found.
+   */
   Object nomFindClassFromId(in long classId, 
                             in long ulMajorVersion, 
                             in long ulMinorVersion);
+  
+  /**
+     Find the class with the given name in the internal class list managed by the
+     class manager. 
+     
+     \remark
+     This method will return classes and metaclasses.
 
-  Object nomFindClassFromName(in string className, 
+     \par How to override
+     This method is usually not overriden.
+     
+     \param className The name of the class to be found as a C string.
+     \param ulMajorVersion This parameter is not used at the moment and should be set to 0.
+     \param ulMinorVersion This parameter is not used at the moment and should be set to 0.
+     \return
+     The class with the given name or NULL if not found.
+   */
+  PNOMObject nomFindClassFromName(in string className, 
                               in long ulMajorVersion, 
                               in long ulNinorVersion);
 
+  /**
+     Register a given class in the internal list of classes.
+     
+     We register mtabs as unique pointers to classes. It's possible to get every
+     information from an mtab. We don't use the class name because in case of
+     meta classes several different meta classes for creating different objects 
+     may have the same name because the default meta class is always NOMClass.
+     The mtab of each of this meta classes is different.
+
+     In addition to maintaining a list of registered classes we also register the
+     mtab in a balanced binary tree for fast retrieval. The data in this tree is
+     used by nomIsObject() to check if a block of memory is actually an object by
+     checking the memories mtab pointer against the registered list of mtabs.
+
+     \remark Classes are registered usually from within nomClassReady(). 
+
+     \par How to override
+     This method is usually not overriden.
+
+     \param classMtab The mtab of the class to be registered.
+   */
   void nomRegisterClass(in gpointer classMtab);
+
+  /**
+     Get the internal list of classes.
+
+     \par How to override
+     This method is usually not overriden.
+
+     \return
+     A pointer on the head of a GData list. Note that this is not a copy.
+
+   */
   PGData nomGetClassList();
+
+  /**
+
+     \par How to override
+     This method is usually not overriden.
+
+     \param className The class name as a C string.
+     \return A nomClsInfo pointer for the given class. This structure is private and only used
+     internally.
+   */
   gpointer nomGetClassInfoPtrFromName(in string className);
+
+  /**
+     Register a method with the class manager. The data is used to find the class
+     implementing a method from the method name.
+
+     \param classMtab The mtab of a class.
+     \param chrMethodName Method to be registered. 
+   */
   void nomRegisterMethod(in gpointer classMtab, in string chrMethodName);
+
+  /**
+     Method to check if the given object is indeed an object or just arbitrary
+     storage. This is done by checking the mtab in the given object against a registered
+     list of mtabs.
+
+     \par How to override
+     This method is usually not overriden.
+
+     \param nomObject The object to be checked.
+     \return
+     True if the given object is a NOMObject.
+   */
   boolean nomIsObject(in PNOMObject nomObject);
 
+  /**
+     Override of nomInit(). The list of methods and the list of classes are initialized
+     in that method. In addition the balanced binary tree for registering mtabs is created.
+   */
   NOMOVERRIDE(nomInit);
+
+  /**
+     The list of registered classes. Normal classes and metaclasses are registered.
+   */     
   NOMINSTANCEVAR(PGData gdataClassList); 
+
+  /**
+     The list of registered methods.
+   */     
   NOMINSTANCEVAR(PGData gdataMethodList); 
+  /**
+     Balanced binary tree holding the mtabs of all known classes.
+   */
   NOMINSTANCEVAR(PGTree pClassListTree); 
   /* nomInit : override;*/
 

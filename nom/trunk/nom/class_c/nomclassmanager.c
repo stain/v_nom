@@ -50,6 +50,11 @@
 #include "nomclassmanager.ih"
 
 
+/**
+   \brief Function which implements the nomFindClassFromID() method of NOMClassMgr.
+
+   \remark This method isn't implemented yet.
+ */
 NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* nomSelf,
                                                                    const CORBA_long classId,
                                                                    const CORBA_long ulMajorVersion,
@@ -64,6 +69,9 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* 
   return nomRetval;
 }
 
+/**
+   \brief Function which implements the nomFindClassFromName() method of NOMClassMgr.
+ */
 NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* nomSelf, 
                                                                      const CORBA_char * className,
                                                                      const CORBA_long ulMajorVersion,
@@ -94,7 +102,7 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr
   return nomRetval;
 }
 
-/*
+/**
   This function is called when a class is (accidently) removed from our class list.
   This may happen e.g. when a class is registered again using the same name. The old
   registration is removed then and the new inserted (which may be the very same data).
@@ -110,8 +118,12 @@ priv_handleClassRemove(gpointer data)
               __FUNCTION__, mtab->nomClassName, (long)mtab);
 }
 
-/* We register mtabs as unique pointers to classes. It's possible to get every
-   information from an mtab. */
+/**
+   \brief Function which implements the nomRegisterClass() method of NOMClassMgr.
+
+   We register mtabs as unique pointers to classes. It's possible to get every
+   information from an mtab.
+ */
 NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, const gpointer classMtab,
                                                          CORBA_Environment *ev)
 {
@@ -132,7 +144,9 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
 
 
 
-
+/**
+   \brief Function which implements the nomGetClassList() method of NOMClassMgr.
+ */
 NOM_Scope PGData NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, CORBA_Environment *ev)
 {
   NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf);
@@ -141,6 +155,7 @@ NOM_Scope PGData NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, 
 
   return _gdataClassList;
 }
+
 
 NOM_Scope gpointer NOMLINK impl_NOMClassMgr_nomGetClassInfoPtrFromName(NOMClassMgr* nomSelf,
                                                                        const CORBA_char * className, CORBA_Environment *ev)
@@ -176,6 +191,9 @@ priv_handleMethodRemoveFromList(gpointer data)
               __FUNCTION__, (long)mtab);
 }
 
+/**
+   \brief Function which implements the nomRegisterMethod() method of NOMClassMgr.
+ */
 NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterMethod(NOMClassMgr* nomSelf, 
                                                           const gpointer classMtab, 
                                                           const CORBA_char * chrMethodName,
@@ -192,6 +210,9 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterMethod(NOMClassMgr* nomSelf,
 
 }
 
+/**
+   \brief Function which implements the nomIsObject() method of NOMClassMgr.
+ */
 NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomIsObject(NOMClassMgr* nomSelf, const PNOMObject nomObject,
                                                              CORBA_Environment *ev)
 {
@@ -212,6 +233,9 @@ int nomClassMgrCompareFunc(gconstpointer a, gconstpointer b)
     return 1;
   return 0;
 }
+/**
+   \brief Function which implements the nomInit() override NOMClassMgr.
+ */
 NOM_Scope void NOMLINK impl_NOMClassMgr_nomInit(NOMClassMgr* nomSelf, CORBA_Environment *ev)
 {
   NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf);
