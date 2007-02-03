@@ -55,11 +55,11 @@
 
    \remark This method isn't implemented yet.
  */
-NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* nomSelf,
-                                                                   const CORBA_long classId,
-                                                                   const CORBA_long ulMajorVersion,
-                                                                   const CORBA_long ulMinorVersion,
-                                                                   CORBA_Environment *ev)
+NOM_Scope PNOMObject NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* nomSelf,
+                                                                 const CORBA_long classId,
+                                                                 const CORBA_long ulMajorVersion,
+                                                                 const CORBA_long ulMinorVersion,
+                                                                 CORBA_Environment *ev)
 {
   /*  NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf); */
   CORBA_Object nomRetval;
@@ -72,11 +72,11 @@ NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* 
 /**
    \brief Function which implements the nomFindClassFromName() method of NOMClassMgr.
  */
-NOM_Scope CORBA_Object NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* nomSelf, 
-                                                                     const CORBA_char * className,
-                                                                     const CORBA_long ulMajorVersion,
-                                                                     const CORBA_long ulMinorVersion,
-                                                                     CORBA_Environment *ev)
+NOM_Scope PNOMObject NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* nomSelf, 
+                                                                   const CORBA_char * className,
+                                                                   const CORBA_long ulMajorVersion,
+                                                                   const CORBA_long ulMinorVersion,
+                                                                   CORBA_Environment *ev)
 {
   CORBA_Object nomRetval=NULLHANDLE;
   nomMethodTab * mtab;
@@ -143,7 +143,6 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
 }
 
 
-
 /**
    \brief Function which implements the nomGetClassList() method of NOMClassMgr.
  */
@@ -158,7 +157,8 @@ NOM_Scope PGData NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, 
 
 
 NOM_Scope gpointer NOMLINK impl_NOMClassMgr_nomGetClassInfoPtrFromName(NOMClassMgr* nomSelf,
-                                                                       const CORBA_char * className, CORBA_Environment *ev)
+                                                                       const CORBA_char * className,
+                                                                       CORBA_Environment *ev)
 {
   nomMethodTab * mtab;
   NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf);
@@ -175,7 +175,7 @@ NOM_Scope gpointer NOMLINK impl_NOMClassMgr_nomGetClassInfoPtrFromName(NOMClassM
 }
 
 
-/*
+/**
   This function is called when a method is (accidently) removed from our list.
   This may happen e.g. when a class is registered again using the same name. The old
   registration is removed then and the new inserted (which may be the very same data).

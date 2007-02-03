@@ -146,10 +146,12 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
      jump to the methods from the object pointer which is known does work. For each class
      an individual thunking code must be calculated because the number of instance
      variables is not defined. */
-  nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
-  if(!nClass->mThunk) {
-    NOMFree(nClass);
-    return NULLHANDLE; 
+  if(0!=sci->ulNumStaticMethods){
+    nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
+    if(!nClass->mThunk) {
+      NOMFree(nClass);
+      return NULLHANDLE; 
+    }
   }
 
   memcpy(nClass->thunk, thunk, sizeof(thunk));       /* Copy assembler thunking code for instance data   */
