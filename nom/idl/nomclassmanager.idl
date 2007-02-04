@@ -152,6 +152,26 @@ interface NOMClassMgr : NOMObject
   boolean nomIsObject(in PNOMObject nomObject);
 
   /**
+     This method substitutes \e oldClass with \e replacementClass. This means that after
+     replacing whenever class \e oldClass is requested \e replacementClass is returned.
+     \e oldClassNew() will create \e replacementClass objects etc.
+
+     The class \e replacementClass must be a direct subclass of \e oldClass.
+
+     \remark Both classes must already be registered with the class manager when calling this
+     method.
+
+     \par How to override
+     This method is usually not overriden.
+
+     \param oldClass The class to be replaced
+     \param replacementClass The class which will be used instead of \e oldClass 
+     \return TRUE if replacement succeeded.
+
+   */
+  boolean nomSubstituteClass(in string oldClass, in string replacementClass);
+
+  /**
      Override of nomInit(). The list of methods and the list of classes are initialized
      in that method. In addition the balanced binary tree for registering mtabs is created.
    */
@@ -163,11 +183,14 @@ interface NOMClassMgr : NOMObject
   NOMINSTANCEVAR(PGData gdataClassList); 
 
   /**
-     The list of registered methods.
+     The list of registered methods. The method nomGetClassList() can be used to get it.
+     If doing so be aware that it's the real thing no copy.
    */     
-  NOMINSTANCEVAR(PGData gdataMethodList); 
+  NOMINSTANCEVAR(PGData gdataMethodList);
+
   /**
-     Balanced binary tree holding the mtabs of all known classes.
+     Balanced binary tree holding the mtabs of all known classes. You can't access
+     this from the outside. It's entirely private to NOMClassMgr.
    */
   NOMINSTANCEVAR(PGTree pClassListTree); 
   /* nomInit : override;*/
