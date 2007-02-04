@@ -88,7 +88,7 @@ NOM_Scope PNOMObject NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* 
 
   mtab=g_datalist_get_data(&_gdataClassList, className);
 
-  nomPrintf("-----> %s %s %x\n", __FUNCTION__, className, mtab);
+  //nomPrintf("-----> %s %s %x\n", __FUNCTION__, className, mtab);
 
   if(mtab){
     NOMClassPriv* ncPriv;
@@ -222,6 +222,34 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomIsObject(NOMClassMgr* nomSel
     return FALSE;
 
   return (g_tree_lookup(_pClassListTree, nomObject->mtab)!= NULLHANDLE); 
+}
+
+/**
+   \brief Function which implements the nomSubstituteClass() method of NOMClassMgr.
+ */
+NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomSubstituteClass(NOMClassMgr* nomSelf,
+                                                                    const CORBA_char * oldClass, 
+                                                                    const CORBA_char * replacementClass,
+                                                                    CORBA_Environment *ev)
+{
+/* NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf); */
+  NOMObject* oClass;
+  NOMObject* rClass;
+
+  if((oClass=_nomFindClassFromName( nomSelf, oldClass, 0, 0, NULLHANDLE))==NULLHANDLE)
+    return FALSE;
+
+  if((rClass=_nomFindClassFromName( nomSelf, replacementClass, 0, 0, NULLHANDLE))==NULLHANDLE)
+    return FALSE;
+
+  /* Save old class object pointer. Hmm, maybe not it's still in the old parentMtab */
+
+  /* Change the class object pointer in the nomClassDataStructure */
+
+  /* Reregister old class with new mtab in the internal list. Make sure we don't get
+     a warning by GLib */
+
+  return FALSE;
 }
 
 static

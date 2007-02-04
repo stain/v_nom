@@ -45,6 +45,8 @@
 
 #include "nomobj.ih"
 
+#include "gc.h"
+
 /**
 
     \brief This function implements the method nomInit() of class NOMObject.
@@ -94,6 +96,17 @@ NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA
 NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environment *ev)
 {
 /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+  GC_PTR oldData;
+  GC_finalization_proc oldFinalizerFunc;
+  NOMClassPriv *ncp;
+
+  /* Unregister finalizer if the class uses nomUnInit. This is done so nomUnInit isn't
+     called again when the memory is eventually collected by the GC. */
+  ncp=(NOMClassPriv*)nomSelf->mtab->nomClsInfo;
+  if(ncp->ulClassFlags & NOM_FLG_NOMUNINIT_OVERRIDEN){
+    /* A NULL finalizer function removes the finalizer */
+    GC_register_finalizer(nomSelf,  NULL, NULL, &oldFinalizerFunc, &oldData);
+  }
 
   /* Give object the chance to free resources */
   _nomUnInit(nomSelf, NULLHANDLE);
