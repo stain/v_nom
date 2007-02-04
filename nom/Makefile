@@ -20,6 +20,7 @@ WPSIDLDIR	=	./wps_idl
 INCDIR		=	./include
 OBJDIR		=	./../../../o
 BINDIR		=	./../../../bin
+DOCDIR		=	./../../../docs
 TOOLDIR		=	./../tools
 
 GCLIB		=	./../../../o/gc.a
@@ -35,15 +36,10 @@ TKOBJECTS	= 	$(OBJDIR)/nomtkinit.o \
 			$(OBJDIR)/nomid.o \
 			$(OBJDIR)/nomgc.o
 
-#			$(OBJDIR)/nomlistmgr.o \
-
-
 
 NOMOBJECTS	=	$(OBJDIR)/nomobj.o \
 			$(OBJDIR)/nomclassmanager.o \
 			$(OBJDIR)/nomcls.o
-
-# $(OBJDIR)/nomtst.o $(OBJDIR)/nomtst2.o
 
 
 NOMINCLUDES	=	$(INCDIR)/nomtk.h \
@@ -60,16 +56,14 @@ IHFILES		=	$(CLASSINC)/nomobj.ih \
 
 OBJECTS		=	 $(NOMOBJECTS) $(TKOBJECTS)
 
-old_IHFILES		=	$(CLASSINC)/cwsomobj.ih \
-			$(CLASSINC)/cwsomcls.ih \
-			$(CLASSINC)/somclassmanager.ih
 
 WPSIHFILES	=	$(CLASSINC)/cwwpobject.ih
 
 .PRECIOUS:	$(CLASSINC)/%.ih $(CLASSCDIR)/%.c $(CDIR)/%.c $(WPSCDIR)/%.c
 
+.PHONY:		dox
+
 all:	$(BINDIR)/nobjtk.dll
-#all:	$(CLASSINC)/nomobj.h
 
 
 $(BINDIR)/nobjtk.dll:	 $(OBJDIR)/o.dep $(IHFILES) $(NOMOBJECTS) $(OBJECTS) $(GCLIB) ./exports.def
@@ -134,12 +128,14 @@ $(OBJDIR)/o.dep:
 	echo > $(OBJDIR)/o.dep
 	mkdir -p $(BINDIR)
 	mkdir -p $(CLASSTEMPLATEDIR)
+	mkdir -p $(DOCDIR)
+
 
 $(GCLIB):
 	cp $(GCPATH)/.libs/gc.a $(GCLIB)
 
 dox:
-	doxygen nom.dox
+	cd ./dox && doxygen nom.dox
 
 clean:
 	@cd $(OBJDIR) && rm *

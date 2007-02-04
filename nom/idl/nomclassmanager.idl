@@ -179,12 +179,13 @@ interface NOMClassMgr : NOMObject
 
   /**
      The list of registered classes. Normal classes and metaclasses are registered.
+     The method nomGetClassList() can be used to get it.
+     If doing so be aware that it's the real thing no copy.
    */     
   NOMINSTANCEVAR(PGData gdataClassList); 
 
   /**
-     The list of registered methods. The method nomGetClassList() can be used to get it.
-     If doing so be aware that it's the real thing no copy.
+     The list of registered methods.
    */     
   NOMINSTANCEVAR(PGData gdataMethodList);
 

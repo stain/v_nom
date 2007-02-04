@@ -242,6 +242,8 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomSubstituteClass(NOMClassMgr*
   if((rClass=_nomFindClassFromName( nomSelf, replacementClass, 0, 0, NULLHANDLE))==NULLHANDLE)
     return FALSE;
 
+  /* Check if the class is a direct child */
+
   /* Save old class object pointer. Hmm, maybe not it's still in the old parentMtab */
 
   /* Change the class object pointer in the nomClassDataStructure */
