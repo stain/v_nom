@@ -112,6 +112,8 @@ typedef nomId* pnomId;
 typedef GData*  PGData;
 typedef gulong* pgulong;
 typedef GTree*  PGTree;
+typedef GArray* PGArray;
+
 
 typedef gchar **nomID;                 /* This will be reomoved later. Don't use anymore */ 
 typedef void *nomToken;                /* Use a gpointer instead of void* here?          */

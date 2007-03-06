@@ -22,7 +22,8 @@ TOOLDIR		=	./../tools
 
 GCLIB		=	./../../../o/gc.a
 
-ADDLIBS		=	-l$(OBJDIR)/voyfcls
+ADDLIBS		=
+#	-l$(OBJDIR)/voyfcls
 
 # Define objects to build
 
