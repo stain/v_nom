@@ -174,7 +174,7 @@ char * b; char * e;
 GC_bool tmp;
 {
     struct roots * old;
-    
+    printf("----> %s: %x %x \n", __FUNCTION__, b, e);
 #   if defined(MSWIN32) || defined(MSWINCE)
       /* Spend the time to ensure that there are no overlapping	*/
       /* or adjacent intervals.					*/

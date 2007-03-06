@@ -49,6 +49,7 @@
 
 #include "nomclassmanager.ih"
 
+#include "nomfilepath.h"
 
 /**
    \brief Function which implements the nomFindClassFromID() method of NOMClassMgr.
@@ -253,6 +254,27 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomSubstituteClass(NOMClassMgr*
 
   return FALSE;
 }
+
+NOM_Scope CORBA_string NOMLINK impl_NOMClassMgr_nomQueryDLLForClass(NOMClassMgr* nomSelf,
+                                                                    const CORBA_char * chrClassName,
+                                                                    CORBA_Environment *ev)
+{
+/* NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf); */
+  NOMPath* thePath;
+
+  if(!chrClassName)
+    return NULL;
+
+  if((thePath=NOMPathNew())==NULLHANDLE)
+    return NULL;
+
+  /* We probably use the home dir later */
+  thePath=NOMPath_assignCString(thePath, g_get_current_dir(), NULL);
+  thePath=NOMPath_appendCString(thePath, "classlist.ini", NULL);
+
+  return NULL;
+}
+
 
 static
 int nomClassMgrCompareFunc(gconstpointer a, gconstpointer b)

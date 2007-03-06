@@ -172,6 +172,13 @@ interface NOMClassMgr : NOMObject
   boolean nomSubstituteClass(in string oldClass, in string replacementClass);
 
   /**
+     Query the name of the DLL in which the class can be found. The name can be used to
+     dynamically load the DLL get the class exports and finally create the class.
+
+     \remark The returned path is in the system encoding.
+   */
+  string nomQueryDLLForClass(in string chrClassName);
+  /**
      Override of nomInit(). The list of methods and the list of classes are initialized
      in that method. In addition the balanced binary tree for registering mtabs is created.
    */

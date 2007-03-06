@@ -17,7 +17,7 @@ LIBS		=	-lgtk-x11-2.0 -lgdk-x11-2.0 -lgdk_pixbuf-2.0 -lgobject-2.0 -lglib-2.0
 
 VERSION		=	0_0_1
 VERSION_STRING  =	0.0.1
-AUTHOR_STRING	=	"(C) Chris Wohlgemuth 2003-2006"
+AUTHOR_STRING	=	"(C) Chris Wohlgemuth 2003-2007"
 
 # Put version in environment for REXX skripts
 export	DESKTOPVERSION	=	$(VERSION_STRING)
@@ -37,3 +37,7 @@ IDLCOMP		=	L:\svn-sources\nom\trunk\ORBit2-2.14.0\src\idl-compiler\.libs\orbit-i
 #IDLCOMP		=	L:/ORBit2-2.14.0/src/idl-compiler/.libs/orbit-idl-2.exe
 
 GCPATH		=	L:/svn-sources/nom/trunk/gc6.8
+NOMPATH		=	L:/svn-sources/nom/trunk/nom
+GUITKPATH	=	L:/svn-sources/desktop/trunk/gui
+FOUNDATIONPATH	=	L:/svn-sources/desktop/trunk/foundation
+DESKTOPPATH	=	L:/svn-sources/desktop/trunk/desktop
