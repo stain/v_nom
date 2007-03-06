@@ -1159,8 +1159,10 @@ void GC_register_data_segments()
       if (!(flags & OBJREAD)) continue;
       if (flags & OBJINVALID) {
           GC_err_printf0("Object with invalid pages?\n");
+          printf("   ----> %s: %x %x \n", path, O32_BASE(seg), O32_BASE(seg)+O32_SIZE(seg));
           continue;
       } 
+      printf("----> %s: %x %x \n", path, O32_BASE(seg), O32_BASE(seg)+O32_SIZE(seg));
       GC_add_roots_inner(O32_BASE(seg), O32_BASE(seg)+O32_SIZE(seg), FALSE);
     }
 }

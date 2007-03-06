@@ -4,19 +4,16 @@ include ./make.inc
 	
 
 GCCINC		=	$(INC) 
-INC		=	./include -I ./class_h 
+INC		=	./include -I ./class_h -I $(FOUNDATIONPATH)/class_h -I $(FOUNDATIONPATH)/include
  
-WPSLIBS		=	$(OBJDIR)/cwsomtk.lib
 
 # Define search directories
 CDIR		=	./src
 CLASSCDIR	=	./class_c
 CLASSTEMPLATEDIR	=	./../../../class_templates
-WPSCDIR		=	./wpsclass_c
+
 CLASSINC	=	./class_h
-WPSINC		=	./wps_h
 IDLDIR		=	./idl
-WPSIDLDIR	=	./wps_idl
 INCDIR		=	./include
 OBJDIR		=	./../../../o
 BINDIR		=	./../../../bin
@@ -24,6 +21,8 @@ DOCDIR		=	./../../../docs
 TOOLDIR		=	./../tools
 
 GCLIB		=	./../../../o/gc.a
+
+ADDLIBS		=	-l$(OBJDIR)/voyfcls
 
 # Define objects to build
 
@@ -57,9 +56,7 @@ IHFILES		=	$(CLASSINC)/nomobj.ih \
 OBJECTS		=	 $(NOMOBJECTS) $(TKOBJECTS)
 
 
-WPSIHFILES	=	$(CLASSINC)/cwwpobject.ih
-
-.PRECIOUS:	$(CLASSINC)/%.ih $(CLASSCDIR)/%.c $(CDIR)/%.c $(WPSCDIR)/%.c
+.PRECIOUS:	$(CLASSINC)/%.ih $(CLASSCDIR)/%.c $(CDIR)/%.c
 
 .PHONY:		dox
 
@@ -69,15 +66,10 @@ all:	$(BINDIR)/nobjtk.dll
 $(BINDIR)/nobjtk.dll:	 $(OBJDIR)/o.dep $(IHFILES) $(NOMOBJECTS) $(OBJECTS) $(GCLIB) ./exports.def
 	@echo "[33;1;mLinking "$@"...[0;m"
 	cmd.exe /C create_vobjtk_def $(OBJDIR)/nobjtk.def
-	$(CC) $(GCCLDFLAGS)  -o $@ $(OBJECTS) $(LIBS) $(GCLIB) $(OBJDIR)/nobjtk.def
+	$(CC) $(GCCLDFLAGS)  -o $@ $(OBJECTS) $(LIBS) $(ADDLIBS) $(GCLIB) $(OBJDIR)/nobjtk.def
 	emximp -o $(OBJDIR)/$(basename $(notdir $@)).a $(OBJDIR)/nobjtk.def
 	@echo "[32;1;mDone linking "$@"...[0;m"
 
-$(OBJDIR)/cwwp.dll:	 $(WPSIHFILES) $(WPSOBJECTS) cwwp.def
-	@echo "[33;1;mLinking "$@"...[0;m"
-	gcc -o $@ $(GCCLDFLAGS) $(WPSOBJECTS) $(WPSLIBS) cwwp.def
-	implib $(basename $@).lib cwwp.def
-	@echo "[32;1;mDone linking "$@"...[0;m"
 
 ###################################
 #
@@ -100,10 +92,6 @@ $(OBJDIR)/%.o:	$(CLASSCDIR)/%.c $(NOMINCLUDES)
 
 $(OBJDIR)/%.o:	$(CDIR)/%.c $(NOMINCLUDES)
 	$(CC) -I $(INC) $(GCCFLAGS)  -o$@ $<
-
-# For WPS classes
-$(OBJDIR)/%.obj:	$(WPSCDIR)/%.c $(INCDIR)/nomtk.h
-	gcc -I $(GCCINC) $(GCCFLAGS) -o $@ $<
 
 
 $(CLASSINC)/%.h:	$(IDLDIR)/%.idl
