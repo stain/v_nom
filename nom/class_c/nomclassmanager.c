@@ -260,6 +260,9 @@ NOM_Scope CORBA_string NOMLINK impl_NOMClassMgr_nomQueryDLLForClass(NOMClassMgr*
                                                                     CORBA_Environment *ev)
 {
 /* NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf); */
+#if 0
+  /* We have a circular reference here to the voyfcls.dll containing NOMPath, which needs nomtk.a
+     to be built. */
   NOMPath* thePath;
 
   if(!chrClassName)
@@ -271,6 +274,7 @@ NOM_Scope CORBA_string NOMLINK impl_NOMClassMgr_nomQueryDLLForClass(NOMClassMgr*
   /* We probably use the home dir later */
   thePath=NOMPath_assignCString(thePath, g_get_current_dir(), NULL);
   thePath=NOMPath_appendCString(thePath, "classlist.ini", NULL);
+#endif
 
   return NULL;
 }

@@ -74,6 +74,13 @@ native  gpointer;
 native  PGData;
 native  PGTree;
 
+native  PGdkPixmap;
+native  PGdkBitmap;
+
+native  PGArray;
+native  PGdkDragContext;
+native  GdkDragAction;
+
 native  nomId; /* This is a typedef for a GQuark */
 native  pnomId;/* ...and the pointer on it.      */
 #endif /* NOMBASE_IDL_INCLUDED */
