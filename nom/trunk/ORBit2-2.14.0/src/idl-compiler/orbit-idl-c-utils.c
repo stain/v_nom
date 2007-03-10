@@ -406,6 +406,73 @@ orbit_cbe_write_param_typespec_str(IDL_tree ts, IDL_ParamRole role)
 	return g_string_free (str, FALSE);
 }
 
+/*
+  This is almost the same like orbit_cbe_write_param_typespec_str(). We only omit the
+  'const' qualifier because we only need the parameter type.
+ */
+static char *
+orbit_cbe_voyager_write_param_typespec_str(IDL_tree ts, IDL_ParamRole role)
+{
+	int      i, n;
+	gboolean isSlice;
+	char    *name;
+	GString *str = g_string_sized_new (23);
+	IDL_tree typedef_spec;
+	char *typedef_name;
+
+	n = oidl_param_info (ts, role, &isSlice);
+	name = orbit_cbe_get_typespec_str (ts);
+
+	if ( role == DATA_IN ) {
+	        /* We want to check if this is a typedef for CORBA_string so we can do special handling 
+		 * in that case. 
+		 */
+	        typedef_spec = orbit_cbe_get_typespec (ts);
+		typedef_name = orbit_cbe_get_typespec_str (typedef_spec);
+
+		g_string_printf (str, "%s", 
+				 !strcmp (typedef_name, "CORBA_string") ?
+				 "CORBA_char *" : name);
+
+		g_free (typedef_name);
+	} else
+		g_string_printf (str, "%s", name);
+
+	g_free (name);
+
+	if ( isSlice )
+		g_string_append (str, "_slice");
+
+	for (i = 0; i < n; i++)
+		g_string_append_c (str, '*');
+
+	return g_string_free (str, FALSE);
+}
+
+/*
+  This helper just writes the typespec of a parameter to a method without any
+  'const' qualifier.
+ */
+void
+orbit_cbe_voyager_write_param_typespec(FILE *of, IDL_tree tree) {
+    IDL_tree		ts = NULL /* Quiet gcc */;
+    IDL_ParamRole	role = 0 /* Quiet gcc */;
+    char *str;
+
+    switch ( IDL_NODE_TYPE(tree) ) {
+    case IDLN_PARAM_DCL: /* one of the parameters */
+        ts = IDL_PARAM_DCL(tree).param_type_spec;
+    	role = oidl_attr_to_paramrole(IDL_PARAM_DCL(tree).attr);
+        break;
+    default:
+        g_assert_not_reached();
+    }
+
+    str = orbit_cbe_voyager_write_param_typespec_str (ts, role);
+    fprintf (of, str);
+    g_free (str);
+}
+
 static void
 orbit_cbe_write_param_typespec_raw (FILE *of, IDL_tree ts, IDL_ParamRole role)
 {

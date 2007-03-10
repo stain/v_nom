@@ -21,7 +21,7 @@ orbit_idl_output_c_skelimpl(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci
 #include <errno.h>
 
 /* Used to count the static methods of a class. This is kind of a hack.
-   I would loce to put it into CBESkelImplInfo but his struct is copied
+   I would love to put it into CBESkelImplInfo but his struct is copied
    everywhere and given as a copy to subprocedures. */ 
 static gulong ulNumStaticMethods[10]; 
 static gulong ulInstanceVarSize[10]; 
@@ -291,8 +291,7 @@ void VoyagerDoWriteOverridenMethodDeclaration(IDL_tree curif, InheritedOutputInf
   for every node while traversing actually writes the info.
 */ 
 static void
-VoyagerWriteOverridenMethodDeclaration(FILE       *of,
-                                     IDL_tree    op,
+VoyagerWriteOverridenMethodDeclaration(FILE       *of, IDL_tree    op,
                                      const char *nom_prefix,
                                      gboolean    for_epv)
 {
@@ -364,6 +363,18 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
     }/* PASS_VOYAGER_...*/
 }
 
+/*
+  This function outputs the parameter type of methods without the 'const'
+  qualifier.
+ */
+static void VoyagerOutputParamTypes(CBESkelImplInfo *ski)
+{
+  if(IDLN_PARAM_DCL!=IDL_NODE_TYPE(ski->tree))
+    return;
+
+  orbit_cbe_voyager_write_param_typespec(ski->of, ski->tree);
+  
+}
 
 static void
 orbit_cbe_ski_process_piece(CBESkelImplInfo *ski)
@@ -384,14 +395,6 @@ orbit_cbe_ski_process_piece(CBESkelImplInfo *ski)
 		break;
 	case IDLN_INTERFACE:
 		cbe_ski_do_interface(ski);
-#if 0
-        if(whichPass==ski->pass)
-          ulCurInterface++;
-        else{
-          whichPass=ski->pass;
-          ulCurInterface=0;
-        }
-#endif
         //        printf("%d: pass --->%d %d %d\n", __LINE__, ski->pass, whichPass, ulCurInterface);
 		break;
 	case IDLN_LIST:
@@ -817,15 +820,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
               {
                 /* Overriden method */
                 fprintf(ski->of, "NOM_Scope ");
-#if 0
-                fprintf(ski->of, " NOMLINK impl_%s_%s(%s *nomSelf,\n",
-                        id2, gstr->str, id2);
-#endif
                 op = ski->tree;
-                VoyagerWriteOverridenMethodDeclaration(ski->of,
-                                                       op,
-                                                       "",
-                                                       FALSE);
+                VoyagerWriteOverridenMethodDeclaration(ski->of, op, "", FALSE);
 
                 for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
                     curitem; curitem = IDL_LIST(curitem).next) {
@@ -887,7 +883,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   ioi.of = ski->of;
                   ioi.realif = tmptree;
                   ioi.chrOverridenMethodName=gstr->str;
-                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerOutputIntroducingClass, &ioi);
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
+                                            (GFunc)VoyagerOutputIntroducingClass, &ioi);
                 }
                 fprintf(ski->of, ":%s\";\n",gstr->str); /* Output the method name */
 
@@ -903,7 +900,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   ioi.of = ski->of;
                   ioi.realif = tmptree;
                   ioi.chrOverridenMethodName=gstr->str;
-                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerWriteParamsForParentCall, &ioi);
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
+                                            (GFunc)VoyagerWriteParamsForParentCall, &ioi);
                 }
                 fprintf(ski->of, "ev)");
                 fprintf(ski->of, " \\\n    (((");
@@ -915,7 +913,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   ioi.of = ski->of;
                   ioi.realif = tmptree;
                   ioi.chrOverridenMethodName=gstr->str;
-                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerOutputParentMethodSpec, &ioi);
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
+                                            (GFunc)VoyagerOutputParentMethodSpec, &ioi);
                 }
                 fprintf(ski->of, ") \\\n    %s_parent_resolved)", id);
                 /* output params for macro */
@@ -928,7 +927,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   ioi.of = ski->of;
                   ioi.realif = tmptree;
                   ioi.chrOverridenMethodName=gstr->str;
-                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerOutputIntroducingClass, &ioi);
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
+                                            (GFunc)VoyagerOutputIntroducingClass, &ioi);
                 }
                 fprintf(ski->of, "*)nomSelf, ");
                 //fprintf(ski->of, "(nomSelf, ");
@@ -938,7 +938,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   ioi.of = ski->of;
                   ioi.realif = tmptree;
                   ioi.chrOverridenMethodName=gstr->str;
-                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec, (GFunc)VoyagerWriteParamsForParentCall, &ioi);
+                  IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
+                                            (GFunc)VoyagerWriteParamsForParentCall, &ioi);
                 }
                 fprintf(ski->of, "ev)");
                 fprintf(ski->of, ")\n");
@@ -951,6 +952,42 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                       id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str,
                       id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
             }
+
+            /* Output the parameter info */
+            if(!bOverriden)
+              {
+                int a=0;
+                IDL_tree tmptree;
+
+                tmptree = IDL_get_parent_node(ski->tree, IDLN_INTERFACE, NULL);
+
+                fprintf(ski->of, "static nomParmInfo nomParm_%s = {\n", id);
+
+                /* Output number of parameters */
+                for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
+                    curitem; curitem = IDL_LIST(curitem).next) {
+                  a++; /* Count parameters */
+                }
+                fprintf(ski->of, "  %d,  /* Number of parameters */\n", a);
+
+                /* Output return type */
+                fprintf(ski->of, "  /* Return type (%s: %s line %d)*/\n  \"", __FILE__, __FUNCTION__, __LINE__);
+                orbit_cbe_write_param_typespec(ski->of, ski->tree);
+                fprintf(ski->of, "\",\n  {");
+
+                op = ski->tree;
+                for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
+                    curitem; curitem = IDL_LIST(curitem).next) {
+                  subski.tree = IDL_LIST(curitem).data;
+                  
+                  fprintf(ski->of, "  \"");
+                  if(IDLN_PARAM_DCL==IDL_NODE_TYPE(subski.tree))
+                    VoyagerOutputParamTypes(&subski);
+                  fprintf(ski->of, "\",\n");
+                }
+                fprintf(ski->of, "}};\n");
+              }
+
             if(ptr!=NULL)
                 *ptr='_';
 
@@ -983,7 +1020,7 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
 		id = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(IDL_OP_DCL(ski->tree).ident), "_", 0);    
 		id2 = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(IDL_INTERFACE(curitem).ident), "_", 0);
 
-        /* Check for our specailly marked NOM-only methods. Don't output them, they are handled
+        /* Check for our specially marked NOM-only methods. Don't output them, they are handled
            specially. */
           if(!strstr(id, NOM_INSTANCEVAR_STRING) &&
              !strstr(id, NOM_OVERRIDE_STRING))
@@ -993,7 +1030,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
             fprintf(ski->of, "  (nomID)&nomIdString_%s_%s,\n", id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
             fprintf(ski->of, "  &nomFullIdString_%s_%s,  /* char *chrMethodDescriptor */\n",
                     id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
-            fprintf(ski->of, "  (nomMethodProc*)  impl_%s_%s\n", id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
+            fprintf(ski->of, "  (nomMethodProc*)  impl_%s_%s,\n", id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
+            fprintf(ski->of, "  &nomParm_%s_%s\n", id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
             fprintf(ski->of, "},\n");
 
             ulNumStaticMethods[ulCurInterface]++;
@@ -1083,7 +1121,7 @@ cbe_ski_do_inherited_op_dcl(CBESkelImplInfo *ski, IDL_tree current_interface)
 		g_assert(curitem);
 
 
-        /* Check for our specailly marked NOM-only methods. Don't output them, they are handled
+        /* Check for our specially marked NOM-only methods. Don't output them, they are handled
            specially. */
         if(!strstr(IDL_IDENT(ident).str, NOM_INSTANCEVAR_STRING) &&
            !strstr(IDL_IDENT(ident).str, NOM_OVERRIDE_STRING))
@@ -1233,6 +1271,12 @@ cbe_ski_do_inherited_methods(IDL_tree interface, CBESkelImplInfo *ski)
 	}
 }
 
+/*
+  CW: When doing a pass we first end here for each interface. By calling
+  cbe_ski_do_list() all nodes are traversed and the subfunctions are called
+  accordingly.
+
+ */
 static void
 cbe_ski_do_interface(CBESkelImplInfo *ski)
 {
@@ -1261,7 +1305,6 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
         cbe_ski_do_list(&subski);
 		IDL_tree_traverse_parents(ski->tree, (GFunc)&cbe_ski_do_inherited_methods, ski);
         
-
         break;
       }
     case PASS_VOYAGER_CLSDATA:
