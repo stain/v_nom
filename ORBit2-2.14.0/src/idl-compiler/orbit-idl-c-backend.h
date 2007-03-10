@@ -76,4 +76,5 @@ void     orbit_cbe_unflatten_args       (IDL_tree    tree,
 					 const char *name);
 gulong orbit_cbe_get_typespec_size(IDL_tree tree);
 
+void orbit_cbe_voyager_write_param_typespec(FILE *of, IDL_tree tree);
 #endif
