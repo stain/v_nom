@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -54,14 +54,16 @@
 #define DEFAULTMETACLASS "NOMClass"
 
 //#define NOMMETACLASS( a ) const string METACLASS_TO_USE = (a)
-#define NOMMETACLASS( a ) const string _conc(_conc(METACLASS_TO_USE_,__LINE__), a) = (#a)
+#define NOMMETACLASS( a ) const string _conc(_conc(METACLASS_TO_USE_,_conc(__LINE__, __INCLUDE_LEVEL__)), a) = #a
 
 /* Define a pointer on a class for IDL using the classname. This is only one half of the work.
    The rest is done by the IDL compiler which typedefs this in the *.h file so it can be used
    in the C code. */
 #define NOMCLASSNAME( a ) native P ## a 
 
-/* #warning !!!!! NOMCLASSNAME macro is missing !!!!! */
+/* For doing parameter checks */
+#define NOMPARMCHECK(a ,...)   const string _conc(a, _conc(__PARMCHECK__, _conc(__LINE__,__INCLUDE_LEVEL__))) = #__VA_ARGS__
+
 
 /* Native types we want to use in the IDL */
 native PNOMObject;
