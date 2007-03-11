@@ -160,6 +160,52 @@ interface NOMObject
      \sa impl_NOMObject_new()
    */
   PNOMObject new();
+
+  /**
+     This method checks if the object is an instance of the given class or some subclass. Using
+     this method one can make sure some feature is available if the introducing class is known.
+     Every subclass of a given class also supports the features of the introducing class. 
+
+     \remarks This method checks the validity of \e nomClass using nomIsObj() and returns FALSE
+     in case it's not an object.
+
+     \param nomClass Pointer to a class object.
+
+     \returns TRUE if the object is an instance of the given class or one of its
+     subclasses.
+
+     \sa nomIsInstanceOf()
+   */
+  boolean nomIsA(in PNOMClass nomClass);
+
+  /**
+     This method checks if the object is an instance of exactly the given class.
+
+
+     \remarks This method checks the validity of \e nomClass using nomIsObj() and returns FALSE
+     in case it's not an object.
+
+     \param nomClass Pointer to a class object.
+
+     \returns TRUE if the object is an instance of exactly the given class.
+
+     \sa nomIsA()
+   */
+  boolean nomIsInstanceOf(in PNOMClass nomClass);
+  /**
+     This method returns the name of the class this object is an instance of.
+     
+     \par How to override:
+     This method is usually not overriden.
+     
+     \returns A null terminated C string. Note that this is not a copy. The string
+     is valid as long as the class object exists (not the instance).
+
+     \sa impl_NOMClass_nomGetClassName()
+  */
+  string nomGetClassName();
+
+
 };
 
 #endif /* NOMOBJ_IDL_INCLUDED */
