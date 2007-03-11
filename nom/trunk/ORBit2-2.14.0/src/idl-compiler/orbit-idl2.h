@@ -32,6 +32,7 @@ IDL_ParamRole oidl_attr_to_paramrole(enum IDL_param_attr attr);
 #define NOM_OVERRIDE_STRING "__OVERRIDE__"
 #define NOM_INSTANCEVAR_STRING "__INSTANCEVAR__"
 #define NOM_METACLASS_STRING "METACLASS_TO_USE"
+#define NOM_PARMCHECK_STRING "__PARMCHECK__"
 
 #endif
 #define ORBIT_EPV_VAR_NAME    "_ORBIT_epv"

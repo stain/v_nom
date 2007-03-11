@@ -42,7 +42,7 @@ static int whichPass;
 typedef struct {
   FILE *of;
   IDL_tree tree;
-  enum { PASS_VOYAGER_INSTANCE, PASS_VOYAGER_GETDATA, PASS_VOYAGER_CLSDATA,
+  enum { PASS_VOYAGER_INSTANCE, PASS_VOYAGER_GETDATA, PASS_VOYAGER_CLSDATA, PASS_VOYAGER_PARMCHECK,
          PASS_SERVANTS, PASS_PROTOS, PASS_EPVS, PASS_VEPVS,
          PASS_IMPLSTUBS, PASS_VOYAGER_OVERRIDEN_METHODS, PASS_VOYAGER_OVERRIDEN_METHODTAB,
          PASS_VOYAGER_STATICMETHODS, PASS_VOYAGER_METACLASS, PASS_VOYAGER_CLASSINFO, PASS_VOYAGER_NEWCLASS,
@@ -66,6 +66,7 @@ static const char *passnames[] = {
   "Voyager object instance data",
   "Voyager GetData macros ", 
   "Voyager class data structures",
+  "Voyager parameter check",
   "App-specific servant structures",
   "Implementation stub prototypes",
   "epv structures",
@@ -327,6 +328,10 @@ VoyagerWriteOverridenMethodDeclaration(FILE       *of, IDL_tree    op,
   g_free(id);
 }
 
+/*
+  The name of our meta class is encoded as a constant. We go over all the constants found during
+  IDL parsing and check for a special marker string in the name.
+ */
 static void
 VoyagerExtractMetaClass(CBESkelImplInfo *ski)
 {
@@ -342,14 +347,9 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
 
       id = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS (ident), "_", 0);
 
-#if 0
-      printf(" %d --- > %s %s %s, %s %d\n", __LINE__,
-             id, IDL_IDENT(ident).str, IDL_IDENT(IDL_INTERFACE(intf).ident).str,
-             passnames[ski->pass], IDL_NODE_TYPE(IDL_CONST_DCL(ski->tree).const_exp));
-#endif
-
       if(IDLN_STRING==IDL_NODE_TYPE(IDL_CONST_DCL(ski->tree).const_exp))
         {
+          //  printf(" %d --- > %s\n", __LINE__,IDL_IDENT(ident).str);
           /* Our metaclass info is a string */
           if(strstr( IDL_IDENT(ident).str, NOM_METACLASS_STRING))
             {
@@ -357,6 +357,49 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
               g_string_printf(gsMetaClassName[ulCurInterface], "%s", IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value);
               //    printf(" %d    --- > %s %s (%x)\n",
               //     __LINE__, id, IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value, gsMetaClassName[ulCurInterface]);
+            }
+        }
+      g_free(id);
+    }/* PASS_VOYAGER_...*/
+}
+
+/*
+  For methods which should have parameter checks (specified by a special macro in the IDL file)
+  a constant string is specified. The method name is encoded in the constants name while the string
+  holds all the info about the parameters to check.
+  We go over all the constants found during IDL parsing and check for a special marker string in the
+  name.
+ */
+static void
+VoyagerCreateParamCheckFunctions(CBESkelImplInfo *ski)
+{
+  char    *id;
+  IDL_tree ident;
+  IDL_tree intf;
+
+
+  if(PASS_VOYAGER_PARMCHECK==ski->pass)
+    {
+      ident = IDL_CONST_DCL (ski->tree).ident;
+      intf = IDL_get_parent_node(ski->tree, IDLN_INTERFACE, NULL);
+
+      id = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS (ident), "_", 0);
+
+      if(IDLN_STRING==IDL_NODE_TYPE(IDL_CONST_DCL(ski->tree).const_exp))
+        {
+          gchar *ptr;
+          //  printf(" %d --- > %s\n", __LINE__,IDL_IDENT(ident).str);
+          /* Our parameter info is a string */
+          ptr=strstr( id /*IDL_IDENT(ident).str*/, NOM_PARMCHECK_STRING);
+          if(ptr)
+            {
+              *ptr='\0';
+              //printf(" %d    --- > %s %s Params: %s\n",
+              //__LINE__, id, IDL_IDENT(ident).str, IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value);
+              fprintf(ski->of, "#ifndef %s_ParmCheck\n", id);
+              fprintf(ski->of, "#define %s_ParmCheck\n", id);
+              fprintf(ski->of, "#endif\n");
+              *ptr='_';
             }
         }
       g_free(id);
@@ -410,7 +453,10 @@ orbit_cbe_ski_process_piece(CBESkelImplInfo *ski)
 		cbe_ski_do_param_dcl(ski);
 		break;
     case IDLN_CONST_DCL:
+      /* Find the name of the metaclass for this class if any. */
       VoyagerExtractMetaClass(ski);
+      /* Create support function for parameter checks. */
+      VoyagerCreateParamCheckFunctions(ski);
       break;
 	default:
 		break;
@@ -775,7 +821,7 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
 
         gstr=g_string_new(IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
 
-        /* Check for our specailly marked NOM-only methods. Don't output them here, they are handled
+        /* Check for our specially marked NOM-only methods. Don't output them here, they are handled
            specially. */
           if(!strstr(id, NOM_INSTANCEVAR_STRING) /*&& !strstr(id, NOM_OVERRIDE_STRING)*/)
           {
@@ -953,7 +999,7 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                       id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
             }
 
-            /* Output the parameter info */
+            /* Output the parameter info for runtime type information */
             if(!bOverriden)
               {
                 int a=0;
@@ -987,6 +1033,37 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                 }
                 fprintf(ski->of, "}};\n");
               }
+
+            /* Output a function for checking the parameters */
+            if(!bOverriden)
+              {
+                fprintf(ski->of, "#ifdef %s_ParmCheck\n", id);
+                fprintf(ski->of, "NOMEXTERN ");                
+                fprintf(ski->of, "gboolean NOMLINK parmCheckFunc_%s_%s(%s *nomSelf,\n",
+                        id2, IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str, id2);                
+                op = ski->tree;
+                for(curitem = IDL_OP_DCL(ski->tree).parameter_dcls;
+                    curitem; curitem = IDL_LIST(curitem).next) {
+                  subski.tree = IDL_LIST(curitem).data;
+                  orbit_cbe_ski_process_piece(&subski);
+                }
+                        
+                if(IDL_OP_DCL(op).context_expr)
+                  fprintf(ski->of, "CORBA_Context ctx,\n");            
+                fprintf(ski->of, "CORBA_Environment *ev)");
+
+                fprintf(ski->of, "{\n");
+                fprintf(ski->of, "  g_message(\"%%s: parameter check for %%s...\", __FUNCTION__, _nomGetClassName(nomSelf, NULLHANDLE));\n");
+                fprintf(ski->of, "if(!_nomIsA(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
+                fprintf(ski->of, "  {\n");
+                fprintf(ski->of, "  g_message(\"Object is not valid\");\n");
+                fprintf(ski->of, "  return FALSE;\n");
+                fprintf(ski->of, "  }\n");
+                fprintf(ski->of, "  return TRUE;\n");
+                fprintf(ski->of, "}\n");
+                fprintf(ski->of, "#endif\n");
+              }
+
 
             if(ptr!=NULL)
                 *ptr='_';
@@ -1386,6 +1463,13 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
             fprintf(ski->of, "/* The meta class this class is using (line %d %s) */\n", __LINE__, __FILE__);
             fprintf(ski->of, "static char * nomIdStringMetaClass_%s = \"%s\";\n\n",  id, gsMetaClassName[ulCurInterface]->str);
           }
+        break;
+      }
+    case PASS_VOYAGER_PARMCHECK:
+      {
+		subski.tree = IDL_INTERFACE(ski->tree).body;
+        cbe_ski_do_list(&subski);
+		IDL_tree_traverse_parents(ski->tree, (GFunc)&cbe_ski_do_inherited_methods, ski);
         break;
       }
     case PASS_VOYAGER_CLASSINFO:
