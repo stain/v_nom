@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -31,6 +31,11 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+/** \file nomobj.idl 
+    
+    Implementation file for the NOM class NOMObject.
+*/
+
 #ifndef NOM_NOMObject_IMPLEMENTATION_FILE
 #define NOM_NOMObject_IMPLEMENTATION_FILE
 #endif
@@ -48,17 +53,14 @@
 #include "gc.h"
 
 /**
-
     \brief This function implements the method nomInit() of class NOMObject.
  */
 NOM_Scope void  NOMLINK impl_NOMObject_nomInit(NOMObject *nomSelf, CORBA_Environment *ev)
 {  
-  //nomPrintf("    Entering %s (%x) with nomSelf: 0x%x. nomSelf is: %s.\n",
-  //        __FUNCTION__, impl_NOMObject_nomInit, nomSelf , nomSelf->mtab->nomClassName);
+
 }
 
 /**
-
     \brief This function implements the method nomUnInit() of class NOMObject.
  */
 NOM_Scope void  NOMLINK impl_NOMObject_nomUnInit(NOMObject *nomSelf, CORBA_Environment *ev)
@@ -70,7 +72,6 @@ NOM_Scope void  NOMLINK impl_NOMObject_nomUnInit(NOMObject *nomSelf, CORBA_Envir
 }
 
 /**
-
     \brief This function implements the method nomGetSize() of class NOMObject.
  */
 NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA_Environment *ev)
@@ -86,7 +87,6 @@ NOM_Scope CORBA_long NOMLINK impl_NOMObject_nomGetSize(NOMObject* nomSelf, CORBA
 }
 
 /**
-
     \brief This function implements the method delete() of class NOMObject.
 
     It calls nomUnInit() to give the object a chance of freeing system resources. Afterwards
@@ -120,7 +120,6 @@ NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environme
 }
 
 /**
-
     \brief This function implements the method nomGetClass() of class NOMObject.
     It returns a pointer to the class object of this object.
 
@@ -161,3 +160,51 @@ NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Enviro
 
 
 
+NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsA(NOMObject* nomSelf, const PNOMClass nomClass, CORBA_Environment *ev)
+{
+  /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+  NOMClassPriv* ncp;
+  nomMethodTabs mtabs; /* List of mtabs */
+
+  if(!nomIsObj(nomClass)){
+    g_warning("%s: class object pointer nomClass does not point to an object.", __FUNCTION__);
+    return FALSE;
+  }
+
+  /* Check if we have the class in our list of classes */
+  ncp=(NOMClassPriv*)nomSelf->mtab->nomClsInfo;
+  mtabs=&ncp->mtabList;
+  while(mtabs)
+    {
+      if(nomClass==mtabs->mtab->nomClassObject)
+          return TRUE;
+
+      mtabs=mtabs->next;
+    }
+  return FALSE;
+}
+
+
+NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsInstanceOf(NOMObject* nomSelf, const PNOMClass nomClass, CORBA_Environment *ev)
+{
+  /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+ 
+  if(!nomIsObj(nomClass)){
+    g_warning("%s: class object pointer nomClass does not point to an object.", __FUNCTION__);
+    return FALSE;
+  }
+ 
+  if(nomClass==_nomGetClass(nomSelf, NULLHANDLE))
+    return TRUE;
+  
+  return FALSE;
+}
+
+/**
+   Function which implements the nomGetClassName() method of NOMObject.
+*/
+NOM_Scope CORBA_string NOMLINK impl_NOMObject_nomGetClassName(NOMObject* nomSelf, CORBA_Environment *ev)
+{
+  /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+  return nomSelf->mtab->nomClassName;
+}

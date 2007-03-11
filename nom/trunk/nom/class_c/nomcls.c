@@ -31,6 +31,10 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+/** \file noncls.c
+    
+    Implementation file for the NOMClass class.
+*/
 #ifndef NOM_NOMClass_IMPLEMENTATION_FILE
 #define NOM_NOMClass_IMPLEMENTATION_FILE
 #endif
@@ -82,6 +86,8 @@ NOM_Scope PNOMObject NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Envir
 
   ncp=(NOMClassPriv*)_ncpObject;
 
+  /* Allocate memory big enough to hold an object. This means the size is that of the
+     mtab pointer and all instance variables. */
   if((nObj=_nomAllocate(nomSelf, ncp->mtab->ulInstanceSize, NULLHANDLE))==NULLHANDLE)
     return NULLHANDLE;
 
@@ -148,11 +154,20 @@ NOM_Scope gpointer NOMLINK impl_NOMClass_nomAllocate(NOMClass* nomSelf, const CO
 }
 
 /**
-   Function which implements the nomGetName() method of NOMClass.
+   Function which implements the nomGetCreatedClassName() method of NOMClass.
 */
-NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomGetName(NOMClass* nomSelf, CORBA_Environment *ev)
+NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomGetCreatedClassName(NOMClass* nomSelf, CORBA_Environment *ev)
 {
-  return nomSelf->mtab->nomClassName;
+  NOMClassPriv* ncp;
+
+  /* The private struct characterizing the objects this meta class can create. */
+  ncp=_nomGetObjectCreateInfo(nomSelf, NULLHANDLE);
+
+  if(!ncp)
+    return ""; /* That can not happen but anyway... */
+
+  //  return nomSelf->mtab->nomClassName;
+  return ncp->mtab->nomClassName;
 }
 
 
@@ -211,9 +226,13 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
          be interested in. */
 
       /* FIXME: no use of version information, yet. */
-      //nomPrintf("I'm here (%s): ", _nomGetName(nomSelf, NULLHANDLE));
-      if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetName(nomSelf, NULLHANDLE),
+      
+      //The following was used before changing nomGetname()
+      //if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetName(nomSelf, NULLHANDLE),
+      //                        0, 0, NULLHANDLE))
+      if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetClassName(nomSelf, NULLHANDLE),
                               0, 0, NULLHANDLE))
+
         {
           NOMClassPriv* ncPriv;
           gulong a, ulNumIntroducedMethods;

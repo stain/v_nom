@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -34,6 +34,11 @@
 /*
  * And remember, phase 3 is near...
  */
+/** \file nomobj.idl 
+    
+    Implementation file for the NOM class NOMClassMgr.
+*/
+
 #ifndef NOM_NOMClassMgr_IMPLEMENTATION_FILE
 #define NOM_NOMClassMgr_IMPLEMENTATION_FILE
 #endif

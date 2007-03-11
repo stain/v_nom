@@ -64,14 +64,17 @@ interface NOMClass:NOMObject
   PNOMObject nomNew();
 
   /**
-     This method returns the name of the class this class object is an instance of.
+     This method returns the name of the class this class object is the meta class of. This
+     means the returned string is the name of the class the metaclass creates instances of.
+
+     \remarks This method used to be called nomGetName().
 
      \par How to override:
      This method is usually not overriden.
 
-     \sa impl_NOMClass_nomGetName()
+     \sa nomGetClassName()
    */
-  string nomGetName();
+  string nomGetCreatedClassName();
 
   /**
      This method is called for example by nomNew() when creating a new object. It may be
@@ -103,7 +106,7 @@ interface NOMClass:NOMObject
      \remark This method does not call nomInit() on the new object. It is guaranteed that this
      method is always called during object creation.
 
-     \par How to override
+     \par How to override:
      This method can be overriden to track the creation of objects. When doing so
      the parent should be called first.
 
@@ -129,13 +132,18 @@ interface NOMClass:NOMObject
      Free a block of memory allocated using nomAllocate(). Because NOM is using a garbage collector
      this method does nothing. It's for compatibility with ported code.
 
-     \par How to override
+     \par How to override:
      This method is usually not overriden.
  
      \sa impl_NOMClass_nomDeallocate()
    */
   void nomDeallocate(in gpointer memptr);
   void nomSetObjectCreateInfo(in gpointer ncpObject);
+
+  /**
+     \remarks
+     The return type may change.
+   */
   gpointer nomGetObjectCreateInfo();
 
   /**
@@ -144,10 +152,19 @@ interface NOMClass:NOMObject
      In addition to registering the class object the class this metaclass can create will
      also be registered.
 
+     \remarks This method is only called by the system during class creation.
+
+     \par How to override:
+     This method is usually not overriden.
+
      \sa impl_NOMClass_nomClassReady()
    */
   void nomClassReady();
 
+  /**
+     \warning
+     The type of this variable will change!
+  */
   NOMINSTANCEVAR(string ncpObject);     //NOMClassPriv structure holding info about the object this class can create
   NOMOVERRIDE(nomInit); 
 

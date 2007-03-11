@@ -72,10 +72,14 @@ typedef struct {
     nomToken nomTokens[1];    /* method tokens, etc. */
 } nomClassDataStructure, *NomClassDataStructurePtr;
 
+/**
+   Structure describing the parameters of a static method. The information
+   is used for runtime type information.
+ */
 typedef struct nomParmInfoStruct {
   gulong ulNumParms;  /* The number of parameters for this method */
   gchar* pReturnType;
-  gchar* pParm[];    /* Parameter types */
+  gchar* pParm[];     /* Parameter types */
 }nomParmInfo;
 
 /**
@@ -140,20 +144,24 @@ typedef struct
 #define NOM_FLG_IS_METACLASS         0x00000001
 #define NOM_FLG_NOMUNINIT_OVERRIDEN  0x00000002
 
-/* This structure holds additional informationen about class not to be found in nomMethodTab.
+/* This structure holds additional informationen about a class not to be found in nomMethodTab.
    It holds the default method table of the class and the thunking code necessary to access
-   data and methods.
+   data and methods. Note that the name may be slightly misleading. This structure is not
+   limited to objects/classes which are related to NOMClass. It's a structure used by every NOM
+   class (be it a normal class or a meta class). 
 */
 typedef struct 
 {
   nomMethodTab  *mtab;                  /* This is the mtab for this class it points to thisMtab at the
-                                           end (not mtab for objects created by this meta class)          */
+                                           end. This is not an mtab for objects created by a meta class.
+                                           Meta classes store the pointer to a NOMClassPriv which specify
+                                           the objects they may create in a private instance variable.    */
   gulong            ulClassSize;        /* The size of an instance (mtab+ instance vars)                  */
   gulong        ulPrivClassSize;        /* The size of this private struct including mtab (not pointr but
                                            real filled structure. Do we need this?                         */
-  // gulong        ulIsMetaClass;          /* Set to 1 if this is a metaclass                                 */
   gulong        ulClassFlags;           /* Set to 1 if this is a metaclass                                 */
   nomStaticClassInfo *sci;              /* Class description                                               */
+  /* FIXME: the following list may be obsolete maybe when we just use the parentMtabStruc??                */
   nomMethodTabList mtabList;            /* The (private) internal list of mtabs we maintain 
                                            struct nomMethodTabList {
                                            nomMethodTab             *mtab; /mtab for this class
