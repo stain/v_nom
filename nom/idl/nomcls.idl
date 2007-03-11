@@ -31,6 +31,10 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+/** \file nomcls.idl 
+    
+Class definition file for NOM class NOMClass the root metaclass.
+*/
 #ifndef NOMCLS_IDL_INCLUDED
 #define NOMCLS_IDL_INCLUDED
 
@@ -38,6 +42,11 @@
 
 //NOMCLASSNAME(NOMClass);
 
+/** \interface NOMClass
+
+    This is the root class for metaclasses.
+
+ */
 interface NOMClass:NOMObject
 {
 
@@ -57,7 +66,7 @@ interface NOMClass:NOMObject
   /**
      This method returns the name of the class this class object is an instance of.
 
-     \par How to override
+     \par How to override:
      This method is usually not overriden.
 
      \sa impl_NOMClass_nomGetName()
@@ -72,7 +81,7 @@ interface NOMClass:NOMObject
      The method first calls nomRenewNoInit() to set important object info on the memory block
      and then calls nomInit() on the newly created object.
 
-     \par How to override
+     \par How to override:
      This method is usually not overriden.
      
      \sa nomNew, nomRenewNoInit(), impl_NOMClass_nomRenew()
@@ -109,7 +118,7 @@ interface NOMClass:NOMObject
      around g_malloc() which is replaced by a garbage collected memory allocation routine the returned block of
      memory is zeroed similar to using NOMCalloc().
 
-     \par How to override
+     \par How to override:
      This method is usually not overriden.
      
      \sa impl_NOMClass_nomAllocate()
@@ -131,7 +140,7 @@ interface NOMClass:NOMObject
 
   /**
      This method is called after the class object is built. It registers the new
-     class with the NOMClassMagrObj.
+     class with the NOMClassMgrObj.
      In addition to registering the class object the class this metaclass can create will
      also be registered.
 

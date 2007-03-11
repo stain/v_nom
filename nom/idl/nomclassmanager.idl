@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -31,13 +31,23 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+/** \file nomclassmanager.idl 
+    
+Class definition file for the NOM class NOMClassMgr
+*/
 
 #ifndef nomcm_idl
 #define nomcm_idl
 
 #include <nomobj.idl>
 
+/** \interface NOMClassMgr
 
+    The NOMClassMgr class provides methods for managing the whole
+    object system. One single instance is created and a pointer is to it is
+    put into the global variable \i NOMClassMgrObject.
+    
+ */
 interface NOMClassMgr : NOMObject
 {
 
@@ -96,7 +106,7 @@ interface NOMClassMgr : NOMObject
      used by nomIsObject() to check if a block of memory is actually an object by
      checking the memories mtab pointer against the registered list of mtabs.
 
-     \remark Classes are registered usually from within nomClassReady(). 
+     \remarks Classes are registered usually from within nomClassReady(). 
 
      \par How to override
      This method is usually not overriden.
@@ -108,7 +118,10 @@ interface NOMClassMgr : NOMObject
   /**
      Get the internal list of classes.
 
-     \par How to override
+     \remarks This method is only for NOM kernel implemeters. You can gather all
+     information of this list by using provided methods.
+
+     \par How to override:
      This method is usually not overriden.
 
      \return
@@ -118,8 +131,12 @@ interface NOMClassMgr : NOMObject
   PGData nomGetClassList();
 
   /**
+     This method returns a pointer to a class specific private structure holding additional
+     information. The structure is only used by the NOM kernel.
 
-     \par How to override
+     \remarks This method is only for NOM kernel implemeters.
+
+     \par How to override:
      This method is usually not overriden.
 
      \param className The class name as a C string.
@@ -142,12 +159,15 @@ interface NOMClassMgr : NOMObject
      storage. This is done by checking the mtab in the given object against a registered
      list of mtabs.
 
-     \par How to override
+     \remarks You probably want to use the function nomIsObj() instead which subsequently
+     calls this method.
+
+     \par How to override:
      This method is usually not overriden.
 
      \param nomObject The object to be checked.
-     \return
-     True if the given object is a NOMObject.
+
+     \returns True if the given object is a NOMObject.
    */
   boolean nomIsObject(in PNOMObject nomObject);
 
@@ -161,12 +181,15 @@ interface NOMClassMgr : NOMObject
      \remark Both classes must already be registered with the class manager when calling this
      method.
 
-     \par How to override
+     \par How to override:
      This method is usually not overriden.
 
      \param oldClass The class to be replaced
      \param replacementClass The class which will be used instead of \e oldClass 
-     \return TRUE if replacement succeeded.
+     \returns TRUE if replacement succeeded.
+
+     \warning
+     This method is not implemented yet.
 
    */
   boolean nomSubstituteClass(in string oldClass, in string replacementClass);
@@ -176,6 +199,9 @@ interface NOMClassMgr : NOMObject
      dynamically load the DLL get the class exports and finally create the class.
 
      \remark The returned path is in the system encoding.
+
+     \warning
+     This method is not implemented yet.
    */
   string nomQueryDLLForClass(in string chrClassName);
   /**

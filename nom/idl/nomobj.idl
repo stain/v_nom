@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -31,6 +31,11 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+/** \file nomobj.idl 
+    
+Class definition file for the NOM class NOMObject.
+*/
+
 #ifndef NOMOBJ_IDL_INCLUDED
 #define NOMOBJ_IDL_INCLUDED
 
@@ -38,6 +43,13 @@
 
 //NOMCLASSNAME(NOMObject);
 
+/** \interface NOMObject
+
+    This is the root class of NOM. It provides methods common to all objects.
+
+    \remarks NOMObject can't be replaced.
+    
+ */
 interface NOMObject
 {
 
@@ -46,10 +58,13 @@ interface NOMObject
   /**
      This method is intended to be overriden by classes which need some initialization.
 
-     \par How to override
+     \remarks This method is called by the system during object creation. Don't call it
+     from your code or unexpected things may happen.
+
+     \par How to override:
      The parent class must always be called first when overriden.
 
-     \sa impl_NOMObject_nomInit()
+     \sa impl_NOMObject_nomInit(), nomUnInit() 
    */
   void nomInit();
 
@@ -59,20 +74,22 @@ interface NOMObject
      to the list of objects with a finalizer. The finalizer will be run when the object is
      collected and calls nomUnInit() to give the object a chance for cleanup. 
 
-     \note It's not necessary to free memory in nomUnInit(). This is the job of the garbage collector.
-     Only system resources like file handles etc. must be explicitely freed.
+     \remarks It's not necessary to free memory in nomUnInit(). This is the job of the garbage collector.
+     Only system resources like file handles etc. must be explicitely freed. 
+     This method is called by the system during object deletion. Don't call it
+     from your code or unexpected things may happen.
 
-     \par How to override
+     \par How to override:
      The parent method must be called after doing the own processing.
 
-     \sa impl_NOMObject_nomUnInit()
+     \sa impl_NOMObject_nomUnInit(), nomInit();
    */
   void nomUnInit();
 
   /** 
      Return the size of the object. That is sizeof(mTab*)+sizeof(all instance vars)
 
-     \par How to override
+     \par How to override:
      This method is usually not overriden.
 
      \sa impl_NOMObject_nomGetSize()
@@ -80,18 +97,26 @@ interface NOMObject
   long nomGetSize();
 
   /**
-     This method calls nomUnInit() to give the object a chance of freeing system resources.
+     Delete an object. This method is useful if you have to control the point in time when
+     an object is actually destroyed. Normally the garbage collector destroys any object when
+     no longer in use but there is no way to control when this happens.
+
+     \remarks This method calls nomUnInit() to give the object a chance of freeing system resources.
      Afterwards the memory occupied by the object is given back to the system and the
      object is not accessible anymore.
 
-     \sa impl_NOMObject_delete()
+     \par HowTo override:
+     This method is usually not overriden. If you need some own processing during object
+     destruction override nomUnInit().
+
+     \sa impl_NOMObject_delete(), nomUnInit()
    */
   void delete();
 
   /**
      This method returns a pointer to the class object of this object.
 
-     \par How to override
+     \par How to override:
      This method is usually not overriden.
 
      \return Pointer to the class object
@@ -104,10 +129,29 @@ interface NOMObject
      Create a new class of the kind the caller is. This method ensures that subclasses
      are properly handled without the need to override this method in every subclass.
 
+     When deriving from classes new methods are added to a class but the already present ones are
+     usually not changed. If one of these classes creates a new object of the class itself
+     is an instance of unexpected things may happen. Consider the
+     following class hierarchy:
+
+     \code
+     NOMObject->NOMString->NOMPath
+     \endcode
+
+     When a method introduced by \e NOMString tries to create a new \e NOMString object it may
+     use the \e NOMStringNew() macro to do so. Problems arise if the method is called from
+     within a \e NOMPath object. The caller probably doesn't want a \e NOMString but rather
+     a \e NOMPath object. So instead of having to override the method using the creation macro
+     which may mean to recreate the whole method implementation the macro should be replaced
+     by a call to new().
+
      This method will get the class object of nomSelf and call nomNew() on it creating
      a new object which has exactly the same class hierarchy of nomSelf.
 
-     \par How to override
+     \remarks Because a new object is created the whole object creation sequence will take
+     place which means a call to nomInit() will be made by the system.
+
+     \par How to override:
      This method is usually not overriden.
 
      \return Pointer to a new object of the same kind as nomSelf. Note that this won't
