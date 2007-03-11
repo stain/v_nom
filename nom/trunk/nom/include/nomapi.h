@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -72,13 +72,32 @@ typedef struct {
     nomToken nomTokens[1];    /* method tokens, etc. */
 } nomClassDataStructure, *NomClassDataStructurePtr;
 
+typedef struct nomParmInfoStruct {
+  gulong ulNumParms;  /* The number of parameters for this method */
+  gchar* pReturnType;
+  gchar* pParm[];    /* Parameter types */
+}nomParmInfo;
+
+/**
+   This structure defines the method introduced by a class. The IDL compiler
+   puts an array of such structs into the *.ih file which is used by the NOM
+   kernel to build the class.
+ */
 typedef struct nomStaticMethodDescStruct {
-  nomMToken *nomMAddressInClassData;
-  nomID nomMethodId;
-  char** chrMethodDescriptor;
-  nomMethodProc *nomMethod;
+  nomMToken *nomMAddressInClassData; /* Method token in class data struct */
+  nomID nomMethodId;          /* This is a 'gchar**' pointing to something like 
+                                 "wpQueryContainerHandle" */
+  char** chrMethodDescriptor; /* This points to something like:
+                                 "WPFolderWindow:wpQueryContainerHandle" */
+  nomMethodProc *nomMethod;   /* Address of the function implementing this 
+                                 method. */
+  nomParmInfo  *pParamInfo;   /* Information about the parameter types */
 } nomStaticMethodDesc;
 
+/**
+   Structure describing an overriden method. An array of these structures
+   is put into the *.ih file.
+ */
 typedef struct nomOverridenMethodDescStruct {
   nomID nomMethodId;
   nomMethodProc *nomMethod;
