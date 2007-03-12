@@ -165,7 +165,6 @@ static void ch_output_voyager(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *
   default:
     break;
   }
-
 }
 
 static void
@@ -670,6 +669,7 @@ static gchar* VoyagerExtractRetValFromParmCheck(gchar* theString)
   *ptr=',';
   return ptr2;
 };
+
 /*
   This functions puts constants into the header file. For Voyager we
   use constants to encode some special information e.g. the metaclass name
@@ -687,18 +687,22 @@ ch_output_const_dcl(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
 	ident = IDL_CONST_DCL (tree).ident;
 	id = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS (ident), "_", 0);
 
+    /* Enable parameter check for a method. This is done by putting a #define xxx
+       at the top of the file. Checking code is sourrounded by #ifdef/#endif. */
     ptr=strstr( id , NOM_PARMCHECK_STRING);
-    /* Enable parameter check for a method */
     if(ptr)
       {
         gchar *retVal;
         *ptr='\0';
         //printf(" %d    --- > %s %s Params: %s\n",
         //__LINE__, id, IDL_IDENT(ident).str, IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value);
+        /* Print out the line for easy finding in this source file */
         fprintf(ci->fh, "/* %s: %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
         fprintf(ci->fh, "/* Value: %s */\n", IDL_STRING(IDL_CONST_DCL(tree).const_exp).value);
+        /* Protect by #ifdef...*/
         fprintf(ci->fh, "#ifndef %s_ParmCheck_h\n", id);
         fprintf(ci->fh, "#define %s_ParmCheck_h\n", id);
+        /* Default return code (provided by the macro) */
         retVal=VoyagerExtractRetValFromParmCheck(IDL_STRING(IDL_CONST_DCL(tree).const_exp).value);
         fprintf(ci->fh, "#define %s_retval %s\n", id, retVal);
         g_free(retVal);
@@ -722,16 +726,16 @@ ch_output_const_dcl(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
         fprintf(ci->fh, "#endif /* !%s */\n\n", id);
       }
 
+    /* Get the name of our explicit metaclass if any. */
     if(IDLN_STRING==IDL_NODE_TYPE(IDL_CONST_DCL(tree).const_exp))
       {
-        /* Get the name of our explicit metaclass if any */
         /* Our metaclass info is a string */
         if(strstr( IDL_IDENT(ident).str, NOM_METACLASS_STRING))
           {
             gsMetaClassName=g_string_new(NULL);
             g_string_printf(gsMetaClassName, "%s", IDL_STRING(IDL_CONST_DCL(tree).const_exp).value);
-            //    printf(" %d    --- > %s %s (%x)\n",
-            //     __LINE__, id, IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value, gsMetaClassName[ulCurInterface]);
+            //printf(" %d    --- > %s %s (%x)\n",
+            //__LINE__, id, IDL_STRING(IDL_CONST_DCL(ski->tree).const_exp).value, gsMetaClassName[ulCurInterface]);
           }
        }
 	g_free(id);
@@ -1155,9 +1159,6 @@ VoyagerOutputOverridenMethod(IDL_tree curif, InheritedOutputInfo *ioi)
         if(!strcmp(overridenMethodName, IDL_IDENT(IDL_OP_DCL(curop).ident).str)){
           IDL_tree  sub;
 
-          //fprintf(ioi->of, "#define %s_%s() \\\n        %s_%s()\n",
-          //      realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str,
-          //      id, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
           fprintf(ioi->of, "#define %s_%s(nomSelf, ",
                   realid, IDL_IDENT(IDL_OP_DCL(curop).ident).str);
           for (sub = IDL_OP_DCL (curop).parameter_dcls; sub; sub = IDL_LIST (sub).next) {
@@ -1184,6 +1185,55 @@ VoyagerOutputOverridenMethod(IDL_tree curif, InheritedOutputInfo *ioi)
   g_free(realid);
 }
 
+/*
+  Output the typespecs and parameters of a new method.
+  Note that tree must be correctly chosen.
+ */
+static void
+doWriteTypespecAndParameters(FILE  *of, IDL_tree tree)
+{
+  IDL_tree curitem;
+
+  for(curitem = IDL_OP_DCL(tree).parameter_dcls;
+      curitem; curitem = IDL_LIST(curitem).next) {
+    IDL_tree tr;
+    tr = IDL_LIST(curitem).data;      
+    /*  Write list of params */
+    if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
+      {
+        fprintf(of, "        ");
+        orbit_cbe_write_param_typespec(of, tr);
+        fprintf(of, " %s,\n", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
+      }
+  }
+}
+
+/*
+  Output the parameters only of a new method.
+  Note that tree must be correctly chosen.
+ */
+static void
+doWriteParametersOnly(FILE  *of, IDL_tree tree)
+{
+  IDL_tree curitem;
+
+  for(curitem = IDL_OP_DCL(tree).parameter_dcls;
+      curitem; curitem = IDL_LIST(curitem).next) {
+    IDL_tree tr;
+    tr = IDL_LIST(curitem).data;      
+    /*  Write list of params */
+    if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
+      {
+        fprintf(of, " %s,", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
+      }
+  }
+}
+
+/*
+  This function does quite some real work. It puts all the info about an introduced method
+  into the *.h file. This includes convenience macros, strings specifying the method name
+  and macros for automatic checking of parameters.
+ */
 static void
 VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
 {
@@ -1194,7 +1244,6 @@ VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
 	char *id, *id2, *id3;
 	IDL_tree curitem, op;
 	int level;
-    //	CBESkelImplInfo subski = *ski;
 
     g_assert (IDL_NODE_TYPE(tree) == IDLN_OP_DCL);
 
@@ -1223,7 +1272,7 @@ VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
         curitem; curitem = IDL_LIST(curitem).next) {
       IDL_tree tr;
       tr = IDL_LIST(curitem).data;      
-      //orbit_cbe_ski_process_piece(&subski);
+
       /*  Write list of params */
       if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
         {
@@ -1253,121 +1302,68 @@ VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
     fprintf(of, "/* define the name for this method */\n");
     fprintf(of, "#define nomMNDef_%s \"%s\"\n", id,  id3);
     fprintf(of, "#define nomMNFullDef_%s \"%s:%s\"\n", id, id2, id3);
+
     /* define method call as a macro */
     fprintf(of, "/* define method call as a macro */\n");
-    fprintf(of, "#ifdef %s_ParmCheck_h /* Parameter check */\n", id);
-    /* Forward declaration */
+    fprintf(of, "#ifndef NOM_NO_PARAM_CHECK /* Parameter chack at all? */\n");
+    fprintf(of, "#ifdef %s_ParmCheck_h /* Extended parameter check enabled */\n", id);
+
+    /* Forward declaration of parameter test function */
     fprintf(of, "NOMEXTERN ");                
     fprintf(of, "gboolean NOMLINK parmCheckFunc_%s(%s *nomSelf, \n",id, id2);
-    op = tree;
-    for(curitem = IDL_OP_DCL(tree).parameter_dcls;
-        curitem; curitem = IDL_LIST(curitem).next) {
-      IDL_tree tr;
-      tr = IDL_LIST(curitem).data;      
-      /*  Write list of params */
-      if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
-        {
-          fprintf(of, "        ");
-          orbit_cbe_write_param_typespec(of, tr);
-          fprintf(of, " %s,\n", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
-        }
-    }
-    tree=op;
-    fprintf(of, "CORBA_Environment *ev)");
-    fprintf(of, ";\n");
+    /* Write parameter list including the type spec */
+    doWriteTypespecAndParameters(of, tree);
+    fprintf(of, "CORBA_Environment *ev);\n");
 
-    /* Macro to be used when parameters are checked */
+    /* Macro to be used when several parameters are checked */
     fprintf(of, "#define %s(nomSelf, ", id);
     /* add the parms */
-    op = tree;
-    for(curitem = IDL_OP_DCL(tree).parameter_dcls;
-        curitem; curitem = IDL_LIST(curitem).next) {
-      IDL_tree tr;
-      tr = IDL_LIST(curitem).data;      
-      /*  Write list of params */
-      if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
-        {
-          fprintf(of, " %s,", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
-        }
-    }
-    tree=op;
+    doWriteParametersOnly(of, tree);
     fprintf(of, "ev) \\\n");
     fprintf(of, "        (parmCheckFunc_%s(nomSelf, ", id);
     /* Parameters for call */
-    op = tree;
-    for(curitem = IDL_OP_DCL(tree).parameter_dcls;
-        curitem; curitem = IDL_LIST(curitem).next) {
-      IDL_tree tr;
-      tr = IDL_LIST(curitem).data;      
-      //orbit_cbe_ski_process_piece(&subski);
-      /*  Write list of params */
-      if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
-        {
-          fprintf(of, " %s,", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
-        }
-    }
-    tree=op;
+    doWriteParametersOnly(of, tree);
 
     fprintf(of, "ev) ? \\\n");
     fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
     fprintf(of, "        (nomSelf,");
-
     /* add the parms */
-    op = tree;
-    for(curitem = IDL_OP_DCL(tree).parameter_dcls;
-        curitem; curitem = IDL_LIST(curitem).next) {
-      IDL_tree tr;
-      tr = IDL_LIST(curitem).data;      
-      //orbit_cbe_ski_process_piece(&subski);
-      /*  Write list of params */
-      if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
-        {
-          fprintf(of, " %s,", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
-        }
-    }
-    tree=op;
+    doWriteParametersOnly(of, tree);
     fprintf(of, "ev)) : %s_retval)\n", id);
-    fprintf(of, "#else\n");
+
+    /* else NOM_NO_PARAM_CHECK */
+    fprintf(of, "#else /* Extended parameter check */\n");
+
+    /* Check object only  */
+    fprintf(of, "#define %s(nomSelf, ", id);
+    /* add the parms */
+    doWriteParametersOnly(of, tree);
+    fprintf(of, "ev) \\\n");
+    fprintf(of, "        (objectCheckFunc_%s(nomSelf, ", id2);
+    fprintf(of, " \"%s\") ? \\\n", id);
+    fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
+    fprintf(of, "        (nomSelf,");
+    /* add the parms */
+    doWriteParametersOnly(of, tree);
+    fprintf(of, "ev)) : (");
+    orbit_cbe_write_param_typespec(of, tree);
+    fprintf(of, ") NULL)\n");
+    fprintf(of, "#endif\n");
+
+    /* No parameter check at all */
+    fprintf(of, "#else /* NOM_NO_PARAM_CHECK */\n");
 
     /* Normal macro */
     fprintf(of, "#define %s(nomSelf, ", id);
-    /* add the parms */
-    op = tree;
-    for(curitem = IDL_OP_DCL(tree).parameter_dcls;
-        curitem; curitem = IDL_LIST(curitem).next) {
-      IDL_tree tr;
-      tr = IDL_LIST(curitem).data;      
-      /*  Write list of params */
-      if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
-        {
-          fprintf(of, " %s,", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
-        }
-    }
-    tree=op;
-
-    //   fprintf(of, "CORBA_Environment *ev) \\\n");
+    doWriteParametersOnly(of, tree);
     fprintf(of, "ev) \\\n");
     fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
     fprintf(of, "        (nomSelf,");
-
     /* add the parms */
-    op = tree;
-    for(curitem = IDL_OP_DCL(tree).parameter_dcls;
-        curitem; curitem = IDL_LIST(curitem).next) {
-      IDL_tree tr;
-      tr = IDL_LIST(curitem).data;      
-      //orbit_cbe_ski_process_piece(&subski);
-      /*  Write list of params */
-      if(IDL_NODE_TYPE(tr) == IDLN_PARAM_DCL)
-        {
-          fprintf(of, " %s,", IDL_IDENT(IDL_PARAM_DCL(tr).simple_declarator).str);
-        }
-    }
-    tree=op;
-
-    // fprintf(of, "CORBA_Environment *ev))\n");
+    doWriteParametersOnly(of, tree);
     fprintf(of, "ev))\n");
-    fprintf(of, "#endif\n");
+    fprintf(of, "#endif\n"); /* Parameter check*/
+
     /* Method macro */
     fprintf(of, "#define _%s %s", id3 , id);
 
@@ -1377,6 +1373,7 @@ VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
     return ;
 }
 
+/* CW: probably some cleanup isn't too bad here... */
 static void
 ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
 {
@@ -1430,7 +1427,6 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
         switch(IDL_NODE_TYPE(cur)) {
         case IDLN_OP_DCL:
           orbit_idl_check_oneway_op (cur);
-          /* orbit_cbe_op_write_proto(ci->fh, cur, "", FALSE); */
 
           /* NOM allows method overriding. This is done using a macro which builds a method
              name containing the string __OVERRIDE__. Make sure these methods are not put
@@ -1458,6 +1454,8 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
                 fprintf(ci->fh, ";\n");
               }
 #else
+#if 0
+              /* 11.03.2007: We don't use attributes for now! */
               /* We put the attribute methods automatically into the *ClassStruct.
                  That's different to SOM where you have to put them in the releaseorder list
                  if desired. Maybe we should just ignore Attributes... */
@@ -1467,6 +1465,7 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
                 VoyagerOutputClassDataStructAttributeMember(ci->fh, ai->op2, "", FALSE);
                 fprintf(ci->fh, ";\n");
               }
+#endif
 #endif
             }/* for() */
           }
@@ -1478,8 +1477,12 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
       /* Voyager special struct */
       fprintf(ci->fh, "} %sClassData;\n\n", id);
       
+      /******* Print generic object check function  *******/
 
-      /******* Print introduced method for possible postprocessing *******/
+      fprintf(ci->fh, "NOMEXTERN gboolean NOMLINK objectCheckFunc_%s(%s *nomSelf, gchar* chrMethodName);\n\n", id, id);
+
+      
+      /******* Print introduced methods *******/
       for(sub = IDL_INTERFACE(tree).body; sub; sub = IDL_LIST(sub).next) {
         IDL_tree cur;
         
@@ -1494,9 +1497,8 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
               fprintf(ci->fh, "/* %s, %s line %d */\n ", __FILE__, __FUNCTION__, __LINE__);
               fprintf(ci->fh, "/*\n * NEW_METHOD: ");
               fprintf(ci->fh, "%s %s\n */\n", IDL_IDENT (IDL_OP_DCL (cur).ident).str, id );
-
+              /* Do print... */
               VoyagerOutputNewMethod(ci->fh, cur, "");
-
             }
           break;
         default:

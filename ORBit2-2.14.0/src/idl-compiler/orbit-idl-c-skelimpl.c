@@ -126,8 +126,12 @@ orbit_cbe_write_skelimpl(FILE *outfile, IDL_tree tree, const char *hdrname)
     fprintf(outfile, "\n#endif /* NOM_CLASS_IMPLEMENTATION_FILE */\n");
 }
 
+/*
+  Worker function for outputting the name of a class introducing some method.
+  Called by VoyagerOutputIntroducingClass();
+ */
 static
-void VoyagerOutputIntroducingClass(IDL_tree curif, InheritedOutputInfo *ioi)
+void VoyagerDoOutputIntroducingClass(IDL_tree curif, InheritedOutputInfo *ioi)
 {
   char *id;
   IDL_tree curitem;
@@ -159,6 +163,24 @@ void VoyagerOutputIntroducingClass(IDL_tree curif, InheritedOutputInfo *ioi)
   }
   g_free(id);
 }
+
+/*
+  Output the name of a class introducing an overriden method.
+*/
+static
+void VoyagerOutputIntroducingClass(IDL_tree tmptree, CBESkelImplInfo *ski, GString *gstr)
+{
+  if(IDL_INTERFACE(tmptree).inheritance_spec) {
+    InheritedOutputInfo ioi;
+    
+    ioi.of = ski->of;
+    ioi.realif = tmptree;
+    ioi.chrOverridenMethodName=gstr->str;
+    IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
+                              (GFunc)VoyagerDoOutputIntroducingClass, &ioi);
+  }
+}
+
 
 static
 void VoyagerOutputParentMethodSpec(IDL_tree curif, InheritedOutputInfo *ioi)
@@ -364,6 +386,10 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
 }
 
 /*
+  This function creates a define for methods with parameter check at the top of the *.ih file
+  to enable the check function whichis sourrounded by '#ifdef/#endif.
+  Note that this function does not create any checking code. 
+
   For methods which should have parameter checks (specified by a special macro in the IDL file)
   a constant string is specified. The method name is encoded in the constants name while the string
   holds all the info about the parameters to check.
@@ -371,7 +397,7 @@ VoyagerExtractMetaClass(CBESkelImplInfo *ski)
   name.
  */
 static void
-VoyagerCreateParamCheckFunctions(CBESkelImplInfo *ski)
+VoyagerCreateParamCheckDefines(CBESkelImplInfo *ski)
 {
   char    *id;
   IDL_tree ident;
@@ -407,6 +433,53 @@ VoyagerCreateParamCheckFunctions(CBESkelImplInfo *ski)
 }
 
 /*
+  Output a generic function for checking the object pointer.
+ */
+static void
+VoyagerCreateObjectCheckFunction(char *id2, CBESkelImplInfo *ski)
+{
+#if 0
+  if(PASS_VOYAGER_PARMCHECK==ski->pass)
+    {
+
+      char *id, *id2;
+      IDL_tree curitem;
+      int level;
+      GString *gstr;
+
+      curitem = IDL_get_parent_node(ski->tree, IDLN_INTERFACE, &level);
+      g_assert(curitem);
+
+      id = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(IDL_OP_DCL(ski->tree).ident), "_", 0);    
+      id2 = IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(IDL_INTERFACE(curitem).ident), "_", 0);
+
+      gstr=g_string_new(IDL_IDENT(IDL_OP_DCL(ski->tree).ident).str);
+#endif
+
+      /* Output a function for checking the parameters. Note that we only
+         check the object pointer. */
+      fprintf(ski->of, "\n/* Function to check if an object is valid before calling a method on it */\n");
+      fprintf(ski->of, "#ifndef NOM_NO_PARAM_CHECK\n");
+      fprintf(ski->of, "NOMEXTERN ");                
+      fprintf(ski->of, "gboolean NOMLINK objectCheckFunc_%s(%s *nomSelf, gchar* chrMethodName)\n",
+              id2, id2);                
+      fprintf(ski->of, "{\n");
+      
+      fprintf(ski->of, "if(!nomIsObj(nomSelf) || !_nomIsA(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
+      fprintf(ski->of, "  {\n");
+      fprintf(ski->of, "  nomPrintObjectPointerError(nomSelf, \"%s\", chrMethodName);\n", id2);
+      fprintf(ski->of, "  g_message(\"Note that NULL is returned for the call (if the method returns a value). This may not be correct. Use the NOMPARMCHECK() macro to specify default return values for methods.\");\n");
+      fprintf(ski->of, "  return FALSE;\n");
+      fprintf(ski->of, "  }\n");
+      fprintf(ski->of, "  return TRUE;\n");
+      fprintf(ski->of, "}\n");
+      fprintf(ski->of, "#endif\n");
+      //      g_free(id); g_free(id2);
+      // }   
+}
+
+
+/*
   This function outputs the parameter type of methods without the 'const'
   qualifier.
  */
@@ -415,8 +488,7 @@ static void VoyagerOutputParamTypes(CBESkelImplInfo *ski)
   if(IDLN_PARAM_DCL!=IDL_NODE_TYPE(ski->tree))
     return;
 
-  orbit_cbe_voyager_write_param_typespec(ski->of, ski->tree);
-  
+  orbit_cbe_voyager_write_param_typespec(ski->of, ski->tree);  
 }
 
 static void
@@ -455,8 +527,8 @@ orbit_cbe_ski_process_piece(CBESkelImplInfo *ski)
     case IDLN_CONST_DCL:
       /* Find the name of the metaclass for this class if any. */
       VoyagerExtractMetaClass(ski);
-      /* Create support function for parameter checks. */
-      VoyagerCreateParamCheckFunctions(ski);
+      /* Create enable defines for parameter checks. */
+      VoyagerCreateParamCheckDefines(ski);
       break;
 	default:
 		break;
@@ -923,6 +995,7 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                 fprintf(ski->of, "static char* nomIdString_%s_%s = \"",
                         id2, gstr->str);
                 /* Output name of introducing class */
+#if 0
                 if(IDL_INTERFACE(tmptree).inheritance_spec) {
                   InheritedOutputInfo ioi;
 
@@ -932,6 +1005,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
                                             (GFunc)VoyagerOutputIntroducingClass, &ioi);
                 }
+#endif
+                VoyagerOutputIntroducingClass(tmptree, ski, gstr);
                 fprintf(ski->of, ":%s\";\n",gstr->str); /* Output the method name */
 
                 fprintf(ski->of, "/* %s, %s line %d */\n", __FILE__, __FUNCTION__, __LINE__);
@@ -967,6 +1042,7 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                 // VoyagerWriteParamsForParentCall (ski->of, ski->tree );
                 fprintf(ski->of, "((");
                 /* Output name of introducing class */
+#if 0
                 if(IDL_INTERFACE(tmptree).inheritance_spec) {
                   InheritedOutputInfo ioi;
 
@@ -976,8 +1052,10 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                   IDL_tree_traverse_parents(IDL_INTERFACE(tmptree).inheritance_spec,
                                             (GFunc)VoyagerOutputIntroducingClass, &ioi);
                 }
+#endif
+                VoyagerOutputIntroducingClass(tmptree, ski, gstr);
                 fprintf(ski->of, "*)nomSelf, ");
-                //fprintf(ski->of, "(nomSelf, ");
+
                 if(IDL_INTERFACE(tmptree).inheritance_spec) {
                   InheritedOutputInfo ioi;
                   
@@ -1034,7 +1112,8 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                 fprintf(ski->of, "}};\n");
               }
 
-            /* Output a function for checking the parameters */
+            /* Output a function for checking the parameters. Note that we only
+               check the object pointer for now. */
             if(!bOverriden)
               {
                 fprintf(ski->of, "#ifdef %s_ParmCheck\n", id);
@@ -1053,12 +1132,13 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
                 fprintf(ski->of, "CORBA_Environment *ev)");
 
                 fprintf(ski->of, "{\n");
-                fprintf(ski->of, "  g_message(\"%%s: parameter check for %%s...\", __FUNCTION__, _nomGetClassName(nomSelf, NULLHANDLE));\n");
-                fprintf(ski->of, "if(!_nomIsA(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
+
+                fprintf(ski->of, "if(!nomIsObj(nomSelf) || !_nomIsA(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
                 fprintf(ski->of, "  {\n");
-                fprintf(ski->of, "  g_message(\"Object is not valid\");\n");
+                fprintf(ski->of, "  nomPrintObjectPointerError(nomSelf, \"%s\", \"%s\");\n", id2, id);
                 fprintf(ski->of, "  return FALSE;\n");
                 fprintf(ski->of, "  }\n");
+                fprintf(ski->of, "  g_message(\"%%s: parameter check for %%s...\", __FUNCTION__, _nomGetClassName(nomSelf, NULLHANDLE));\n");
                 fprintf(ski->of, "  return TRUE;\n");
                 fprintf(ski->of, "}\n");
                 fprintf(ski->of, "#endif\n");
@@ -1469,7 +1549,10 @@ cbe_ski_do_interface(CBESkelImplInfo *ski)
       {
 		subski.tree = IDL_INTERFACE(ski->tree).body;
         cbe_ski_do_list(&subski);
+        /* Output parameter check defines */
 		IDL_tree_traverse_parents(ski->tree, (GFunc)&cbe_ski_do_inherited_methods, ski);
+        /* Output generic object check function */
+        VoyagerCreateObjectCheckFunction(id, ski);
         break;
       }
     case PASS_VOYAGER_CLASSINFO:
