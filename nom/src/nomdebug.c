@@ -59,12 +59,12 @@ extern gboolean fInitialized;
 NOMEXTERN void NOMLINK nomPrintObjectPointerErrorMsg(NOMObject*  nomObject, NOMClass* nomClass, gchar* chrMethodName)
 {
   if(!nomObject)
-    g_warning("The object used to call the method %s is not valid. A NULL pointer was given.", chrMethodName);
+    g_error("The object used to call the method %s is not valid. A NULL pointer was given.", chrMethodName);
   else{
     if(!nomIsObj(nomObject))
-      g_warning("The object used to call the method %s is not a valid NOM object. ", chrMethodName);
+      g_error("The object used to call the method %s is not a valid NOM object. ", chrMethodName);
     else
-      g_warning("The object for which the method %s should be called is not valid for this method.\nThe object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, NOMClass_nomGetCreatedClassName(nomClass, NULLHANDLE), 
+      g_error("The object for which the method %s should be called is not valid for this method.\nThe object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, NOMClass_nomGetCreatedClassName(nomClass, NULLHANDLE), 
                 NOMObject_nomGetClassName(nomObject, NULLHANDLE));
   }
 }
