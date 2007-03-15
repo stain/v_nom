@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -74,6 +74,9 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void);
 NOMEXTERN void NOMLINK dumpClasses(void);
 NOMEXTERN nomId NOMLINK nomIdFromString(gchar* inString);
 NOMEXTERN gchar* NOMLINK nomStringFromId(nomId inId);
+NOMEXTERN void NOMLINK nomPrintObjectPointerError(NOMObject*  nomObject, gchar *chrClsName, gchar* chrMethodName);
+NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);
+NOMEXTERN CORBA_Environment* NOMLINK nomCreateEnvNoObjectCheck(void);
 
 /* Functions used by nomBuildClass() */
 ULONG priv_requestSomEnvMutex(PNOM_ENV pEnv);

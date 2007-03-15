@@ -174,7 +174,7 @@ interface NOMObject
      \returns TRUE if the object is an instance of the given class or one of its
      subclasses.
 
-     \sa nomIsInstanceOf()
+     \sa nomIsInstanceOf(), nomIsANoClsCheck()
    */
   boolean nomIsA(in PNOMClass nomClass);
 
@@ -189,7 +189,7 @@ interface NOMObject
 
      \returns TRUE if the object is an instance of exactly the given class.
 
-     \sa nomIsA()
+     \sa nomIsA(), nomIsANoClsCheck()
    */
   boolean nomIsInstanceOf(in PNOMClass nomClass);
   /**
@@ -205,7 +205,25 @@ interface NOMObject
   */
   string nomGetClassName();
 
+  /**
+     This method checks if the object is an instance of the given class or some subclass. Using
+     this method one can make sure some feature is available if the introducing class is known.
+     Every subclass of a given class also supports the features of the introducing class. 
+
+     \remarks This method does \e not check the validity of \e nomClass using nomIsObj(). So
+     make sure to have checked it beforehand. You may want to use nomIsA() instead;
+
+     \param nomClass Pointer to a class object.
+
+     \returns TRUE if the object is an instance of the given class or one of its
+     subclasses.
+
+     \sa nomIsInstanceOf(), nomIsA()
+   */
+  boolean nomIsANoClsCheck(in PNOMClass nomClass);
 
 };
 
 #endif /* NOMOBJ_IDL_INCLUDED */
+
+

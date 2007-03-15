@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -968,6 +968,8 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
         nomClass= priv_buildWithExplicitMetaClass(ulReserved, sci,
                                                   ulMajorVersion, ulMinorVersion);
         if(nomClass){
+          CORBA_Environment * tempEnv=nomCreateEnvNoObjectCheck();
+
           DBG_NOMBUILDCLASS(TRUE, "%s: class is 0x%x\n", nomClass->mtab->nomClassName, nomClass);
 #if 0
           /* Mark the class as using nomUnInit() if any parent did that. We just have to
@@ -976,8 +978,10 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
              on the object when collecting memory so the object may do its uninit stuff. */
           priv_checkForNomUnInitOverride( (NOMClassPriv*)nomClass->mtab->nomClsInfo,  ncpParent);
 #endif     
-          _nomInit((NOMObject*)nomClass, NULLHANDLE);
-          _nomClassReady(nomClass, NULLHANDLE);
+          /* Make sure the env is marked that we don't chek the object pointer. This would fail
+             because the class isn't registered yet. */
+          _nomInit((NOMObject*)nomClass, tempEnv);
+          _nomClassReady(nomClass, tempEnv);
         }
 
         return nomClass;
@@ -992,8 +996,11 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
                                                   ulMajorVersion, ulMinorVersion);
 
       if(nomClass){
-        _nomInit((NOMObject*)nomClass, NULLHANDLE);
-        _nomClassReady(nomClass, NULLHANDLE);
+        CORBA_Environment * tempEnv=nomCreateEnvNoObjectCheck();
+        /* Make sure the env is marked that we don't chek the object pointer. This would fail
+           because the class isn't registered yet. */
+        _nomInit((NOMObject*)nomClass, tempEnv);
+        _nomClassReady(nomClass, tempEnv);
       }
       return nomClass;
     }
@@ -1087,14 +1094,18 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
                     , nomClass, nClass, *sci->nomClassId);
 
   if(nomClass){
+    CORBA_Environment * tempEnv=nomCreateEnvNoObjectCheck();
+
     /* Mark the class as using nomUnInit() if any parent did that. We just have to
        check the flag and the flag of the parent class. This information is important
        because if this method is overriden the garbage collector has to run a finalizer
        on the object when collecting memory so the object may do its uninit stuff. */
     priv_checkForNomUnInitOverride( (NOMClassPriv*)nomClass->mtab->nomClsInfo,  ncpParent);
     
-    _nomInit(nomClass, NULLHANDLE);
-    _nomClassReady(nomClass, NULLHANDLE);
+    /* Make sure the env is marked that we don't chek the object pointer. This would fail
+       because the class isn't registered yet. */
+    _nomInit(nomClass, tempEnv);
+    _nomClassReady(nomClass, tempEnv);
   }
   return nomClass;
 };

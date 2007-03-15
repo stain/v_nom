@@ -160,7 +160,7 @@ typedef NOMClass *PNOMClass;
 typedef NOMObject *CORBA_Object;
 
 /* The following is probably not correct... */
-typedef NOMAnyObj CORBA_Environment;
+//typedef NOMAnyObj CORBA_Environment;
 
 #define nomresolve_(obj,mToken) ((nomMethodProc*)((void)obj, mToken))
 #define NOM_Resolve(obj, objClassName, methodName) \

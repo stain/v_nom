@@ -78,9 +78,6 @@ NOM_Scope PNOMObject NOMLINK impl_NOMClass_nomNew(NOMClass* nomSelf, CORBA_Envir
   NOMClassPriv *ncp;
   gchar* nObj;
 
-  if(!nomSelf)
-    return NULLHANDLE;
-
   if(!_ncpObject)
     return NULLHANDLE;
 
@@ -133,11 +130,17 @@ NOM_Scope PNOMObject NOMLINK impl_NOMClass_nomRenewNoInit(NOMClass* nomSelf,
 NOM_Scope PNOMObject NOMLINK impl_NOMClass_nomRenew(NOMClass* nomSelf, const gpointer nomObj,
                                                     CORBA_Environment *ev)
 {
+#if 0
+  CORBA_Environment tempEnv={0};
+  tempEnv.fFlags=NOMENV_FLG_DONT_CHECK_OBJECT;
+#endif
   _nomRenewNoInit(nomSelf, nomObj, NULLHANDLE);
 
   /* And now give the object the possibility to initialize... */
+  /* Make sure the object is not checked. */
+  //_nomInit((NOMObject*)nomObj, &tempEnv);
   _nomInit((NOMObject*)nomObj, NULLHANDLE);
-  
+
   return nomObj;
 }
 
@@ -209,6 +212,8 @@ NOM_Scope gpointer NOMLINK impl_NOMClass_nomGetObjectCreateInfo(NOMClass* nomSel
  */
 NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Environment *ev)
 {
+  CORBA_Environment tempEnv={0};
+  tempEnv.fFlags=NOMENV_FLG_DONT_CHECK_OBJECT;
 
   nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
             __FUNCTION__, nomSelf, nomSelf->mtab->nomClassName);
@@ -230,8 +235,8 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
       //The following was used before changing nomGetname()
       //if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetName(nomSelf, NULLHANDLE),
       //                        0, 0, NULLHANDLE))
-      if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetClassName(nomSelf, NULLHANDLE),
-                              0, 0, NULLHANDLE))
+      if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetClassName(nomSelf, &tempEnv),
+                              0, 0, &tempEnv))
 
         {
           NOMClassPriv* ncPriv;
@@ -304,10 +309,18 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
 NOM_Scope void NOMLINK impl_NOMClass_nomInit(NOMClass* nomSelf, CORBA_Environment *ev)
 {
 /* NOMClassData* nomThis=NOMClassGetData(nomSelf); */
+#if 0
+  CORBA_Environment tempEnv={0};
+  tempEnv.fFlags=NOMENV_FLG_DONT_CHECK_OBJECT;
+#endif
+  //  nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
+  //         __FUNCTION__, nomSelf, nomSelf->mtab->nomClassName);
 
-  //nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
-  //           __FUNCTION__, nomSelf, nomSelf->mtab->nomClassName);
-
-  NOMClass_nomInit_parent(nomSelf,  ev);
+  /* Don't check object pointer. We are just created but not yet registered as a class. */
+  //  NOMClass_nomInit_parent(nomSelf,  &tempEnv);
+  NOMClass_nomInit_parent(nomSelf, NULLHANDLE);
 }
+
+
+
 

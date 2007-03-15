@@ -301,6 +301,7 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomInit(NOMClassMgr* nomSelf, CORBA_Envi
 {
   NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf);
 
+  g_message("In %s", __FUNCTION__);
   NOMClassMgr_nomInit_parent((NOMObject*)nomSelf,  ev);
 
   g_datalist_init(&_gdataMethodList);
