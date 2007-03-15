@@ -180,11 +180,22 @@ typedef struct nomClassList {
   struct nomClassList *next;
 } nomClassList, *nomClasses;
 
+
+#define NOMENV_FLG_DONT_CHECK_OBJECT  0x00000001
+
+typedef struct
+{
+  gulong fFlags;
+  gpointer pReserved1;
+  gpointer pReserved2;  
+}nomEnvironment;
+
+typedef nomEnvironment CORBA_Environment;
+
 NOMEXTERN NOMClass * NOMLINK nomBuildClass (gulong ulReserved,
                                             nomStaticClassInfo *sci,
                                             gulong ulMajorVersion,
                                             gulong ulMinorVersion);
 
-//#define nomIsObj(a) ((a)!= 0)
 #endif /* NOMAPI_H_INCLUDED */
 

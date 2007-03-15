@@ -60,6 +60,8 @@ PNOM_ENV pGlobalNomEnv;
 /* Global class manager object */
 NOMClassMgr* NOMClassMgrObject=NULLHANDLE; /* Referenced from different files */
 
+gboolean fInitialized=FALSE;
+
 /********************************************************/
 /*   Toolkit functions, exported                        */
 /********************************************************/
@@ -130,6 +132,7 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
 {
   NOMClassPriv* ncPriv;
   NOMClass* nomCls;
+  //  NOMClassMgr *NOMClassMgrObject_priv;
 #if 0
   NOMObject *nomObj;
   NOMTest* nomTst;
@@ -161,7 +164,7 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
     g_error("Can't create the NOMClassMgr class object!\n");
 
 #ifdef DEBUG_NOMENVNEW
-  nomPrintf("%s: NOMClassMgrObject: %x \n", __FUNCTION__, NOMClassMgrObject);
+  nomPrintf("%s: NOMClassMgrObject: %x (%x)\n", __FUNCTION__, NOMClassMgrObject, pGlobalNomEnv->defaultMetaClass);
 #endif
 
   /* Now register the classes we already have */
@@ -195,6 +198,10 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
   _nomTestFunc(nomTst2Obj, NULLHANDLE);
   _nomTestFunc_NOMTest2(nomTst2Obj, NULLHANDLE);
 #endif
+  /* This must be done last! */
+  //  NOMClassMgrObject=NOMClassMgrObject_priv;
+
+  fInitialized=TRUE;
 
   return NOMClassMgrObject;
 }

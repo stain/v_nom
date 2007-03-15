@@ -1320,17 +1320,27 @@ VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
     /* add the parms */
     doWriteParametersOnly(of, tree);
     fprintf(of, "ev) \\\n");
-    fprintf(of, "        (parmCheckFunc_%s(nomSelf, ", id);
-    /* Parameters for call */
-    doWriteParametersOnly(of, tree);
-
-    fprintf(of, "ev) ? \\\n");
-    fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
-    fprintf(of, "        (nomSelf,");
-    /* add the parms */
-    doWriteParametersOnly(of, tree);
-    fprintf(of, "ev)) : %s_retval)\n", id);
-
+    if(!strstr(id, "_nomIsObject"))
+      {
+        /* No check for _nomIsObject or otherwise we have a recursion */
+        fprintf(of, "        (parmCheckFunc_%s(nomSelf, ", id);
+        /* Parameters for call */
+        doWriteParametersOnly(of, tree);        
+        fprintf(of, "ev) ? \\\n");
+        fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
+        fprintf(of, "        (nomSelf,");
+        /* add the parms */
+        doWriteParametersOnly(of, tree);
+        fprintf(of, "ev)) : %s_retval)\n", id);
+      }
+    else
+      {
+        fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
+        fprintf(of, "        (nomSelf,");
+        /* add the parms */
+        doWriteParametersOnly(of, tree);
+        fprintf(of, "ev))\n");
+      }
     /* else NOM_NO_PARAM_CHECK */
     fprintf(of, "#else /* Extended parameter check */\n");
 
@@ -1339,15 +1349,30 @@ VoyagerOutputNewMethod(FILE  *of, IDL_tree tree, const char *nom_prefix)
     /* add the parms */
     doWriteParametersOnly(of, tree);
     fprintf(of, "ev) \\\n");
-    fprintf(of, "        (objectCheckFunc_%s(nomSelf, ", id2);
-    fprintf(of, " \"%s\") ? \\\n", id);
-    fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
-    fprintf(of, "        (nomSelf,");
-    /* add the parms */
-    doWriteParametersOnly(of, tree);
-    fprintf(of, "ev)) : (");
-    orbit_cbe_write_param_typespec(of, tree);
-    fprintf(of, ") NULL)\n");
+    if(!strstr(id, "_nomIsObject"))
+      {
+        /* No check for _nomIsObject or otherwise we have a recursion */
+        if(!strcmp(id2, "NOMObject"))
+          fprintf(of, "        (nomCheckNOMObjectPtr((NOMObject*)nomSelf, %sClassData.classObject,", id2);
+        else
+          fprintf(of, "        (nomCheckObjectPtr((NOMObject*)nomSelf, %sClassData.classObject,", id2);
+        fprintf(of, " \"%s\", ev) ? \\\n", id); /* method name */
+        fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
+        fprintf(of, "        (nomSelf,");
+        /* add the parms */
+        doWriteParametersOnly(of, tree);
+        fprintf(of, "ev)) : (");
+        orbit_cbe_write_param_typespec(of, tree);
+        fprintf(of, ") NULL)\n");
+      }
+    else
+      {
+        fprintf(of, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", id2, id3);
+        fprintf(of, "        (nomSelf,");
+        /* add the parms */
+        doWriteParametersOnly(of, tree);
+        fprintf(of, "ev))\n");
+      }
     fprintf(of, "#endif\n");
 
     /* No parameter check at all */
@@ -1479,8 +1504,10 @@ ch_output_stub_protos(IDL_tree tree, OIDL_Run_Info *rinfo, OIDL_C_Info *ci)
       
       /******* Print generic object check function  *******/
 
-      fprintf(ci->fh, "NOMEXTERN gboolean NOMLINK objectCheckFunc_%s(%s *nomSelf, gchar* chrMethodName);\n\n", id, id);
-
+      if(!strcmp(id, "NOMObject"))
+        fprintf(ci->fh, "NOMEXTERN gboolean NOMLINK nomCheckNOMObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);\n\n");
+      else
+        fprintf(ci->fh, "NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);\n\n");
       
       /******* Print introduced methods *******/
       for(sub = IDL_INTERFACE(tree).body; sub; sub = IDL_LIST(sub).next) {

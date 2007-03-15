@@ -459,13 +459,13 @@ VoyagerCreateObjectCheckFunction(char *id2, CBESkelImplInfo *ski)
       /* Output a function for checking the parameters. Note that we only
          check the object pointer. */
       fprintf(ski->of, "\n/* Function to check if an object is valid before calling a method on it */\n");
-      fprintf(ski->of, "#ifndef NOM_NO_PARAM_CHECK\n");
+      fprintf(ski->of, "#ifdef NOM_NO_PARAM_CHECK /* Disabled by now because not working */\n");
       fprintf(ski->of, "NOMEXTERN ");                
       fprintf(ski->of, "gboolean NOMLINK objectCheckFunc_%s(%s *nomSelf, gchar* chrMethodName)\n",
               id2, id2);                
       fprintf(ski->of, "{\n");
       
-      fprintf(ski->of, "if(!nomIsObj(nomSelf) || !_nomIsA(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
+      fprintf(ski->of, "if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
       fprintf(ski->of, "  {\n");
       fprintf(ski->of, "  nomPrintObjectPointerError(nomSelf, \"%s\", chrMethodName);\n", id2);
       fprintf(ski->of, "  g_message(\"Note that NULL is returned for the call (if the method returns a value). This may not be correct. Use the NOMPARMCHECK() macro to specify default return values for methods.\");\n");
@@ -1133,7 +1133,7 @@ cbe_ski_do_op_dcl(CBESkelImplInfo *ski)
 
                 fprintf(ski->of, "{\n");
 
-                fprintf(ski->of, "if(!nomIsObj(nomSelf) || !_nomIsA(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
+                fprintf(ski->of, "if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf , %sClassData.classObject, NULLHANDLE))\n", id2);
                 fprintf(ski->of, "  {\n");
                 fprintf(ski->of, "  nomPrintObjectPointerError(nomSelf, \"%s\", \"%s\");\n", id2, id);
                 fprintf(ski->of, "  return FALSE;\n");

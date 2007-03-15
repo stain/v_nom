@@ -18,6 +18,10 @@ EXPORTS
 	nomEndRegisterDLLWithGC
 	nomRegisterDLLByName
 	nomQueryUsingNameIsDLLRegistered
+;        nomPrintObjectPointerErrorMsg
+	nomCheckNOMObjectPtr
+	nomCheckObjectPtr
+	nomCreateEnvNoObjectCheck
 
 	nomPrintf		
 

@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2006
+* Portions created by the Initial Developer are Copyright (C) 2005-2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -54,7 +54,84 @@
 
 //#include "cwsomcls.h"
 extern NOMClassMgr* NOMClassMgrObject;
+extern gboolean fInitialized;
 
+NOMEXTERN void NOMLINK nomPrintObjectPointerErrorMsg(NOMObject*  nomObject, gchar *chrClsName, gchar* chrMethodName)
+{
+  if(!nomObject)
+    g_warning("The object used to call the method %s is not valid. A NULL pointer was given.", chrMethodName);
+  else{
+    if(!nomIsObj(nomObject))
+      g_warning("The object used to call the method %s is not a valid NOM object. ", chrMethodName);
+    else
+      g_warning("The object used to call the method %s is not valid for this method. The object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, chrClsName, NOMObject_nomGetClassName(nomObject, NULLHANDLE));
+  }
+}
+
+/*
+  This function prints some more info about the object error. It's used for generic checks which
+  always return NULL which isn't always correct.
+ */
+static void nomPrintAdditionalErrorMsg(void)
+{
+  g_message("Note that NULL is returned for the call (if the method returns a value). This may not be correct. Use the NOMPARMCHECK() macro to specify default return values for methods.");
+}
+
+/* Function to check if  NOMObject is valid before calling a method on it. Note that we don't have to check
+   the instance class here using nomIsA*(). */
+NOMEXTERN gboolean NOMLINK nomCheckNOMObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev)
+{
+  /* Not initialized yet, so object check won't work. This means the three core NOM classes are not
+     yet created.*/
+  if(!fInitialized)
+    return TRUE;
+  
+  if(ev && (ev->fFlags & NOMENV_FLG_DONT_CHECK_OBJECT))
+    return TRUE;
+
+  //  g_message("In %s with %s %px nomClass: %px (%s)", __FUNCTION__, chrMethodName, nomSelf, nomClass, nomClass->mtab->nomClassName);
+  if(!nomIsObj(nomSelf))
+    {
+      nomPrintObjectPointerErrorMsg(nomSelf, nomClass->mtab->nomClassName, chrMethodName);
+      nomPrintAdditionalErrorMsg();
+      return FALSE;
+    }
+  return TRUE;
+}
+
+#include <string.h>
+/* Function to check if an object is valid before calling a method on it */
+NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev)
+{
+  /* Not initialized yet, so object check won't work. This means the three core NOM classes are not
+     yet created.*/
+  if(!fInitialized)
+    return TRUE;
+
+  //if(strstr( chrMethodName, "nomIsObj"))
+  //return TRUE;
+
+  if(ev && (ev->fFlags & NOMENV_FLG_DONT_CHECK_OBJECT))
+    return TRUE;
+
+  //  g_message("In %s with %s %px nomClass: %px (%s)", __FUNCTION__, chrMethodName, nomSelf, nomClass, nomClass->mtab->nomClassName);
+  if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf, nomClass, NULLHANDLE))
+    {
+      nomPrintObjectPointerErrorMsg(nomSelf, nomClass->mtab->nomClassName, chrMethodName);
+      nomPrintAdditionalErrorMsg();
+      return FALSE;
+    }
+  return TRUE;
+}
+
+NOMEXTERN CORBA_Environment* NOMLINK nomCreateEnvNoObjectCheck(void)
+{
+  CORBA_Environment * tempEnv=(CORBA_Environment*)NOMMalloc(sizeof(CORBA_Environment));
+  if(tempEnv)
+    tempEnv->fFlags|=NOMENV_FLG_DONT_CHECK_OBJECT;
+  return tempEnv;
+}
+ 
 static void dumpClassFunc(GQuark gquark, gpointer data, gpointer user_data)
 {
   nomMethodTab* mtab;

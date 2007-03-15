@@ -163,13 +163,22 @@ NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Enviro
 NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsA(NOMObject* nomSelf, const PNOMClass nomClass, CORBA_Environment *ev)
 {
   /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
-  NOMClassPriv* ncp;
-  nomMethodTabs mtabs; /* List of mtabs */
 
   if(!nomIsObj(nomClass)){
     g_warning("%s: class object pointer nomClass does not point to an object.", __FUNCTION__);
     return FALSE;
   }
+
+  return _nomIsANoClsCheck(nomSelf, nomClass, ev);
+}
+
+
+NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsANoClsCheck(NOMObject* nomSelf, const PNOMClass nomClass,
+                                                                CORBA_Environment *ev)
+{
+  /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
+  NOMClassPriv* ncp;
+  nomMethodTabs mtabs; /* List of mtabs */
 
   /* Check if we have the class in our list of classes */
   ncp=(NOMClassPriv*)nomSelf->mtab->nomClsInfo;
@@ -183,7 +192,6 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsA(NOMObject* nomSelf, const 
     }
   return FALSE;
 }
-
 
 NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsInstanceOf(NOMObject* nomSelf, const PNOMClass nomClass, CORBA_Environment *ev)
 {
