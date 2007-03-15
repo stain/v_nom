@@ -56,7 +56,7 @@
 extern NOMClassMgr* NOMClassMgrObject;
 extern gboolean fInitialized;
 
-NOMEXTERN void NOMLINK nomPrintObjectPointerErrorMsg(NOMObject*  nomObject, gchar *chrClsName, gchar* chrMethodName)
+NOMEXTERN void NOMLINK nomPrintObjectPointerErrorMsg(NOMObject*  nomObject, NOMClass* nomClass, gchar* chrMethodName)
 {
   if(!nomObject)
     g_warning("The object used to call the method %s is not valid. A NULL pointer was given.", chrMethodName);
@@ -64,7 +64,8 @@ NOMEXTERN void NOMLINK nomPrintObjectPointerErrorMsg(NOMObject*  nomObject, gcha
     if(!nomIsObj(nomObject))
       g_warning("The object used to call the method %s is not a valid NOM object. ", chrMethodName);
     else
-      g_warning("The object used to call the method %s is not valid for this method. The object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, chrClsName, NOMObject_nomGetClassName(nomObject, NULLHANDLE));
+      g_warning("The object for which the method %s should be called is not valid for this method.\nThe object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, NOMClass_nomGetCreatedClassName(nomClass, NULLHANDLE), 
+                NOMObject_nomGetClassName(nomObject, NULLHANDLE));
   }
 }
 
@@ -92,7 +93,7 @@ NOMEXTERN gboolean NOMLINK nomCheckNOMObjectPtr(NOMObject *nomSelf, NOMClass* no
   //  g_message("In %s with %s %px nomClass: %px (%s)", __FUNCTION__, chrMethodName, nomSelf, nomClass, nomClass->mtab->nomClassName);
   if(!nomIsObj(nomSelf))
     {
-      nomPrintObjectPointerErrorMsg(nomSelf, nomClass->mtab->nomClassName, chrMethodName);
+      nomPrintObjectPointerErrorMsg(nomSelf, nomClass, chrMethodName);
       nomPrintAdditionalErrorMsg();
       return FALSE;
     }
@@ -117,7 +118,7 @@ NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomCl
   //  g_message("In %s with %s %px nomClass: %px (%s)", __FUNCTION__, chrMethodName, nomSelf, nomClass, nomClass->mtab->nomClassName);
   if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf, nomClass, NULLHANDLE))
     {
-      nomPrintObjectPointerErrorMsg(nomSelf, nomClass->mtab->nomClassName, chrMethodName);
+      nomPrintObjectPointerErrorMsg(nomSelf, nomClass, chrMethodName);
       nomPrintAdditionalErrorMsg();
       return FALSE;
     }
