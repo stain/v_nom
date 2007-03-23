@@ -85,72 +85,6 @@ SYMBOLINFO curSymbol;
 
 
 
-
-/*
-  Parse the class version. Note that the identifier is the current symbol..
-
-  OM:= IDL_SYMBOL_OVERRIDE '(' IDENT ')' ';'
- */
-void parseOverrideMethod(void)
-{
-  GTokenValue value;
-  POVERMETHOD pOMethod=g_malloc0(sizeof(OVERMETHOD));
-
-  if(!matchNext('('))
-    {
-      getNextToken(); /* Make sure error references the correct token */
-      g_scanner_unexp_token(gScanner,
-                            '(',
-                            NULL,
-                            NULL,
-                            NULL,
-                            "Error in NOMOVERRIDE()",
-                            TRUE); /* is_error */
-      exit(1);
-    }
-
-  if(!matchNext(G_TOKEN_IDENTIFIER))
-    {
-      getNextToken(); /* Make sure error references the correct token */
-      g_scanner_unexp_token(gScanner,
-                            G_TOKEN_IDENTIFIER,
-                            NULL,
-                            NULL,
-                            NULL,
-                            "Error in NOMOVERRIDE()",
-                            TRUE); /* is_error */
-      exit(1);
-    }
-  value=gScanner->value;
-  pOMethod->chrName=g_strdup(value.v_identifier);
-
-  if(!matchNext(')'))
-    {
-      getNextToken(); /* Make sure error references the correct token */
-      g_scanner_unexp_token(gScanner,
-                            ')',
-                            NULL,
-                            NULL,
-                            NULL,
-                            "Error in NOMOVERRIDE()",
-                            TRUE); /* is_error */
-      exit(1);
-    }
-  if(!matchNext(';'))
-    {
-      getNextToken(); /* Make sure error references the correct token */
-      g_scanner_unexp_token(gScanner,
-                            ';',
-                            NULL,
-                            NULL,
-                            NULL,
-                            "Error in NOMOVERRIDE()",
-                            TRUE); /* is_error */
-      exit(1);
-    }
-  g_ptr_array_add(pCurInterface->pOverrideArray, (gpointer) pOMethod);
-}
-
 gchar* getTypeSpecStringFromCurToken(void)
 {
   GTokenValue value;
@@ -176,9 +110,10 @@ gchar* getTypeSpecStringFromCurToken(void)
     }
 }
 
+void parseIt()
+{
 
-
-
+}
 
 
 /*

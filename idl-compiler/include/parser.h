@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2007
+* Portions created by the Initial Developer are Copyright (C) 2007
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -141,7 +141,6 @@ void parseMethod(void);
 void parseInstanceVar(void);
 void parseInterface(GTokenType token);
 void parseClassVersion(void);
-
 void parseClassVersion(void);
 void parseOverrideMethod(void);
 
