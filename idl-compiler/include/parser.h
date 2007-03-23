@@ -135,6 +135,7 @@ enum
   KIND_DIRECTION    /* in, out, inout */
 };
 
+PINTERFACE findInterfaceFromName(gchar* chrName);
 
 void parseTypeSpec(PMETHODPARAM pMethodParam);
 void parseMethod(void);

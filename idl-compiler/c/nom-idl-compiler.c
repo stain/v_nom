@@ -84,6 +84,20 @@ PINTERFACE pCurInterface=NULL;
 SYMBOLINFO curSymbol;
 
 
+PINTERFACE findInterfaceFromName(gchar* chrName)
+{
+  int a;
+
+  for(a=0;a<pInterfaceArray->len;a++)
+    {
+      PINTERFACE pif=g_ptr_array_index(pInterfaceArray, a);
+      if(!strcmp(chrName, pif->chrName))
+        return pif;
+    }
+
+  return NULL;
+}
+
 
 gchar* getTypeSpecStringFromCurToken(void)
 {
@@ -110,65 +124,14 @@ gchar* getTypeSpecStringFromCurToken(void)
     }
 }
 
-void parseIt()
-{
-
-}
-
-
-/*
-  Main entry point. This function is called from the EMX wrapper. Be aware that gtk_init()
-  is already called in the wrapper.
+/**
+   This is the root parse function. Here starts the fun...
  */
-int main(int argc, char **argv)
+void parseIt(void)
 {
-  int a;
-  int fd;
-  
-  int idScope=0;
-
-  if(argc<2)
-    return 1;
-
-  for(a=0; a<argc; a++)
-    {
-      g_message("arg %d: %s", a, argv[a]);
-    }
-
-  fd=open(argv[1], O_RDONLY);
-  
-  if(-1==fd)
-    {
-      g_message("Can't open input file %s", argv[1]);
-      exit(1);
-    }
-  
-  g_printf("\n");
-
-  gScanner=g_scanner_new(NULL);
-  gScanner->user_data=(gpointer)&curSymbol;
-  curSymbol.pSymbols=idlSymbols;
-
-  pInterfaceArray=g_ptr_array_new();
-
-  g_scanner_input_file(gScanner, fd);
-  /* No single line comments */
-  gScanner->config->skip_comment_single=FALSE;
-  gScanner->config->cpair_comment_single="";
-  gScanner->input_name=IDL_COMPILER_STRING;
-
-  g_scanner_set_scope(gScanner, idScope);
-  /* Load our own symbols into the scanner. We use the defualt scope for now. */
-  while(pSymbols->chrSymbolName)
-    {
-      g_scanner_scope_add_symbol(gScanner, idScope, pSymbols->chrSymbolName, GINT_TO_POINTER(pSymbols->uiSymbolToken));
-      pSymbols++;
-    }
-  gScanner->config->symbol_2_token=TRUE;
-
   while(g_scanner_peek_next_token(gScanner) != G_TOKEN_EOF) {
-    /* get the next token */
     GTokenType token;
+
     curToken=g_scanner_get_next_token(gScanner);
     token=curToken;
     GTokenValue value=gScanner->value;
@@ -178,6 +141,8 @@ int main(int argc, char **argv)
       case IDL_SYMBOL_INTERFACE:
         parseInterface(token);
         break;
+
+#if 0
       case G_TOKEN_IDENTIFIER:
         g_message("Token: %d (G_TOKEN_IDENTIFIER)\t\t%s", token, value.v_identifier);
         break;
@@ -217,12 +182,69 @@ int main(int argc, char **argv)
       case IDL_SYMBOL_ENDIF:
         g_message("Token: %d (IDL_SYMBOL_ENDIF)\t\t\t", token);
         break;
+#endif
       default:
-        g_message("Token: %d (---)\t\t\t%c (LINE %d)", token, token, g_scanner_cur_line(gScanner));
+        printToken(curToken);
+        //  g_message("Token: %d (---)\t\t\t%c (LINE %d)", token, token, g_scanner_cur_line(gScanner));
         break;
       }
   }
-  if(pCurInterface)
+}
+
+
+/*
+
+ */
+int main(int argc, char **argv)
+{
+  int a;
+  int fd;
+  
+  int idScope=0;
+
+  if(argc<2)
+    return 1;
+
+  for(a=0; a<argc; a++)
+    {
+      g_message("arg %d: %s", a, argv[a]);
+    }
+
+  fd=open(argv[1], O_RDONLY);
+  
+  if(-1==fd)
+    {
+      g_message("Can't open input file %s", argv[1]);
+      exit(1);
+    }
+  
+  g_printf("\n");
+
+  gScanner=g_scanner_new(NULL);
+  gScanner->user_data=(gpointer)&curSymbol;
+  curSymbol.pSymbols=idlSymbols;
+
+  pInterfaceArray=g_ptr_array_new();
+
+  g_scanner_input_file(gScanner, fd);
+  /* No single line comments */
+  gScanner->config->skip_comment_single=FALSE;
+  gScanner->config->cpair_comment_single="";
+  /* This string is used in error messages of the parser */
+  gScanner->input_name=IDL_COMPILER_STRING;
+
+  g_scanner_set_scope(gScanner, idScope);
+  /* Load our own symbols into the scanner. We use the default scope for now. */
+  while(pSymbols->chrSymbolName)
+    {
+      g_scanner_scope_add_symbol(gScanner, idScope, pSymbols->chrSymbolName, GINT_TO_POINTER(pSymbols->uiSymbolToken));
+      pSymbols++;
+    }
+  gScanner->config->symbol_2_token=TRUE;
+
+  parseIt();
+
+  if(pInterfaceArray->len)
     printInterface();
 
   g_scanner_destroy(gScanner);
