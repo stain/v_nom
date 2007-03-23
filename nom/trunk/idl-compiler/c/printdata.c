@@ -139,6 +139,7 @@ void printInterface(void)
       PINTERFACE pif=g_ptr_array_index(pInterfaceArray, a);
       g_printf("Found Interface:\n");  
       g_printf("\tName:\t\t%s\n", pif->chrName);
+      g_printf("\tParent:\t\t%s\n", (pif->chrParent ? pif->chrParent : "No parent"));
       g_printf("\tMajor:\t\t%ld\n", pif->ulMajor);
       g_printf("\tMinor:\t\t%ld\n", pif->ulMinor);
       g_printf("\tForward decl.:\t%s\n", (pif->fIsForwardDeclaration ? "Yes" : "No"));

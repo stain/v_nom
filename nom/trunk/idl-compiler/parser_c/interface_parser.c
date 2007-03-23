@@ -33,6 +33,7 @@
 * ***** END LICENSE BLOCK ***** */
 #include <os2.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <glib.h> 
 #include "parser.h"
@@ -64,7 +65,7 @@ static PINTERFACE createInterfaceStruct()
      |  M                                             // Method
      | OV                                             // Overriden method
  */
-void parseIFaceBody(void)
+void parseIBody(void)
 {
   /* Current token is '{' */
 
@@ -96,6 +97,9 @@ void parseIFaceBody(void)
 
 
 /*
+  Parse the interface name.
+  Note that the current token is the 'interface' keyword.
+
   I:= IDL_SYMBOL_INTERFACE G_TOKEN_INDENTIFIER
  */
 static void parseIFace(GTokenType token)
@@ -113,43 +117,127 @@ static void parseIFace(GTokenType token)
     }
   /* Save interface info */
   GTokenValue value=gScanner->value;
-  pCurInterface=createInterfaceStruct();
   pCurInterface->chrName=g_strdup(value.v_identifier);
+}
+
+/*
+  Current token is '{'.
+
+  IB2:= '{' IB '}'
+      | '{' IB '}' ';'
+
+*/
+static void parseIFaceBody(void)
+{
+  parseIBody();
+  if(!matchNext('}'))
+    {
+      g_scanner_unexp_token(gScanner,
+                            '}',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "No closing of 'interface' section.",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+  /* Remove a terminating ';' from the input if present. */
+  matchNext(';');
+}
+
+/*
+  Parse an interface which is subclassed. This includes checking if the parent
+  interface is already defined.
+
+  IS:= G_TOKEN_INDENTIFIER IB2
+ */
+static void parseSubclassedIFace()
+{
+
+  /* Parent interface */
+  if(!matchNext(G_TOKEN_IDENTIFIER))
+    {
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_IDENTIFIER,
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Parent interface name is missing.",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+  GTokenValue value=gScanner->value;
+  pCurInterface->chrParent=g_strdup(value.v_identifier);
+
+  /* Check if the parent interface is known. */
+  if(!findInterfaceFromName(pCurInterface->chrParent))
+  {
+    g_scanner_unexp_token(gScanner,
+                          G_TOKEN_IDENTIFIER,
+                          NULL,
+                          NULL,
+                          NULL,
+                          "Parent interface in definition is unknown.",
+                          TRUE); /* is_error */
+    exit(1);
+
+  }
+
+  if(!matchNext('{'))
+    {
+      g_scanner_unexp_token(gScanner,
+                            '{',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "No opening brace in interface definition.",
+                            TRUE); /* is_error */
+      exit(1);
+      
+    }
+  parseIFaceBody();
 }
 
 /*
   Parse an interface declaration. The current token is the 'interface' keyword.
 
   interface:= I ';'                       // Forward declaration
-            | I '{' IB '}'
-            | I ':' G_TOKEN_INDENTIFIER '{' ID '}'
+            | I IB2
+            | I ':' IS                    // Subclassed interface
 
- 
+  This translates into:
+
+  interface:= I ';'                       // Forward declaration
+            | I '{' IB '}'
+            | I ':' G_TOKEN_INDENTIFIER '{' IB '}'
  */
 void parseInterface(GTokenType token)
 {
+  pCurInterface=createInterfaceStruct();
+
+  /* Get the interface name */
   parseIFace(token);
-  getNextToken();
-  switch(curToken)
+
+  if(matchNext(';'))
     {
-    case ';':
-      if(pCurInterface)
-        {
-          pCurInterface->fIsForwardDeclaration=TRUE;
-          g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
-          pCurInterface=NULL;
-        }
-      break;
-    case ':':
-      g_message("Line %d: Defining subclasses interfaces not supported yet",  g_scanner_cur_line(gScanner));
-      exit(0);
-    case '{':
+      pCurInterface->fIsForwardDeclaration=TRUE;
+      g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
+
+    }
+  else if(matchNext(':'))
+    {
+      parseSubclassedIFace();
+      g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
+    }
+  else if(matchNext('{'))
+    {
       parseIFaceBody();
       g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
-      break;
-    default:
+    }
+  else
+    {
       g_message("Line %d: Error in interface declaration",  g_scanner_cur_line(gScanner));
       exit(0);
-      break;
     }
 }
+
