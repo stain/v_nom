@@ -41,6 +41,9 @@ extern GScanner *gScanner;
 extern GTokenType curToken;
 extern PINTERFACE pCurInterface;
 
+/* In override_parser.c */
+extern PINTERFACE findInterfaceForMethod(PINTERFACE pStartInterface, gchar* chrMethodName);
+
 static PMETHOD createMethodStruct()
 {
   PMETHOD pMethod=g_malloc0(sizeof(METHOD));
@@ -145,7 +148,7 @@ void parseMethod(void)
 {
   GTokenValue value;
   PMETHOD pMethod=createMethodStruct();
-
+  PINTERFACE pif;
   //g_printf("%d: ", __LINE__);
   //printToken(curToken);
 
@@ -156,7 +159,6 @@ void parseMethod(void)
   if(!matchNext(G_TOKEN_IDENTIFIER))
     {
       getNextToken(); /* Make sure error references the correct token */
-      printToken(curToken);
       g_scanner_unexp_token(gScanner,
                             G_TOKEN_IDENTIFIER,
                             NULL,
@@ -168,6 +170,23 @@ void parseMethod(void)
     }
   value=gScanner->value;
   pMethod->chrName=g_strdup(value.v_identifier);
+
+  /* Now check if the method was introduced by some parent */
+  if((pif=findInterfaceForMethod(pCurInterface, pMethod->chrName))!=NULL)
+    {
+      gchar* chrMessage;
+      chrMessage=g_strdup_printf("A method '%s' is already present in interface '%s'.",
+                                 pMethod->chrName, pif->chrName);
+
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_IDENTIFIER,
+                            NULL,
+                            NULL,
+                            NULL,
+                            chrMessage,
+                            TRUE); /* is_error */
+      exit(1);
+    }
 
   /* Handle parameters  if any */
   if(!matchNext('('))
