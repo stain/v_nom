@@ -107,6 +107,17 @@ typedef struct
                                     about their name. */
 }SYMBOLINFO,*PSYMBOLINFO; 
 
+typedef struct
+{
+  GTree*    pSymbolTree;         /* Our introduced symbols */
+  guint     uiLineCorrection;    /* This is the line number put by the preprocessor into
+                                    the source file. It's used to calculate proper line numbers
+                                    for errors. */
+  char*     chrCurrentSourceFile;/* The preprocessor includes files for us. This is the info
+                                    about their name. */
+
+}PARSEINFO, *PPARSEINFO;
+
 /* Symbols defined for our IDL language.
    Keep these enums in sync with the order of the idlSymbols struct! */
 enum 

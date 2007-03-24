@@ -71,17 +71,42 @@ void parseIBody(void)
   /* Current token is '{' */
 
   do{
-    g_printf("%d: ", __LINE__);
-    printToken(curToken);
-    if(matchNext(IDL_SYMBOL_CLSVERSION))
-      parseClassVersion();
-    if(matchNext(IDL_SYMBOL_OVERRIDE))
-      parseOverrideMethod();
-    else if(matchNext(IDL_SYMBOL_INSTANCEVAR))
-      parseInstanceVar();
-    else if(matchNextKind(KIND_TYPESPEC)) /* Be aware that we don't compare types here */
+    //  g_printf("%d: ", __LINE__);
+    //  printToken(curToken);
+
+    /* Typespec check must be first */
+    if(matchNextKind(KIND_TYPESPEC)) /* Be aware that we don't compare types here */
       {
         parseMethod();
+      }
+    else if(matchNext(G_TOKEN_SYMBOL))
+      {
+        PSYMBOL pCurSymbol;
+        GTokenValue value;
+        
+        value=gScanner->value;
+        pCurSymbol=value.v_symbol;
+        switch(pCurSymbol->uiSymbolToken)
+          {
+          case IDL_SYMBOL_CLSVERSION:
+            parseClassVersion();
+            break;
+          case IDL_SYMBOL_OVERRIDE:
+            parseOverrideMethod();
+            break;
+          case IDL_SYMBOL_INSTANCEVAR:
+            parseInstanceVar();
+            break;
+          default:
+            g_scanner_unexp_token(gScanner,
+                                  G_TOKEN_SYMBOL,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  "Trying to parse interface body.",
+                                  TRUE); /* is_error */
+            exit(1);
+          }/* switch */
       }
     else
       {
