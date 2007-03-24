@@ -72,6 +72,7 @@ void parseOverrideMethod(void)
 {
   GTokenValue value;
   POVERMETHOD pOMethod=g_malloc0(sizeof(OVERMETHOD));
+  PINTERFACE pif;
 
   if(!matchNext('('))
     {
@@ -102,12 +103,15 @@ void parseOverrideMethod(void)
   pOMethod->chrName=g_strdup(value.v_identifier);
 
   /* Now check if the method was introduced by some parent */
-  if(!findInterfaceForMethod(pCurInterface, pOMethod->chrName))
+  if((pif=findInterfaceForMethod(pCurInterface, pOMethod->chrName))==NULL)
     {
+
       g_message("%s:%d: Method '%s' was not introduced by some parent interface.", gScanner->input_name,
                 g_scanner_cur_line(gScanner), pOMethod->chrName);
       exit(1);
     }
+  pOMethod->chrIntroducingIFace=pif->chrName; /* No copy of string here. Nobody should free the
+                                               interface info under our feet. */
 
   if(!matchNext(')'))
     {

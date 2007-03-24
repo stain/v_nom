@@ -35,6 +35,7 @@
 #include <stdlib.h>
 
 #include <glib.h> 
+#include <glib/gprintf.h> 
 #include "parser.h"
 
 extern GScanner *gScanner;
@@ -149,8 +150,8 @@ void parseMethod(void)
   GTokenValue value;
   PMETHOD pMethod=createMethodStruct();
   PINTERFACE pif;
-  //g_printf("%d: ", __LINE__);
-  //printToken(curToken);
+  g_printf("%s %d: ", __FUNCTION__, __LINE__);
+  printToken(curToken);
 
   /* Do type spec */
   parseTypeSpec(&pMethod->mpReturn);

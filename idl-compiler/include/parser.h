@@ -50,6 +50,7 @@ void printInterface(void);
 typedef struct
 {
   gchar* chrName;    /* Name of this instance variable */
+  gchar* chrIntroducingIFace;
 }OVERMETHOD, *POVERMETHOD;
 
 #define PARM_DIRECTION_IN     1
@@ -99,6 +100,11 @@ typedef struct
 {
   const SYMBOL    *pSymbols;     /* List of our introduced symbols */
   guint     uiCurSymbolKind;
+  guint     uiLineCorrection;    /* This is the line number put by the preprocessor into
+                                    the source file. It's used to calculate proper line numbers
+                                    for errors. */
+  char*     chrCurrentSourceFile;/* The preprocessor includes files for us. This is the info
+                                    about their name. */
 }SYMBOLINFO,*PSYMBOLINFO; 
 
 /* Symbols defined for our IDL language.
@@ -144,5 +150,6 @@ void parseInterface(GTokenType token);
 void parseClassVersion(void);
 void parseClassVersion(void);
 void parseOverrideMethod(void);
-
+void parseHash(void);
+void parsePreprocLineInfo(void);
 

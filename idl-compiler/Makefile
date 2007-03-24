@@ -31,6 +31,8 @@ PGOBJECTS	=	$(OBJDIR)/nom-idl-compiler.o \
 			$(OBJDIR)/interface_parser.o \
 			$(OBJDIR)/classversion_parser.o \
 			$(OBJDIR)/override_parser.o \
+			$(OBJDIR)/hash_parser.o \
+			$(OBJDIR)/lineinfo_parser.o \
 			$(OBJDIR)/printdata.o
 
 

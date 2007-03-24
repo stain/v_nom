@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include <glib.h> 
+#include <glib/gprintf.h> 
 #include "parser.h"
 
 extern GScanner *gScanner;
@@ -70,8 +71,8 @@ void parseIBody(void)
   /* Current token is '{' */
 
   do{
-    //g_printf("%d: ", __LINE__);
-    //printToken(curToken);
+    g_printf("%d: ", __LINE__);
+    printToken(curToken);
     if(matchNext(IDL_SYMBOL_CLSVERSION))
       parseClassVersion();
     if(matchNext(IDL_SYMBOL_OVERRIDE))
@@ -84,13 +85,15 @@ void parseIBody(void)
       }
     else
       {
-        //g_message("Line %d Error in'interface' deklaration %d", g_scanner_cur_line(gScanner),
-        //        g_scanner_peek_next_token(gScanner));
-        //g_printf("%d: ", __LINE__);
-        //printToken(curToken);
-        /* Unknown token, skip it. */
         getNextToken();
-        //exit(1);
+        g_scanner_unexp_token(gScanner,
+                              G_TOKEN_IDENTIFIER,
+                              NULL,
+                              NULL,
+                              NULL,
+                              "Trying to parse interface body.",
+                              TRUE); /* is_error */
+        exit(1);
       }
     }while(g_scanner_peek_next_token(gScanner)!='}');
 }
