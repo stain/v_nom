@@ -65,6 +65,7 @@ static void parseMethodParams(PMETHOD pMethod)
 {
   GTokenValue value;
   PMETHODPARAM pParam;
+  PSYMBOL pCurSymbol;
 
   do{ 
     pParam=g_malloc0(sizeof(METHODPARAM));
@@ -83,7 +84,9 @@ static void parseMethodParams(PMETHOD pMethod)
         exit(1);
       }
 
-    switch(curToken)
+    value=gScanner->value;
+    pCurSymbol=value.v_symbol;
+    switch(pCurSymbol->uiSymbolToken)
       {
       case IDL_SYMBOL_IN:
         pParam->uiDirection=PARM_DIRECTION_IN;
@@ -150,8 +153,8 @@ void parseMethod(void)
   GTokenValue value;
   PMETHOD pMethod=createMethodStruct();
   PINTERFACE pif;
-  g_printf("%s %d: ", __FUNCTION__, __LINE__);
-  printToken(curToken);
+  //g_printf("%s %d: ", __FUNCTION__, __LINE__);
+  //printToken(curToken);
 
   /* Do type spec */
   parseTypeSpec(&pMethod->mpReturn);

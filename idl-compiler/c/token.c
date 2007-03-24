@@ -45,13 +45,13 @@ extern GTokenType curToken;
   We need this information during parsing to decide if an identifier
   is e.g. a typespec or just a var name.
  */
-void setSymbolInfo(GTokenType token)
+void setCurSymbolInfo(void)
 {
   PSYMBOLINFO psi;
 
   psi=(PSYMBOLINFO)gScanner->user_data;
 
-  switch(token)
+  switch(curToken)
     {
     case G_TOKEN_IDENTIFIER:
       /* Here we have to check identifiers if they are for example types, e.g. int */
@@ -60,9 +60,15 @@ void setSymbolInfo(GTokenType token)
       psi->uiCurSymbolKind=KIND_UNKNOWN;
       break;
     }
-  if(token>G_TOKEN_LAST)
+  if(curToken==G_TOKEN_SYMBOL)
     {
-      psi->uiCurSymbolKind=psi->pSymbols[token-G_TOKEN_LAST-1].uiKind;
+      GTokenValue value;
+      PSYMBOL pCurSymbol;
+      
+      value=gScanner->value;
+      pCurSymbol=value.v_symbol;
+
+      psi->uiCurSymbolKind=pCurSymbol->uiKind;
     }
 }
 
@@ -74,16 +80,23 @@ guint queryCurTokensKind(void)
   return psi->uiCurSymbolKind;
 }
 
-static guint getKindFromTokenType(GTokenType token)
+/* This token is not necessarily the current token! */
+static guint getKindOfNextToken()
 {
-  if(token>G_TOKEN_LAST)
+  /* Load info into gScanner */
+  g_scanner_peek_next_token(gScanner);
+
+  if(gScanner->next_token==G_TOKEN_SYMBOL)
     {
-      PSYMBOLINFO psi;
+      GTokenValue value;
+      PSYMBOL pCurSymbol;
+
+      value=gScanner->next_value;
+      pCurSymbol=value.v_symbol;
       
-      psi=(PSYMBOLINFO)gScanner->user_data;
-      return psi->pSymbols[token-G_TOKEN_LAST-1].uiKind;
+      return pCurSymbol->uiKind;
     }
-  switch(token)
+  switch(gScanner->next_token)
     {
     case G_TOKEN_IDENTIFIER:
       {
@@ -97,25 +110,23 @@ static guint getKindFromTokenType(GTokenType token)
   return KIND_UNKNOWN;
 }
 
+#if 0
 guint queryNextTokensKind(void)
 {
   return getKindFromTokenType(gScanner->next_token);
 }
-
+#endif
 
 /* Well, the name says all... */
 void getNextToken(void)
 {
   curToken = g_scanner_get_next_token(gScanner);
-  setSymbolInfo(curToken);
+  setCurSymbolInfo();
 }
 
 gboolean matchNextKind(guint uiKind)
 {
-  GTokenType token;
-
-  token=g_scanner_peek_next_token(gScanner);
-  if(uiKind==getKindFromTokenType(token))
+  if(uiKind==getKindOfNextToken())
     {
       getNextToken();
       return TRUE;
@@ -157,9 +168,38 @@ void printToken(GTokenType token)
 
   switch(token)
     {
-    case IDL_SYMBOL_INTERFACE:
-      g_message("Token: %d (IDL_SYMBOL_INTERFACE)\t\t\t (LINE %d)", token, g_scanner_cur_line(gScanner));
-      break;
+    case G_TOKEN_SYMBOL:
+      {
+        PSYMBOL pCurSymbol=value.v_symbol;
+
+        switch(pCurSymbol->uiSymbolToken)
+          {
+          case IDL_SYMBOL_INTERFACE:
+            g_message("Token: %d (IDL_SYMBOL_INTERFACE)\t\t\t (LINE %d)",
+                      pCurSymbol->uiSymbolToken, g_scanner_cur_line(gScanner));
+            break;
+          case IDL_SYMBOL_DEFINE:
+            g_message("Token: %d (IDL_SYMBOL_DEFINE)\t\t\t", pCurSymbol->uiSymbolToken);
+            break;
+          case IDL_SYMBOL_IFDEF:
+            g_message("Token: %d (IDL_SYMBOL_IFDEF)\t\t\t", pCurSymbol->uiSymbolToken);
+            break;
+          case IDL_SYMBOL_ENDIF:
+            g_message("Token: %d (IDL_SYMBOL_ENDIF)\t\t\t", pCurSymbol->uiSymbolToken);
+            break;
+          default:
+            {
+              PSYMBOLINFO psi;
+              psi=(PSYMBOLINFO)gScanner->user_data;         
+            
+              g_message("Token: %d (%s)\t\t\t (LINE %d)", pCurSymbol->uiSymbolToken,
+                        pCurSymbol->chrSymbolName, g_scanner_cur_line(gScanner));
+
+            break;
+            }
+          }/* switch */
+        break;
+      }
     case G_TOKEN_IDENTIFIER:
       g_message("Token: %d (G_TOKEN_IDENTIFIER)\t\t%s (LINE %d)",
                 token, value.v_identifier, g_scanner_cur_line(gScanner));
@@ -197,25 +237,9 @@ void printToken(GTokenType token)
     case G_TOKEN_INT:
       g_message("Token: %d (G_TOKEN_INT)\t\t\t%ld", token, value.v_int);
       break;
-    case IDL_SYMBOL_DEFINE:
-      g_message("Token: %d (IDL_SYMBOL_DEFINE)\t\t\t", token);
-      break;
-    case IDL_SYMBOL_IFDEF:
-      g_message("Token: %d (IDL_SYMBOL_IFDEF)\t\t\t", token);
-      break;
-    case IDL_SYMBOL_ENDIF:
-      g_message("Token: %d (IDL_SYMBOL_ENDIF)\t\t\t", token);
-      break;
     default:
-      {
-        PSYMBOLINFO psi;
-        psi=(PSYMBOLINFO)gScanner->user_data;
-
-        if(token>G_TOKEN_LAST)
-          g_message("Token: %d (%s)\t\t\t (LINE %d)", token,
-                    psi->pSymbols[token-G_TOKEN_LAST-1].chrSymbolName, g_scanner_cur_line(gScanner));
-        else
-          g_message("Token: %d (---)\t\t\t (LINE %d)", token, g_scanner_cur_line(gScanner));
+      {        
+        g_message("Token: %d (---)\t\t\t (LINE %d)", token, g_scanner_cur_line(gScanner));
         break;
       } /* default */
     } /* switch */

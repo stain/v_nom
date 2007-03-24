@@ -77,7 +77,7 @@ GPtrArray* pInterfaceArray;
 
 /* Symbols defined for our IDL language.
    Keep this in synch with the defined enums! */
-const SYMBOL idlSymbols[]={
+SYMBOL idlSymbols[]={
   {"interface", IDL_SYMBOL_INTERFACE, KIND_UNKNOWN}, /* 71 */
   {"NOMCLASSVERSION", IDL_SYMBOL_CLSVERSION, KIND_UNKNOWN},
   {"NOMINSTANCEVAR", IDL_SYMBOL_INSTANCEVAR, KIND_UNKNOWN},
@@ -102,6 +102,8 @@ PINTERFACE pCurInterface=NULL;
 /* Holding info about current token. Referenced by gScanner. */
 SYMBOLINFO curSymbol;
 
+/* Holding the current state of parsing and pointers to necessary lists. */
+PARSEINFO parseInfo={0};
 
 PINTERFACE findInterfaceFromName(gchar* chrName)
 {
@@ -122,25 +124,34 @@ gchar* getTypeSpecStringFromCurToken(void)
 {
   GTokenValue value;
 
-  if(G_TOKEN_IDENTIFIER==curToken)
-    return g_strdup(value.v_identifier);
-  else
+  value=gScanner->value;
+
+  switch(curToken)
     {
-      /* It's one of our symbols. */
-      PSYMBOLINFO psi;
+    case G_TOKEN_IDENTIFIER:
+      return g_strdup(value.v_identifier);
+      break;
+    case G_TOKEN_SYMBOL:
+      {
+        /* It's one of our symbols. */
+        PSYMBOL pCurSymbol;
 
-      if(curToken<=G_TOKEN_LAST)
-        g_scanner_unexp_token(gScanner,
-                              G_TOKEN_SYMBOL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              "Error in NOMINSTANCEVAR()",
-                              TRUE); /* is_error */
+        pCurSymbol=value.v_symbol;
+        return g_strdup(pCurSymbol->chrSymbolName);
+        break;
+      }
+    default:
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_SYMBOL,
+                            NULL,
+                            NULL,
+                            NULL,
+                            "",
+                            TRUE); /* is_error */
 
-      psi=(PSYMBOLINFO)gScanner->user_data;
-      return psi->pSymbols[curToken-G_TOKEN_LAST-1].chrSymbolName;
+      break;
     }
+  return "unknown";
 }
 
 
@@ -158,13 +169,22 @@ void parseIt(void)
     
     switch(curToken)
       {
-      case IDL_SYMBOL_INTERFACE:
-        parseInterface(token);
-        break;
       case '#':
         parseHash();
         break;
-
+      case G_TOKEN_SYMBOL:
+        {
+          PSYMBOL pCurSymbol=value.v_symbol;
+          switch(pCurSymbol->uiSymbolToken)
+            {
+            case IDL_SYMBOL_INTERFACE:
+              parseInterface(token);
+              break;
+            default:
+              break;
+            }
+          break;
+        }
 #if 0
       case G_TOKEN_IDENTIFIER:
         g_message("Token: %d (G_TOKEN_IDENTIFIER)\t\t%s", token, value.v_identifier);
@@ -225,6 +245,16 @@ static void outputCompilerHelp(GOptionContext *gContext, gchar* chrExeName)
   g_option_context_parse (gContext, &argc2, &argv2, &gError); 
 }
 
+static gint funcSymbolCompare(gconstpointer a, gconstpointer b)
+{
+  if(a==b)
+    return 0;
+
+  if(a<b)
+    return -1;
+
+  return 1;
+};
 /*
 
  */
@@ -290,6 +320,8 @@ int main(int argc, char **argv)
   
   g_printf("\n");
 
+
+
   gScanner=g_scanner_new(NULL);
   gScanner->user_data=(gpointer)&curSymbol;
   curSymbol.pSymbols=idlSymbols;
@@ -305,17 +337,20 @@ int main(int argc, char **argv)
 
   g_scanner_set_scope(gScanner, idScope);
   /* Load our own symbols into the scanner. We use the default scope for now. */
+  parseInfo.pSymbolTree=g_tree_new((GCompareFunc) funcSymbolCompare);
   while(pSymbols->chrSymbolName)
     {
-      g_scanner_scope_add_symbol(gScanner, idScope, pSymbols->chrSymbolName, GINT_TO_POINTER(pSymbols->uiSymbolToken));
+      g_scanner_scope_add_symbol(gScanner, idScope, pSymbols->chrSymbolName,
+                                 pSymbols);
+      g_tree_insert(parseInfo.pSymbolTree, pSymbols, pSymbols->chrSymbolName);
       pSymbols++;
     }
-  gScanner->config->symbol_2_token=TRUE;
+  //  gScanner->config->symbol_2_token=TRUE;
 
   parseIt();
 
-  //if(pInterfaceArray->len)
-  //  printInterface();
+  if(pInterfaceArray->len)
+    printInterface();
 
   g_scanner_destroy(gScanner);
   close(fd);
