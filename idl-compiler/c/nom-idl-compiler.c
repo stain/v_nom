@@ -53,6 +53,25 @@
 
 #include "parser.h"
 
+static gchar* chrOutputDir="";
+static gchar* chrOutputName="";
+static gboolean fOptionEmitH=FALSE;
+static gboolean fOptionEmitIH=FALSE;
+static gboolean fOptionEmitC=FALSE;
+
+/* Command line options */
+static GOptionEntry gOptionEntries[] = 
+{
+  {"directory", 'd', 0, G_OPTION_ARG_FILENAME, &chrOutputDir, "Output directory", NULL},
+  {"emit-h", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitH, "Emmit a header file (*.h)", NULL},
+  {"emit-ih", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitIH, "Emmit an include header (*.ih)", NULL},
+  {"emit-c", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitC, "Emmit an implementation template (*.c)", NULL},
+  {"output", 'o', 0, G_OPTION_ARG_FILENAME, &chrOutputName, "Output name", NULL},
+  {NULL}
+};
+
+static char* chrOutputFileName="";
+
 /* The pointer array holding the interfaces we found */
 GPtrArray* pInterfaceArray;
 
@@ -124,6 +143,7 @@ gchar* getTypeSpecStringFromCurToken(void)
     }
 }
 
+
 /**
    This is the root parse function. Here starts the fun...
  */
@@ -191,6 +211,19 @@ void parseIt(void)
   }
 }
 
+/* Show help.
+   gContext must be valid.
+*/
+static void outputCompilerHelp(GOptionContext *gContext, gchar* chrExeName)
+{
+  GError *gError = NULL;
+  int argc2=2;
+  char *helpCmd[]={"","--help"};
+  char** argv2=helpCmd;
+  helpCmd[0]=chrExeName;
+  
+  g_option_context_parse (gContext, &argc2, &argv2, &gError); 
+}
 
 /*
 
@@ -199,16 +232,53 @@ int main(int argc, char **argv)
 {
   int a;
   int fd;
-  
   int idScope=0;
+  GError *gError = NULL;
+  GOptionContext* gContext;
+
+  /* Parse command line options */
+  gContext = g_option_context_new ("file");
+  g_option_context_add_main_entries (gContext, gOptionEntries, NULL);
+
+  if(!g_option_context_parse (gContext, &argc, &argv, &gError))
+    {
+      outputCompilerHelp(gContext, argv[0]);
+    }
+
+  /* Correct emitter options? Exactly one emitter must be specified. */
+  a=0;
+  if(fOptionEmitH)
+    a++;
+  if(fOptionEmitIH)
+    a++;
+  if(fOptionEmitC)
+    a++;
+
+#if 0
+  if(!a){
+    g_printf("An emitter must be specified.\n\n");
+    outputCompilerHelp(gContext, argv[0]);
+  }
+  if(a>1){
+    g_printf("Only one emitter must be specified.\n\n");
+    outputCompilerHelp(gContext, argv[0]);
+  }
+#endif
+  g_option_context_free(gContext);
+
 
   if(argc<2)
-    return 1;
+    {
+      g_printf("No input file name given.\n\nUse %s --help for options.\n\n", argv[0]);
+      return 1;
+    }
 
   for(a=0; a<argc; a++)
     {
       g_message("arg %d: %s", a, argv[a]);
     }
+
+  /* Create output file name */
 
   fd=open(argv[1], O_RDONLY);
   
