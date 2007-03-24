@@ -161,6 +161,9 @@ void parseIt(void)
       case IDL_SYMBOL_INTERFACE:
         parseInterface(token);
         break;
+      case '#':
+        parseHash();
+        break;
 
 #if 0
       case G_TOKEN_IDENTIFIER:
@@ -180,9 +183,6 @@ void parseIt(void)
         break;
       case ';':
         g_message("Token: %d (semicolon)\t\t\t;", token);
-        break;
-      case '#':
-        g_message("Token: %d (hash)\t\t\t#", token);
         break;
       case '/':
         g_message("Token: %d (slash)\t\t\t/ %s", token, value.v_comment);
@@ -314,8 +314,8 @@ int main(int argc, char **argv)
 
   parseIt();
 
-  if(pInterfaceArray->len)
-    printInterface();
+  //if(pInterfaceArray->len)
+  //  printInterface();
 
   g_scanner_destroy(gScanner);
   close(fd);

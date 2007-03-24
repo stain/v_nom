@@ -158,19 +158,26 @@ void printToken(GTokenType token)
   switch(token)
     {
     case IDL_SYMBOL_INTERFACE:
-      g_message("Token: %d (IDL_SYMBOL_INTERFACE)\tParsing...", token);
+      g_message("Token: %d (IDL_SYMBOL_INTERFACE)\t\t\t (LINE %d)", token, g_scanner_cur_line(gScanner));
       break;
     case G_TOKEN_IDENTIFIER:
-      g_message("Token: %d (G_TOKEN_IDENTIFIER)\t\t%s", token, value.v_identifier);
+      g_message("Token: %d (G_TOKEN_IDENTIFIER)\t\t%s (LINE %d)",
+                token, value.v_identifier, g_scanner_cur_line(gScanner));
       break;
     case G_TOKEN_STRING:
       g_message("Token: %d (G_TOKEN_STRING)\t\t\t%s", token, value.v_string);
       break;
     case G_TOKEN_LEFT_PAREN:
-      g_message("Token: %d (G_TOKEN_LEFT_PAREN)\t\t(", token);
+      g_message("Token: %d (G_TOKEN_LEFT_PAREN)\t\t\t( (LINE %d)", token, g_scanner_cur_line(gScanner));
       break;
     case G_TOKEN_RIGHT_PAREN:
-      g_message("Token: %d (G_TOKEN_RIGHT_PAREN)\t\t)", token);
+      g_message("Token: %d (G_TOKEN_RIGHT_PAREN)\t\t\t) (LINE %d)", token, g_scanner_cur_line(gScanner));
+      break;
+    case G_TOKEN_LEFT_CURLY:
+      g_message("Token: %d (G_TOKEN_LEFT_CURLY)\t\t\t{ (LINE %d)", token, g_scanner_cur_line(gScanner));
+      break;
+    case G_TOKEN_RIGHT_CURLY:
+      g_message("Token: %d (G_TOKEN_RIGHT_CURLY)\t\t\t} (LINE %d)", token, g_scanner_cur_line(gScanner));
       break;
     case ':':
       g_message("Token: %d (colon)\t\t:", token);
@@ -200,7 +207,16 @@ void printToken(GTokenType token)
       g_message("Token: %d (IDL_SYMBOL_ENDIF)\t\t\t", token);
       break;
     default:
-      g_message("Token: %d (---)\t\t\t (LINE %d)", token, g_scanner_cur_line(gScanner));
-      break;
-    }
+      {
+        PSYMBOLINFO psi;
+        psi=(PSYMBOLINFO)gScanner->user_data;
+
+        if(token>G_TOKEN_LAST)
+          g_message("Token: %d (%s)\t\t\t (LINE %d)", token,
+                    psi->pSymbols[token-G_TOKEN_LAST-1].chrSymbolName, g_scanner_cur_line(gScanner));
+        else
+          g_message("Token: %d (---)\t\t\t (LINE %d)", token, g_scanner_cur_line(gScanner));
+        break;
+      } /* default */
+    } /* switch */
 }
