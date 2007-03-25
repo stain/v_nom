@@ -45,6 +45,7 @@ void printInterface(void);
 
 
 #define IDL_COMPILER_STRING "IDL compiler" /* Used inside warnings and errors */
+#define ID_SCOPE 0
 
 /* Holding an overriden method */
 typedef struct
@@ -126,11 +127,15 @@ enum
   IDL_SYMBOL_CLSVERSION,
   IDL_SYMBOL_INSTANCEVAR,
   IDL_SYMBOL_OVERRIDE,
+  IDL_SYMBOL_REGINTERFACE,  /* Used for registered interfaces */
+  IDL_SYMBOL_NATIVE,
   /* Some GLib types */
   IDL_SYMBOL_GULONG,           /* 275 */
   IDL_SYMBOL_GINT,
   IDL_SYMBOL_GPOINTER,
   IDL_SYMBOL_GBOOLEAN,
+  IDL_SYMBOL_GCHAR,
+  IDL_SYMBOL_VOID,
   /* Direction of method parameters */
   IDL_SYMBOL_IN,
   IDL_SYMBOL_OUT,

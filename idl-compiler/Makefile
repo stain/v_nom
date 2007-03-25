@@ -58,10 +58,10 @@ $(BINDIR)/nom-idl-compiler.exe:	$(OBJDIR)/o.dep $(PGOBJECTS)
 ###################################
 
 
-$(OBJDIR)/%.o:	$(CDIR)/%.c
+$(OBJDIR)/%.o:	$(CDIR)/%.c $(INCDIR)/parser.h
 	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
 
-$(OBJDIR)/%.o:	$(PARSERDIR)/%.c
+$(OBJDIR)/%.o:	$(PARSERDIR)/%.c $(INCDIR)/parser.h
 	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
 
 
