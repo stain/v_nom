@@ -41,7 +41,8 @@
 
 
 extern GScanner *gScanner;
-extern PINTERFACE pCurInterface;
+//extern PINTERFACE pCurInterface;
+extern PPARSEINFO pParseInfo;
 
 PINTERFACE findInterfaceForMethod(PINTERFACE pStartInterface, gchar* chrMethodName)
 {
@@ -104,7 +105,7 @@ void parseOverrideMethod(void)
   pOMethod->chrName=g_strdup(value.v_identifier);
 
   /* Now check if the method was introduced by some parent */
-  if((pif=findInterfaceForMethod(pCurInterface, pOMethod->chrName))==NULL)
+  if((pif=findInterfaceForMethod(pParseInfo->pCurInterface, pOMethod->chrName))==NULL)
     {
 
       g_message("%s:%d: Method '%s' was not introduced by some parent interface.", gScanner->input_name,
@@ -138,5 +139,5 @@ void parseOverrideMethod(void)
                             TRUE); /* is_error */
       exit(1);
     }
-  g_ptr_array_add(pCurInterface->pOverrideArray, (gpointer) pOMethod);
+  g_ptr_array_add(pParseInfo->pCurInterface->pOverrideArray, (gpointer) pOMethod);
 }

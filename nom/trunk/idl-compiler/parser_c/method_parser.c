@@ -40,7 +40,7 @@
 
 extern GScanner *gScanner;
 extern GTokenType curToken;
-extern PINTERFACE pCurInterface;
+extern PPARSEINFO pParseInfo;
 
 /* In override_parser.c */
 extern PINTERFACE findInterfaceForMethod(PINTERFACE pStartInterface, gchar* chrMethodName);
@@ -179,8 +179,9 @@ void parseMethod(void)
   value=gScanner->value;
   pMethod->chrName=g_strdup(value.v_identifier);
 
-  /* Now check if the method was introduced by some parent */
-  if((pif=findInterfaceForMethod(pCurInterface, pMethod->chrName))!=NULL)
+  /* Now check if the method was introduced by some parent. The interface struct contains
+     the parent name if any and the function will follow the chain of parents. */
+  if((pif=findInterfaceForMethod(pParseInfo->pCurInterface, pMethod->chrName))!=NULL)
     {
       gchar* chrMessage;
       chrMessage=g_strdup_printf("A method '%s' is already present in interface '%s'.",
@@ -225,7 +226,7 @@ void parseMethod(void)
                                 TRUE); /* is_error */
           exit(1);
         }
-      g_ptr_array_add( pCurInterface->pMethodArray, (gpointer) pMethod);
+      g_ptr_array_add( pParseInfo->pCurInterface->pMethodArray, (gpointer) pMethod);
       return;
     }
 
@@ -258,5 +259,5 @@ void parseMethod(void)
       exit(1);
     }
 
-  g_ptr_array_add( pCurInterface->pMethodArray, (gpointer) pMethod);
+  g_ptr_array_add( pParseInfo->pCurInterface->pMethodArray, (gpointer) pMethod);
 }

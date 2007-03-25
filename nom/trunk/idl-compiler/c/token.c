@@ -39,7 +39,7 @@
 #include "parser.h"
 
 extern GScanner *gScanner;
-extern GTokenType curToken;
+extern PPARSEINFO pParseInfo;
 
 /*
   We need this information during parsing to decide if an identifier
@@ -47,20 +47,16 @@ extern GTokenType curToken;
  */
 void setCurSymbolInfo(void)
 {
-  PSYMBOLINFO psi;
-
-  psi=(PSYMBOLINFO)gScanner->user_data;
-
-  switch(curToken)
+  switch(gScanner->token)
     {
     case G_TOKEN_IDENTIFIER:
       /* Here we have to check identifiers if they are for example types, e.g. int */
       break;
     default:
-      psi->uiCurSymbolKind=KIND_UNKNOWN;
+      pParseInfo->uiCurSymbolKind=KIND_UNKNOWN;
       break;
     }
-  if(curToken==G_TOKEN_SYMBOL)
+  if(gScanner->token==G_TOKEN_SYMBOL)
     {
       GTokenValue value;
       PSYMBOL pCurSymbol;
@@ -68,16 +64,13 @@ void setCurSymbolInfo(void)
       value=gScanner->value;
       pCurSymbol=value.v_symbol;
 
-      psi->uiCurSymbolKind=pCurSymbol->uiKind;
+      pParseInfo->uiCurSymbolKind=pCurSymbol->uiKind;
     }
 }
 
 guint queryCurTokensKind(void)
 {
-  PSYMBOLINFO psi;
-
-  psi=(PSYMBOLINFO)gScanner->user_data;
-  return psi->uiCurSymbolKind;
+  return pParseInfo->uiCurSymbolKind;
 }
 
 /* This token is not necessarily the current token! */
@@ -120,7 +113,7 @@ guint queryNextTokensKind(void)
 /* Well, the name says all... */
 void getNextToken(void)
 {
-  curToken = g_scanner_get_next_token(gScanner);
+  g_scanner_get_next_token(gScanner);
   setCurSymbolInfo();
 }
 
@@ -137,7 +130,7 @@ gboolean matchNextKind(guint uiKind)
 /* Well, the name says all... */
 gboolean matchCur(GTokenType token)
 {
-  if(token==curToken)
+  if(token==gScanner->token)
     {
       return TRUE;
     }
@@ -189,9 +182,6 @@ void printToken(GTokenType token)
             break;
           default:
             {
-              PSYMBOLINFO psi;
-              psi=(PSYMBOLINFO)gScanner->user_data;         
-            
               g_message("Token: %d (%s)\t\t\t (LINE %d)", pCurSymbol->uiSymbolToken,
                         pCurSymbol->chrSymbolName, g_scanner_cur_line(gScanner));
 

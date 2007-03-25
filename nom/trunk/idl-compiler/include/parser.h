@@ -83,7 +83,10 @@ typedef struct
   gulong ulMajor;    /* Class version            */
   gulong ulMinor;    /* Class version            */
   gboolean fIsForwardDeclaration;
+  gboolean fIsInRootFile;
   gchar* chrMetaClass; /* Pointer to metaclass name or NULL*/
+  char*  chrSourceFileName; /* The preprocessor includes files for us. This is the info
+                               about the file this interface is defined in. */
   GPtrArray *pMethodArray;
   GPtrArray *pOverrideArray;
   GPtrArray *pInstanceVarArray;
@@ -100,21 +103,18 @@ typedef struct
 /* Such a struct can be found in GScanner->user_data */
 typedef struct
 {
-  const SYMBOL    *pSymbols;     /* List of our introduced symbols */
-  guint     uiCurSymbolKind;
-  guint     uiLineCorrection;    /* This is the line number put by the preprocessor into
-                                    the source file. It's used to calculate proper line numbers
-                                    for errors. */
-  char*     chrCurrentSourceFile;/* The preprocessor includes files for us. This is the info
-                                    about their name. */
+  guint     _uiCurSymbolKind;
 }SYMBOLINFO,*PSYMBOLINFO; 
 
 typedef struct
 {
+  PINTERFACE pCurInterface;      /* The interface we are currently parsing. This is a working pointer. */
+  guint     uiCurSymbolKind;     /* This may be e.g. KIND_TYPESPEC */
   GTree*    pSymbolTree;         /* Our introduced symbols */
   guint     uiLineCorrection;    /* This is the line number put by the preprocessor into
                                     the source file. It's used to calculate proper line numbers
                                     for errors. */
+  char*     chrRootSourceFile;   /* File we are intending to parse. Others may get included. */
   char*     chrCurrentSourceFile;/* The preprocessor includes files for us. This is the info
                                     about their name. */
   FILE*     outFile;             /* Output file handle */
@@ -178,3 +178,5 @@ void parseOverrideMethod(void);
 void parseHash(void);
 void parsePreprocLineInfo(void);
 void parseMetaClass(void);
+
+void emitHFile(GPtrArray* pInterfaceArray);

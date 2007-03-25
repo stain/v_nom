@@ -39,7 +39,7 @@
 #include "parser.h"
 
 extern GScanner *gScanner;
-extern PINTERFACE pCurInterface;
+extern PPARSEINFO pParseInfo;
 
 /*
   Parse an instance variable. Note that the current symbol is the identifier NOMINSTANCEVAR.
@@ -121,10 +121,10 @@ void parseInstanceVar(void)
                             TRUE); /* is_error */
       exit(1);
     }
-  if(!pCurInterface)
+  if(!pParseInfo->pCurInterface)
     {
       g_message("Error: no interface for some reason");
     }
 
-  g_ptr_array_add(pCurInterface->pInstanceVarArray , (gpointer) pInstanceVar);
+  g_ptr_array_add(pParseInfo->pCurInterface->pInstanceVarArray , (gpointer) pInstanceVar);
 }
