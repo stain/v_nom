@@ -39,7 +39,7 @@
 #include "parser.h"
 
 extern GScanner *gScanner;
- 
+extern PARSEINFO parseInfo;
 
 /*
   Current token is the first integer.
@@ -49,11 +49,10 @@ extern GScanner *gScanner;
 void parsePreprocLineInfo(void)
 {
   GTokenValue value;
-  PSYMBOLINFO psi=(PSYMBOLINFO)gScanner->user_data;
 
   /* Line number */
   value=gScanner->value;
-  psi->uiLineCorrection=value.v_int;
+  parseInfo.uiLineCorrection=g_scanner_cur_line(gScanner)-value.v_int+1;
 
   if(!matchNext(G_TOKEN_STRING))
     {
@@ -69,11 +68,11 @@ void parsePreprocLineInfo(void)
     }
 
   /* Current source file */
-  if(psi->chrCurrentSourceFile)
-    g_free(psi->chrCurrentSourceFile);
+  if(parseInfo.chrCurrentSourceFile)
+    g_free(parseInfo.chrCurrentSourceFile);
 
   value=gScanner->value;
-  psi->chrCurrentSourceFile=g_strdup(value.v_string);
+  parseInfo.chrCurrentSourceFile=g_strdup(value.v_string);
 
   /* Trailing file include level info isn't used for now. Note that for the root
      level no trailing int is following. */

@@ -44,7 +44,25 @@ extern GTokenType curToken;
 extern PINTERFACE pCurInterface;
 /* The pointer array holding the interfaces we found */
 extern GPtrArray* pInterfaceArray;
+extern PARSEINFO parseInfo;
 
+static void registerInterface(void)
+{
+  PSYMBOL pNewSymbol=g_malloc0(sizeof(SYMBOL));
+
+  g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
+
+  /* Any found interface is registered as a new type so it can be
+     used in other classes. */
+  pNewSymbol->chrSymbolName=g_strdup(pCurInterface->chrName); /* We create a copy here because
+                                                                 when cleaning up the symbol space
+                                                                 the string will be freed. */
+  pNewSymbol->uiKind=KIND_TYPESPEC;
+  pNewSymbol->uiSymbolToken=IDL_SYMBOL_REGINTERFACE;
+  g_tree_insert(parseInfo.pSymbolTree, pNewSymbol, pNewSymbol->chrSymbolName);
+  g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pNewSymbol->chrSymbolName,
+                             pNewSymbol);
+}
 
 static PINTERFACE createInterfaceStruct()
 {
@@ -177,25 +195,43 @@ static void parseIFaceBody(void)
   Parse an interface which is subclassed. This includes checking if the parent
   interface is already defined.
 
-  IS:= G_TOKEN_INDENTIFIER IB2
+  IS:= G_TOKEN_SYMBOL IB2
+
+  It's G_TOKEN_SYMBOL here because every found interface is registered
+  as a new symbol with GScanner.
  */
 static void parseSubclassedIFace()
 {
+  PSYMBOL pCurSymbol;
 
   /* Parent interface */
-  if(!matchNext(G_TOKEN_IDENTIFIER))
+  if(!matchNext(G_TOKEN_SYMBOL))
     {
       g_scanner_unexp_token(gScanner,
-                            G_TOKEN_IDENTIFIER,
+                            G_TOKEN_SYMBOL,
                             NULL,
                             NULL,
                             NULL,
-                            "Parent interface name is missing.",
+                            "Parent interface name is missing or unknown.",
                             TRUE); /* is_error */
       exit(1);
     }
   GTokenValue value=gScanner->value;
-  pCurInterface->chrParent=g_strdup(value.v_identifier);
+  /* Make sure it's the correct symbol */
+  pCurSymbol=value.v_symbol;
+
+  if(IDL_SYMBOL_REGINTERFACE!=pCurSymbol->uiSymbolToken)
+    {
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_SYMBOL,
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Parent interface name is unknown.",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+  pCurInterface->chrParent=g_strdup(pCurSymbol->chrSymbolName);
 
   /* Check if the parent interface is known. */
   if(!findInterfaceFromName(pCurInterface->chrParent))
@@ -208,7 +244,6 @@ static void parseSubclassedIFace()
                           "Parent interface in definition is unknown.",
                           TRUE); /* is_error */
     exit(1);
-
   }
 
   if(!matchNext('{'))
@@ -237,7 +272,10 @@ static void parseSubclassedIFace()
 
   interface:= I ';'                       // Forward declaration
             | I '{' IB '}'
-            | I ':' G_TOKEN_INDENTIFIER '{' IB '}'
+            | I ':' G_TOKEN_SYMBOL '{' IB '}'
+
+            It's G_TOKEN_SYMBOL here because every found interface is registered
+            as a new symbol with GScanner.
  */
 void parseInterface(GTokenType token)
 {
@@ -245,22 +283,21 @@ void parseInterface(GTokenType token)
 
   /* Get the interface name */
   parseIFace(token);
+  /* It's save to register the interface right here even if the struct is almost empty. 
+     If anything goes wrong later we will exit anyway. */
+  registerInterface();  
 
   if(matchNext(';'))
     {
       pCurInterface->fIsForwardDeclaration=TRUE;
-      g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
-
     }
   else if(matchNext(':'))
     {
       parseSubclassedIFace();
-      g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
     }
   else if(matchNext('{'))
     {
       parseIFaceBody();
-      g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
     }
   else
     {

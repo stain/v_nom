@@ -82,10 +82,14 @@ SYMBOL idlSymbols[]={
   {"NOMCLASSVERSION", IDL_SYMBOL_CLSVERSION, KIND_UNKNOWN},
   {"NOMINSTANCEVAR", IDL_SYMBOL_INSTANCEVAR, KIND_UNKNOWN},
   {"NOMOVERRIDE", IDL_SYMBOL_OVERRIDE, KIND_UNKNOWN},
+  {"NOMREGISTEREDIFACE", IDL_SYMBOL_REGINTERFACE, KIND_TYPESPEC},
+  {"native", IDL_SYMBOL_NATIVE, KIND_UNKNOWN},
   {"gulong", IDL_SYMBOL_GULONG, KIND_TYPESPEC},
   {"gint", IDL_SYMBOL_GINT, KIND_TYPESPEC},
   {"gpointer", IDL_SYMBOL_GPOINTER, KIND_TYPESPEC},
   {"gboolean", IDL_SYMBOL_GBOOLEAN, KIND_TYPESPEC},
+  {"gchar", IDL_SYMBOL_GCHAR, KIND_TYPESPEC},
+  {"void", IDL_SYMBOL_VOID, KIND_TYPESPEC},
   {"in", IDL_SYMBOL_IN, KIND_DIRECTION},
   {"out", IDL_SYMBOL_OUT, KIND_DIRECTION},
   {"inout", IDL_SYMBOL_INOUT, KIND_DIRECTION},
@@ -154,6 +158,74 @@ gchar* getTypeSpecStringFromCurToken(void)
   return "unknown";
 }
 
+/*
+  The native keyword is used to introduce new types. That's coming
+  from the Corba spec. Maybe we will change that some time.
+
+The current token is the 'native' keyword.
+
+  N:= G_TOKEN_SYMBOL IDENT ';'
+ */
+static void parseNative(void)
+{
+  GTokenValue value;
+  PSYMBOL pCurSymbol=g_malloc0(sizeof(SYMBOL));
+
+  if(!matchNext(G_TOKEN_IDENTIFIER))
+    {
+      PSYMBOL pSymbol;
+
+      /* Check if it's a symbol. The following 'identifier' (word) is maybe alread
+       registered as a symbol. */
+      if(!matchNext(G_TOKEN_SYMBOL))
+        {
+          g_scanner_unexp_token(gScanner,
+                                G_TOKEN_SYMBOL,
+                                NULL,
+                                NULL,
+                                NULL,
+                                "'native' statement is not followed by a valid identifier.",
+                                TRUE); /* is_error */
+          exit(1);
+        }
+      /* It's a symbol. Check if it's a typespec. */
+      value=gScanner->value;
+      pSymbol=value.v_symbol;
+      if(!pSymbol || pSymbol->uiKind!=KIND_TYPESPEC)
+        {
+          g_scanner_unexp_token(gScanner,
+                                G_TOKEN_SYMBOL,
+                                NULL,
+                                NULL,
+                                NULL,
+                                "'native' statement is not followed by a valid symbol.",
+                                TRUE); /* is_error */
+          exit(1);
+        }
+    }
+
+    value=gScanner->value;
+    pCurSymbol->chrSymbolName=g_strdup(value.v_identifier);
+    pCurSymbol->uiKind=KIND_TYPESPEC;
+    pCurSymbol->uiSymbolToken=G_TOKEN_NONE;
+    g_tree_insert(parseInfo.pSymbolTree, pCurSymbol, pCurSymbol->chrSymbolName);
+    g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pCurSymbol->chrSymbolName,
+                             pCurSymbol);
+
+    if(!matchNext(';'))
+      {
+        getNextToken(); /* Make sure error references the correct token */
+        g_scanner_unexp_token(gScanner,
+                              ';',
+                              NULL,
+                              NULL,
+                              NULL,
+                              "Error in 'native' definition , Missing semicolon",
+                              TRUE); /* is_error */
+        exit(1);
+      }
+
+}
 
 /**
    This is the root parse function. Here starts the fun...
@@ -179,6 +251,9 @@ void parseIt(void)
             {
             case IDL_SYMBOL_INTERFACE:
               parseInterface(token);
+              break;
+            case IDL_SYMBOL_NATIVE:
+              parseNative();
               break;
             default:
               break;
@@ -225,7 +300,6 @@ void parseIt(void)
 #endif
       default:
         printToken(curToken);
-        //  g_message("Token: %d (---)\t\t\t%c (LINE %d)", token, token, g_scanner_cur_line(gScanner));
         break;
       }
   }
@@ -245,6 +319,9 @@ static void outputCompilerHelp(GOptionContext *gContext, gchar* chrExeName)
   g_option_context_parse (gContext, &argc2, &argv2, &gError); 
 }
 
+/*
+  Compare function for the tree holding our private symbols.
+ */
 static gint funcSymbolCompare(gconstpointer a, gconstpointer b)
 {
   if(a==b)
@@ -255,6 +332,16 @@ static gint funcSymbolCompare(gconstpointer a, gconstpointer b)
 
   return 1;
 };
+
+void funcMsgHandler(GScanner *gScanner,
+                    gchar *message,
+                    gboolean error)
+{
+
+  g_printf("In file %s, line %d:\n\t%s\n", parseInfo.chrCurrentSourceFile,
+           g_scanner_cur_line(gScanner)-parseInfo.uiLineCorrection, message);
+}
+
 /*
 
  */
@@ -262,7 +349,7 @@ int main(int argc, char **argv)
 {
   int a;
   int fd;
-  int idScope=0;
+
   GError *gError = NULL;
   GOptionContext* gContext;
 
@@ -309,8 +396,10 @@ int main(int argc, char **argv)
     }
 
   /* Create output file name */
-
-  fd=open(argv[1], O_RDONLY);
+  if(!strcmp(argv[1], "-"))
+    fd=0; /* Read from stdin */
+  else
+    fd=open(argv[1], O_RDONLY);
   
   if(-1==fd)
     {
@@ -326,6 +415,7 @@ int main(int argc, char **argv)
   gScanner->user_data=(gpointer)&curSymbol;
   curSymbol.pSymbols=idlSymbols;
 
+  gScanner->msg_handler=funcMsgHandler;
   pInterfaceArray=g_ptr_array_new();
 
   g_scanner_input_file(gScanner, fd);
@@ -335,12 +425,13 @@ int main(int argc, char **argv)
   /* This string is used in error messages of the parser */
   gScanner->input_name=IDL_COMPILER_STRING;
 
-  g_scanner_set_scope(gScanner, idScope);
+  g_scanner_set_scope(gScanner, ID_SCOPE);
   /* Load our own symbols into the scanner. We use the default scope for now. */
   parseInfo.pSymbolTree=g_tree_new((GCompareFunc) funcSymbolCompare);
   while(pSymbols->chrSymbolName)
     {
-      g_scanner_scope_add_symbol(gScanner, idScope, pSymbols->chrSymbolName,
+#warning !!! Create a copy here so it is the same as with new symbols added later.
+      g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pSymbols->chrSymbolName,
                                  pSymbols);
       g_tree_insert(parseInfo.pSymbolTree, pSymbols, pSymbols->chrSymbolName);
       pSymbols++;
@@ -370,3 +461,12 @@ int main(int argc, char **argv)
   return (PNOMPath)NOMPath_appendPath(nomRetval, nomPath, NULLHANDLE);
 
 #endif
+
+
+
+
+
+
+
+
+
