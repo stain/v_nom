@@ -40,8 +40,6 @@
 #include "parser.h"
 
 extern GScanner *gScanner;
-/* The pointer array holding the interfaces we found */
-extern GPtrArray* pInterfaceArray;
 extern PPARSEINFO pParseInfo;
 
 static void registerInterface(void)
@@ -51,7 +49,7 @@ static void registerInterface(void)
   if(!strcmp(pParseInfo->chrRootSourceFile, pParseInfo->pCurInterface->chrSourceFileName))
     pParseInfo->pCurInterface->fIsInRootFile=TRUE;
 
-  g_ptr_array_add(pInterfaceArray, (gpointer) pParseInfo->pCurInterface);
+  g_ptr_array_add(pParseInfo->pInterfaceArray, (gpointer) pParseInfo->pCurInterface);
 
   /* Any found interface is registered as a new type so it can be
      used in other classes. */

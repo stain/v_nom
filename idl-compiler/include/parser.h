@@ -40,9 +40,6 @@ guint queryCurTokensKind(void);
 void printToken(GTokenType token);
 gboolean matchNextKind(guint uiKind);
 
-/* In printdata.c */
-void printInterface(void);
-
 
 #define IDL_COMPILER_STRING "IDL compiler" /* Used inside warnings and errors */
 #define ID_SCOPE 0
@@ -100,17 +97,12 @@ typedef struct
   guint  uiKind;
 }SYMBOL, *PSYMBOL;
 
-/* Such a struct can be found in GScanner->user_data */
-typedef struct
-{
-  guint     _uiCurSymbolKind;
-}SYMBOLINFO,*PSYMBOLINFO; 
-
 typedef struct
 {
   PINTERFACE pCurInterface;      /* The interface we are currently parsing. This is a working pointer. */
   guint     uiCurSymbolKind;     /* This may be e.g. KIND_TYPESPEC */
   GTree*    pSymbolTree;         /* Our introduced symbols */
+  GPtrArray* pInterfaceArray;    /* The pointer array holding the interfaces we found */
   guint     uiLineCorrection;    /* This is the line number put by the preprocessor into
                                     the source file. It's used to calculate proper line numbers
                                     for errors. */
@@ -180,3 +172,7 @@ void parsePreprocLineInfo(void);
 void parseMetaClass(void);
 
 void emitHFile(GPtrArray* pInterfaceArray);
+
+/* In printdata.c */
+void printInterface(PINTERFACE pif);
+void printAllInterfacec(void);
