@@ -49,7 +49,7 @@
 #include "parser.h"
 
 /* The pointer array holding the interfaces we found */
-extern GPtrArray* pInterfaceArray;
+extern PPARSEINFO pParseInfo;
 
 static void printOverridenMethods(GPtrArray *pArray)
 {
@@ -130,13 +130,13 @@ static void printMethods(GPtrArray *pArray)
     }
 }
 
-void printInterface(void)
+void printAllInterfaces(void)
 {
   int a;
 
-  for(a=0;a<pInterfaceArray->len;a++)
+  for(a=0;a<pParseInfo->pInterfaceArray->len;a++)
     {
-      PINTERFACE pif=g_ptr_array_index(pInterfaceArray, a);
+      PINTERFACE pif=g_ptr_array_index(pParseInfo->pInterfaceArray, a);
       g_printf("Found Interface:\n");  
       g_printf("\tName:\t\t%s\n", pif->chrName);
       g_printf("\tParent:\t\t%s\n", (pif->chrParent ? pif->chrParent : "No parent"));
@@ -155,4 +155,25 @@ void printInterface(void)
       g_printf("\tOverriden methods:\t%d\n", pif->pOverrideArray->len);
       printOverridenMethods(pif->pOverrideArray);
     }
+}
+
+void printInterface(PINTERFACE pif)
+{
+  g_printf("Found Interface:\n");  
+  g_printf("\tName:\t\t%s\n", pif->chrName);
+  g_printf("\tParent:\t\t%s\n", (pif->chrParent ? pif->chrParent : "No parent"));
+  g_printf("\tMajor:\t\t%ld\n", pif->ulMajor);
+  g_printf("\tMinor:\t\t%ld\n", pif->ulMinor);
+  g_printf("\tForward decl.:\t%s\n", (pif->fIsForwardDeclaration ? "Yes" : "No"));
+  g_printf("\tMetaclass:\t%s\n", (pif->chrMetaClass ? pif->chrMetaClass : "None"));
+  g_printf("\tSource file:\t%s\n", pif->chrSourceFileName);
+  /* Print instance vars */
+  g_printf("\tInstance vars:\t%d\n", pif->pInstanceVarArray->len);
+  printInstanceVars(pif->pInstanceVarArray);
+  /* Print methods */
+  g_printf("\tNew methods:\t%d\n", pif->pMethodArray->len);
+  printMethods(pif->pMethodArray);
+  /* Print overriden methods */
+  g_printf("\tOverriden methods:\t%d\n", pif->pOverrideArray->len);
+  printOverridenMethods(pif->pOverrideArray);
 }

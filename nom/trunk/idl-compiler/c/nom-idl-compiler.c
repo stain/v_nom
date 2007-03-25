@@ -72,7 +72,7 @@ static GOptionEntry gOptionEntries[] =
 
 
 /* The pointer array holding the interfaces we found */
-GPtrArray* pInterfaceArray;
+//GPtrArray* pInterfaceArray;
 
 /* Symbols defined for our IDL language.
    Keep this in synch with the defined enums! */
@@ -109,12 +109,10 @@ SYMBOL idlSymbols[]={
 
 GScanner *gScanner;
 
-/* Holding info about current token. Referenced by gScanner. */
-//SYMBOLINFO curSymbol;
-
-/* Holding the current state of parsing and pointers to necessary lists. */
+/* Holding the current state of parsing and pointers to necessary lists.
+   Referenced by gScanner-user_data. */
 PARSEINFO parseInfo={0};
-PPARSEINFO pParseInfo=&parseInfo;
+PPARSEINFO pParseInfo=&parseInfo; /* This pointer will go away, don't use */
 
 /**
    Helper function which scans the array of known interfaces and returns the interface
@@ -128,9 +126,9 @@ PINTERFACE findInterfaceFromName(gchar* chrName)
 {
   int a;
 
-  for(a=0;a<pInterfaceArray->len;a++)
+  for(a=0;a<parseInfo.pInterfaceArray->len;a++)
     {
-      PINTERFACE pif=g_ptr_array_index(pInterfaceArray, a);
+      PINTERFACE pif=g_ptr_array_index(parseInfo.pInterfaceArray, a);
       if(!strcmp(chrName, pif->chrName))
         return pif;
     }
@@ -629,10 +627,10 @@ int main(int argc, char **argv)
   g_printf("\n");
 
   gScanner=g_scanner_new(NULL);
-  //gScanner->user_data=(gpointer)&curSymbol;
+  gScanner->user_data=(gpointer)&parseInfo;
 
   gScanner->msg_handler=funcMsgHandler;
-  pInterfaceArray=g_ptr_array_new();
+  parseInfo.pInterfaceArray=g_ptr_array_new();
 
   g_scanner_input_file(gScanner, fd);
   gScanner->config->case_sensitive=TRUE;
@@ -658,7 +656,7 @@ int main(int argc, char **argv)
 
   /* Write the output file */
   if(fOptionEmitH)
-    emitHFile(pInterfaceArray);
+    emitHFile(parseInfo.pInterfaceArray);
 
 #if 0
   else if(fOptionEmitIH)
