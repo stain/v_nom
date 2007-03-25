@@ -143,7 +143,7 @@ void printInterface(void)
       g_printf("\tMajor:\t\t%ld\n", pif->ulMajor);
       g_printf("\tMinor:\t\t%ld\n", pif->ulMinor);
       g_printf("\tForward decl.:\t%s\n", (pif->fIsForwardDeclaration ? "Yes" : "No"));
-      
+      g_printf("\tMetaclass::\t%s\n", (pif->chrMetaClass ? pif->chrMetaClass : "None"));
       /* Print instance vars */
       g_printf("\tInstance vars:\t%d\n", pif->pInstanceVarArray->len);
       printInstanceVars(pif->pInstanceVarArray);
