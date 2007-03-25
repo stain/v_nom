@@ -40,26 +40,27 @@
 #include "parser.h"
 
 extern GScanner *gScanner;
-extern GTokenType curToken;
-extern PINTERFACE pCurInterface;
 /* The pointer array holding the interfaces we found */
 extern GPtrArray* pInterfaceArray;
-extern PARSEINFO parseInfo;
+extern PPARSEINFO pParseInfo;
 
 static void registerInterface(void)
 {
   PSYMBOL pNewSymbol=g_malloc0(sizeof(SYMBOL));
 
-  g_ptr_array_add(pInterfaceArray, (gpointer) pCurInterface);
+  if(!strcmp(pParseInfo->chrRootSourceFile, pParseInfo->pCurInterface->chrSourceFileName))
+    pParseInfo->pCurInterface->fIsInRootFile=TRUE;
+
+  g_ptr_array_add(pInterfaceArray, (gpointer) pParseInfo->pCurInterface);
 
   /* Any found interface is registered as a new type so it can be
      used in other classes. */
-  pNewSymbol->chrSymbolName=g_strdup(pCurInterface->chrName); /* We create a copy here because
-                                                                 when cleaning up the symbol space
-                                                                 the string will be freed. */
+  pNewSymbol->chrSymbolName=g_strdup(pParseInfo->pCurInterface->chrName); /* We create a copy here because
+                                                                             when cleaning up the symbol space
+                                                                             the string will be freed. */
   pNewSymbol->uiKind=KIND_TYPESPEC;
   pNewSymbol->uiSymbolToken=IDL_SYMBOL_REGINTERFACE;
-  g_tree_insert(parseInfo.pSymbolTree, pNewSymbol, pNewSymbol->chrSymbolName);
+  g_tree_insert(pParseInfo->pSymbolTree, pNewSymbol, pNewSymbol->chrSymbolName);
   g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pNewSymbol->chrSymbolName,
                              pNewSymbol);
   /* For legacy support and convenience we automatically register a pointer type
@@ -67,11 +68,11 @@ static void registerInterface(void)
   pNewSymbol=g_malloc0(sizeof(SYMBOL));
   pNewSymbol->uiKind=KIND_TYPESPEC;
   pNewSymbol->uiSymbolToken=IDL_SYMBOL_REGINTERFACE;
-  pNewSymbol->chrSymbolName=g_strconcat("P", pCurInterface->chrName, NULL);
-  g_message("%s: %s", __FUNCTION__, pNewSymbol->chrSymbolName);
-  g_tree_insert(parseInfo.pSymbolTree, pNewSymbol, pNewSymbol->chrSymbolName);
+  pNewSymbol->chrSymbolName=g_strconcat("P", pParseInfo->pCurInterface->chrName, NULL);
+  g_tree_insert(pParseInfo->pSymbolTree, pNewSymbol, pNewSymbol->chrSymbolName);
   g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pNewSymbol->chrSymbolName,
                              pNewSymbol);
+  //g_message("%s: %s", __FUNCTION__, pNewSymbol->chrSymbolName);
 }
 
 static PINTERFACE createInterfaceStruct()
@@ -178,7 +179,7 @@ static void parseIFace(GTokenType token)
     }
   /* Save interface info */
   GTokenValue value=gScanner->value;
-  pCurInterface->chrName=g_strdup(value.v_identifier);
+  pParseInfo->pCurInterface->chrName=g_strdup(value.v_identifier);
 }
 
 /*
@@ -246,10 +247,10 @@ static void parseSubclassedIFace()
                             TRUE); /* is_error */
       exit(1);
     }
-  pCurInterface->chrParent=g_strdup(pCurSymbol->chrSymbolName);
+  pParseInfo->pCurInterface->chrParent=g_strdup(pCurSymbol->chrSymbolName);
 
   /* Check if the parent interface is known. */
-  if(!findInterfaceFromName(pCurInterface->chrParent))
+  if(!findInterfaceFromName(pParseInfo->pCurInterface->chrParent))
   {
     g_scanner_unexp_token(gScanner,
                           G_TOKEN_IDENTIFIER,
@@ -294,17 +295,19 @@ static void parseSubclassedIFace()
  */
 void parseInterface(GTokenType token)
 {
-  pCurInterface=createInterfaceStruct();
+  pParseInfo->pCurInterface=createInterfaceStruct();
 
   /* Get the interface name */
   parseIFace(token);
+  pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
+
   /* It's save to register the interface right here even if the struct is almost empty. 
      If anything goes wrong later we will exit anyway. */
   registerInterface();  
 
   if(matchNext(';'))
     {
-      pCurInterface->fIsForwardDeclaration=TRUE;
+      pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
     }
   else if(matchNext(':'))
     {

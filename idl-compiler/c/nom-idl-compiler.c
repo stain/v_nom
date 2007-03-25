@@ -108,14 +108,13 @@ SYMBOL idlSymbols[]={
 },*pSymbols=idlSymbols;
 
 GScanner *gScanner;
-GTokenType curToken=G_TOKEN_EOF;
-PINTERFACE pCurInterface=NULL;
 
 /* Holding info about current token. Referenced by gScanner. */
-SYMBOLINFO curSymbol;
+//SYMBOLINFO curSymbol;
 
 /* Holding the current state of parsing and pointers to necessary lists. */
 PARSEINFO parseInfo={0};
+PPARSEINFO pParseInfo=&parseInfo;
 
 /**
    Helper function which scans the array of known interfaces and returns the interface
@@ -150,7 +149,7 @@ gchar* getTypeSpecStringFromCurToken(void)
 
   value=gScanner->value;
 
-  switch(curToken)
+  switch(gScanner->token)
     {
     case G_TOKEN_IDENTIFIER:
       return g_strdup(value.v_identifier);
@@ -394,11 +393,11 @@ void parseIt(void)
   while(g_scanner_peek_next_token(gScanner) != G_TOKEN_EOF) {
     GTokenType token;
 
-    curToken=g_scanner_get_next_token(gScanner);
-    token=curToken;
+    g_scanner_get_next_token(gScanner);
+    token=gScanner->token;
     GTokenValue value=gScanner->value;
     
-    switch(curToken)
+    switch(token)
       {
       case '#':
         parseHash();
@@ -464,7 +463,7 @@ void parseIt(void)
         break;
 #endif
       default:
-        printToken(curToken);
+        printToken(token);
         break;
       }
   }
@@ -534,6 +533,7 @@ int main(int argc, char **argv)
   int fd;
   /* Vars for filename building */
   char* chrOutputFileName="";
+  char* chrTemp;
 
   GError *gError = NULL;
   GOptionContext* gContext;
@@ -556,7 +556,6 @@ int main(int argc, char **argv)
   if(fOptionEmitC)
     a++;
 
-#if 0
   if(!a){
     g_printf("An emitter must be specified.\n\n");
     outputCompilerHelp(gContext, argv[0]);
@@ -565,7 +564,6 @@ int main(int argc, char **argv)
     g_printf("Only one emitter must be specified.\n\n");
     outputCompilerHelp(gContext, argv[0]);
   }
-#endif
 
   if(strlen(chrOutputName)==0)
     {
@@ -601,7 +599,17 @@ int main(int argc, char **argv)
   else
     chrOutputFileName=chrOutputName;
 
-  //g_message("Output file: %s", chrOutputFileName);
+  /* Add emitter extension */
+  if(fOptionEmitH)
+    chrTemp=g_strconcat(chrOutputFileName, ".h", NULL);
+  else if(fOptionEmitIH)
+    chrTemp=g_strconcat(chrOutputFileName, ".ih", NULL);
+  else if(fOptionEmitC)
+    chrTemp=g_strconcat(chrOutputFileName, ".c", NULL);
+  g_free(chrOutputFileName);
+  chrOutputFileName=chrTemp;
+
+  g_message("Output file: %s", chrOutputFileName);
 
   /* Open input */
   if(!strcmp(argv[1], "-"))
@@ -621,8 +629,7 @@ int main(int argc, char **argv)
   g_printf("\n");
 
   gScanner=g_scanner_new(NULL);
-  gScanner->user_data=(gpointer)&curSymbol;
-  curSymbol.pSymbols=idlSymbols;
+  //gScanner->user_data=(gpointer)&curSymbol;
 
   gScanner->msg_handler=funcMsgHandler;
   pInterfaceArray=g_ptr_array_new();
@@ -649,8 +656,19 @@ int main(int argc, char **argv)
 
   parseIt();
 
+  /* Write the output file */
+  if(fOptionEmitH)
+    emitHFile(pInterfaceArray);
+
+#if 0
+  else if(fOptionEmitIH)
+
+  else if(fOptionEmitC)
+    a++;
+
   if(pInterfaceArray->len)
     printInterface();
+#endif
 
   g_scanner_destroy(gScanner);
   close(fd);

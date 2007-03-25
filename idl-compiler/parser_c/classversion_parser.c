@@ -39,7 +39,8 @@
 #include "parser.h"
 
 extern GScanner *gScanner;
-extern PINTERFACE pCurInterface;
+extern PPARSEINFO pParseInfo;
+
 /*
   Parse the class version. Note that the identifier is the current symbol..
 
@@ -75,7 +76,7 @@ void parseClassVersion(void)
       exit(1);
     }
   value=gScanner->value;
-  pCurInterface->ulMajor=value.v_int;
+  pParseInfo->pCurInterface->ulMajor=value.v_int;
 
   if(!matchNext(','))
     {
@@ -102,7 +103,7 @@ void parseClassVersion(void)
       exit(1);
     }
   value=gScanner->value;
-  pCurInterface->ulMinor=value.v_int;
+  pParseInfo->pCurInterface->ulMinor=value.v_int;
 
   if(!matchNext(')'))
     {
