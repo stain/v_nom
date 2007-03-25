@@ -118,10 +118,14 @@ static void parseMethodParams(PMETHOD pMethod)
       }
 
     //pParam->chrType=getTypeSpecStringFromCurToken();
+    //g_printf("%s %d", __FUNCTION__, __LINE__);
+    //printToken(curToken);
 
     if(!matchNext(G_TOKEN_IDENTIFIER))
       {
         getNextToken(); /* Make sure error references the correct token */
+        //g_printf("%s %d", __FUNCTION__, __LINE__);
+        //printToken(curToken);
         g_scanner_unexp_token(gScanner,
                               G_TOKEN_IDENTIFIER,
                               NULL,

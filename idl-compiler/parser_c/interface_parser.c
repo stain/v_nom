@@ -62,6 +62,16 @@ static void registerInterface(void)
   g_tree_insert(parseInfo.pSymbolTree, pNewSymbol, pNewSymbol->chrSymbolName);
   g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pNewSymbol->chrSymbolName,
                              pNewSymbol);
+  /* For legacy support and convenience we automatically register a pointer type
+     to the interface. */
+  pNewSymbol=g_malloc0(sizeof(SYMBOL));
+  pNewSymbol->uiKind=KIND_TYPESPEC;
+  pNewSymbol->uiSymbolToken=IDL_SYMBOL_REGINTERFACE;
+  pNewSymbol->chrSymbolName=g_strconcat("P", pCurInterface->chrName, NULL);
+  g_message("%s: %s", __FUNCTION__, pNewSymbol->chrSymbolName);
+  g_tree_insert(parseInfo.pSymbolTree, pNewSymbol, pNewSymbol->chrSymbolName);
+  g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pNewSymbol->chrSymbolName,
+                             pNewSymbol);
 }
 
 static PINTERFACE createInterfaceStruct()
@@ -97,6 +107,8 @@ void parseIBody(void)
       {
         parseMethod();
       }
+    else if(matchNext('#'))
+      parseHash();
     else if(matchNext(G_TOKEN_SYMBOL))
       {
         PSYMBOL pCurSymbol;
