@@ -66,11 +66,10 @@ static GOptionEntry gOptionEntries[] =
   {"emit-h", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitH, "Emmit a header file (*.h)", NULL},
   {"emit-ih", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitIH, "Emmit an include header (*.ih)", NULL},
   {"emit-c", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitC, "Emmit an implementation template (*.c)", NULL},
-  {"output", 'o', 0, G_OPTION_ARG_FILENAME, &chrOutputName, "Output name", NULL},
+  {"output", 'o', 0, G_OPTION_ARG_FILENAME, &chrOutputName, "Output name. Must not be omitted.", NULL},
   {NULL}
 };
 
-static char* chrOutputFileName="";
 
 /* The pointer array holding the interfaces we found */
 GPtrArray* pInterfaceArray;
@@ -90,6 +89,10 @@ SYMBOL idlSymbols[]={
   {"gboolean", IDL_SYMBOL_GBOOLEAN, KIND_TYPESPEC},
   {"gchar", IDL_SYMBOL_GCHAR, KIND_TYPESPEC},
   {"void", IDL_SYMBOL_VOID, KIND_TYPESPEC},
+
+  {"boolean", IDL_SYMBOL_BOOLEAN, KIND_TYPESPEC},
+  {"String", IDL_SYMBOL_STRING, KIND_TYPESPEC},
+
   {"in", IDL_SYMBOL_IN, KIND_DIRECTION},
   {"out", IDL_SYMBOL_OUT, KIND_DIRECTION},
   {"inout", IDL_SYMBOL_INOUT, KIND_DIRECTION},
@@ -109,6 +112,14 @@ SYMBOLINFO curSymbol;
 /* Holding the current state of parsing and pointers to necessary lists. */
 PARSEINFO parseInfo={0};
 
+/**
+   Helper function which scans the array of known interfaces and returns the interface
+   structure for the given name. 
+
+   \PARAM chrName Name of the interface.
+   \Returns If no interface with that name can be found NULL is returned otherwise a
+   pointer to the interface structure..
+ */
 PINTERFACE findInterfaceFromName(gchar* chrName)
 {
   int a;
@@ -123,7 +134,11 @@ PINTERFACE findInterfaceFromName(gchar* chrName)
   return NULL;
 }
 
-
+/**
+   Helper function which returns a copy of the typespec string of the current token.
+   That is e.g. 'gint' or 'gpointer'. Note that this function is only called when the
+   current token is indeed a type specification in the IDL file.
+ */
 gchar* getTypeSpecStringFromCurToken(void)
 {
   GTokenValue value;
@@ -158,11 +173,13 @@ gchar* getTypeSpecStringFromCurToken(void)
   return "unknown";
 }
 
-/*
-  The native keyword is used to introduce new types. That's coming
-  from the Corba spec. Maybe we will change that some time.
+/**
+   Parse the declaration of a new type using the 'native' keyword.
 
-The current token is the 'native' keyword.
+  The 'native' keyword is used to introduce new types. That's coming
+  from the Corba spec.
+
+  \Remarks  The current token is the 'native' keyword.
 
   N:= G_TOKEN_SYMBOL IDENT ';'
  */
@@ -228,7 +245,12 @@ static void parseNative(void)
 }
 
 /**
-   This is the root parse function. Here starts the fun...
+   This is the root parse function. Here starts the fun. When a token is found in the
+   input stream which matches one of the known token types the respective parsing function
+   is called for further processing. In case of an error the parsing function in question 
+   prints an error which describes the problem and exits the application.
+
+   This function scans the input until EOF is hit.
  */
 void parseIt(void)
 {
@@ -305,8 +327,8 @@ void parseIt(void)
   }
 }
 
-/* Show help.
-   gContext must be valid.
+/**
+   Support function to show help for the IDL compiler. gContext must be valid.
 */
 static void outputCompilerHelp(GOptionContext *gContext, gchar* chrExeName)
 {
@@ -315,8 +337,21 @@ static void outputCompilerHelp(GOptionContext *gContext, gchar* chrExeName)
   char *helpCmd[]={"","--help"};
   char** argv2=helpCmd;
   helpCmd[0]=chrExeName;
-  
-  g_option_context_parse (gContext, &argc2, &argv2, &gError); 
+
+  g_printf("An output filename must always be specified. If the name is an absolute path\n\
+it will be used unmodified. Otherwise the output name is built from the given\n\
+name and the directory specification.\n\n\
+-If no directory is specified the output name is built from the current directory\n\
+ path and the given filename.\n\
+-If the directory is a relative path the output name is built from the current\n\
+ directory path, the given directory name (or path) and the filename.\n\
+-If the directory is a full path the output name is built from the directory\n\
+ path and the given filename.\n\n\
+Note that an emitter specific extension will always be appended to the output\n\
+filename\n\n");
+
+  /* This prints the standard option help to screen. */  
+  g_option_context_parse (gContext, &argc2, &argv2, &gError);
 }
 
 /*
@@ -333,22 +368,28 @@ static gint funcSymbolCompare(gconstpointer a, gconstpointer b)
   return 1;
 };
 
-void funcMsgHandler(GScanner *gScanner,
-                    gchar *message,
-                    gboolean error)
+/**
+   Message output handler for the scanner. The default handler isn't used because the preprocessor
+   mangles all include files together and thus the line numbers are not as expected by the user.
+   This function prints the error messages with corrected linenumbers and the source file name
+   in which to find the problem.
+   
+ */
+void funcMsgHandler(GScanner *gScanner, gchar *message, gboolean error)
 {
-
   g_printf("In file %s, line %d:\n\t%s\n", parseInfo.chrCurrentSourceFile,
            g_scanner_cur_line(gScanner)-parseInfo.uiLineCorrection, message);
 }
 
-/*
-
+/**
+   Main entry point for the idl compiler.
  */
 int main(int argc, char **argv)
 {
   int a;
   int fd;
+  /* Vars for filename building */
+  char* chrOutputFileName="";
 
   GError *gError = NULL;
   GOptionContext* gContext;
@@ -381,6 +422,12 @@ int main(int argc, char **argv)
     outputCompilerHelp(gContext, argv[0]);
   }
 #endif
+
+  if(strlen(chrOutputName)==0)
+    {
+      g_printf("No output file name given.\n\n");
+      outputCompilerHelp(gContext, argv[0]);
+    }
   g_option_context_free(gContext);
 
 
@@ -395,7 +442,24 @@ int main(int argc, char **argv)
       g_message("arg %d: %s", a, argv[a]);
     }
 
-  /* Create output file name */
+  
+  /*** Create output file name ****/
+  if(!g_path_is_absolute(chrOutputName))
+    {
+      if(g_path_is_absolute(chrOutputDir))
+        chrOutputFileName=g_build_filename(chrOutputDir, chrOutputName, NULL);
+      else
+        {
+          /* Yes this is a memory leak but I don't care */
+          chrOutputFileName=g_build_filename(g_get_current_dir(), chrOutputDir, chrOutputName, NULL);
+        }
+    }
+  else
+    chrOutputFileName=chrOutputName;
+
+  //g_message("Output file: %s", chrOutputFileName);
+
+  /* Open input */
   if(!strcmp(argv[1], "-"))
     fd=0; /* Read from stdin */
   else
@@ -407,9 +471,10 @@ int main(int argc, char **argv)
       exit(1);
     }
   
+  /* Open output */
+  parseInfo.outFile=fopen(chrOutputFileName, "w");
+
   g_printf("\n");
-
-
 
   gScanner=g_scanner_new(NULL);
   gScanner->user_data=(gpointer)&curSymbol;
@@ -436,7 +501,6 @@ int main(int argc, char **argv)
       g_tree_insert(parseInfo.pSymbolTree, pSymbols, pSymbols->chrSymbolName);
       pSymbols++;
     }
-  //  gScanner->config->symbol_2_token=TRUE;
 
   parseIt();
 
@@ -445,7 +509,7 @@ int main(int argc, char **argv)
 
   g_scanner_destroy(gScanner);
   close(fd);
-
+  fclose(parseInfo.outFile);
   return 0;
 }
 
