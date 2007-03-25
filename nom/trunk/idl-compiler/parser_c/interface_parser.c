@@ -127,6 +127,9 @@ void parseIBody(void)
           case IDL_SYMBOL_INSTANCEVAR:
             parseInstanceVar();
             break;
+          case IDL_SYMBOL_METACLASS:
+            parseMetaClass();
+            break;
           default:
             g_scanner_unexp_token(gScanner,
                                   G_TOKEN_SYMBOL,
