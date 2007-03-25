@@ -32,8 +32,10 @@
 *
 * ***** END LICENSE BLOCK ***** */
 #include <os2.h>
+#include <stdio.h>
 
 #include <glib.h> 
+
 #include "parser.h"
 
 extern gchar* getTypeSpecStringFromCurToken(void);

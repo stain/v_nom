@@ -116,7 +116,7 @@ typedef struct
                                     for errors. */
   char*     chrCurrentSourceFile;/* The preprocessor includes files for us. This is the info
                                     about their name. */
-
+  FILE*     outFile;             /* Output file handle */
 }PARSEINFO, *PPARSEINFO;
 
 /* Symbols defined for our IDL language.
@@ -136,6 +136,9 @@ enum
   IDL_SYMBOL_GBOOLEAN,
   IDL_SYMBOL_GCHAR,
   IDL_SYMBOL_VOID,
+  /* Legacy support */
+  IDL_SYMBOL_BOOLEAN,
+  IDL_SYMBOL_STRING,
   /* Direction of method parameters */
   IDL_SYMBOL_IN,
   IDL_SYMBOL_OUT,

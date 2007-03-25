@@ -32,6 +32,7 @@
 *
 * ***** END LICENSE BLOCK ***** */
 #include <os2.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <glib.h> 
