@@ -82,6 +82,9 @@ SYMBOL idlSymbols[]={
   {"NOMINSTANCEVAR", IDL_SYMBOL_INSTANCEVAR, KIND_UNKNOWN},
   {"NOMOVERRIDE", IDL_SYMBOL_OVERRIDE, KIND_UNKNOWN},
   {"NOMREGISTEREDIFACE", IDL_SYMBOL_REGINTERFACE, KIND_TYPESPEC},
+  {"NOMCLASSNAME", IDL_SYMBOL_CLSNAME, KIND_UNKNOWN},
+  {"NOMMETACLASS", IDL_SYMBOL_OLDMETACLASS, KIND_UNKNOWN},
+  {"MetaClass", IDL_SYMBOL_METACLASS, KIND_UNKNOWN},
   {"native", IDL_SYMBOL_NATIVE, KIND_UNKNOWN},
   {"gulong", IDL_SYMBOL_GULONG, KIND_TYPESPEC},
   {"gint", IDL_SYMBOL_GINT, KIND_TYPESPEC},
@@ -91,7 +94,9 @@ SYMBOL idlSymbols[]={
   {"void", IDL_SYMBOL_VOID, KIND_TYPESPEC},
 
   {"boolean", IDL_SYMBOL_BOOLEAN, KIND_TYPESPEC},
-  {"String", IDL_SYMBOL_STRING, KIND_TYPESPEC},
+  {"string", IDL_SYMBOL_STRING, KIND_TYPESPEC},
+  {"long", IDL_SYMBOL_LONG, KIND_TYPESPEC},
+  {"unsigned", IDL_SYMBOL_LONG, KIND_TYPESPEC},
 
   {"in", IDL_SYMBOL_IN, KIND_DIRECTION},
   {"out", IDL_SYMBOL_OUT, KIND_DIRECTION},
@@ -171,6 +176,138 @@ gchar* getTypeSpecStringFromCurToken(void)
       break;
     }
   return "unknown";
+}
+
+/**
+   This function is only for removing the NOMCLASSNAME() definition from
+   the input stream. When everything is moved to the new IDL compiler
+   those statements will be removed and this parsing function eventually
+   removed.
+
+   The current token is the NOMCLASSNAME keyword.
+
+   CN:= G_TOKEN_SYMBOL '(' INDENT ')' ';'
+ */
+static void parseClassName(void)
+{
+
+  if(!matchNext('('))
+    {
+      getNextToken(); /* Make sure error references the correct token */
+      g_scanner_unexp_token(gScanner,
+                            '(',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Error in NOMCLASSNAME()",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+
+  /* Identifier. We discard it. */
+  if(!matchNext(G_TOKEN_IDENTIFIER))
+    {
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_IDENTIFIER,
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Class name is not a valid identifier.",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+
+  if(!matchNext(')'))
+    {
+      getNextToken(); /* Make sure error references the correct token */
+      g_scanner_unexp_token(gScanner,
+                            ')',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Error in NOMCLASSNAME().",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+
+    if(!matchNext(';'))
+      {
+        getNextToken(); /* Make sure error references the correct token */
+        g_scanner_unexp_token(gScanner,
+                              ';',
+                              NULL,
+                              NULL,
+                              NULL,
+                              "Error in NOMCLASSNAME() definition, Missing semicolon at the end.",
+                              TRUE); /* is_error */
+        exit(1);
+      }
+}
+
+/**
+   This function is only for removing the NOMMETACLASS() definition from
+   the input stream. When everything is moved to the new IDL compiler
+   those statements will be removed and this parsing function eventually
+   removed.
+
+   The current token is the NOMMETACLASS keyword.
+
+   CN:= G_TOKEN_SYMBOL '(' INDENT ')' ';'
+ */
+static void parseOldMetaClass(void)
+{
+
+  if(!matchNext('('))
+    {
+      getNextToken(); /* Make sure error references the correct token */
+      g_scanner_unexp_token(gScanner,
+                            '(',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Error in NOMMETACLASS()",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+
+  /* Identifier. We discard it. */
+  if(!matchNext(G_TOKEN_IDENTIFIER))
+    {
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_IDENTIFIER,
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Class name is not a valid identifier.",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+
+  if(!matchNext(')'))
+    {
+      getNextToken(); /* Make sure error references the correct token */
+      g_scanner_unexp_token(gScanner,
+                            ')',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Error in NOMMETACLASS().",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+
+    if(!matchNext(';'))
+      {
+        getNextToken(); /* Make sure error references the correct token */
+        g_scanner_unexp_token(gScanner,
+                              ';',
+                              NULL,
+                              NULL,
+                              NULL,
+                              "Error in NOMMETACLASS() definition, Missing semicolon at the end.",
+                              TRUE); /* is_error */
+        exit(1);
+      }
 }
 
 /**
@@ -277,6 +414,12 @@ void parseIt(void)
             case IDL_SYMBOL_NATIVE:
               parseNative();
               break;
+            case IDL_SYMBOL_CLSNAME:
+              parseClassName();
+              break;
+            case IDL_SYMBOL_OLDMETACLASS:
+              parseOldMetaClass();
+              break;
             default:
               break;
             }
@@ -377,8 +520,9 @@ static gint funcSymbolCompare(gconstpointer a, gconstpointer b)
  */
 void funcMsgHandler(GScanner *gScanner, gchar *message, gboolean error)
 {
-  g_printf("In file %s, line %d:\n\t%s\n", parseInfo.chrCurrentSourceFile,
-           g_scanner_cur_line(gScanner)-parseInfo.uiLineCorrection, message);
+  g_printf("%s:%d: error: %s (%d %d)\n", parseInfo.chrCurrentSourceFile,
+           g_scanner_cur_line(gScanner)-parseInfo.uiLineCorrection, message,
+           g_scanner_cur_line(gScanner), parseInfo.uiLineCorrection);
 }
 
 /**
@@ -484,6 +628,7 @@ int main(int argc, char **argv)
   pInterfaceArray=g_ptr_array_new();
 
   g_scanner_input_file(gScanner, fd);
+  gScanner->config->case_sensitive=TRUE;
   /* No single line comments */
   gScanner->config->skip_comment_single=FALSE;
   gScanner->config->cpair_comment_single="";

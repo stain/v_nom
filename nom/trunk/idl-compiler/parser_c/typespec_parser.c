@@ -46,17 +46,36 @@ extern gchar* getTypeSpecStringFromCurToken(void);
   Current token is the typespec.
 
   TS:= TYPE_SPEC
+    |  TYPE_SPEC TYPE_SPEC      // This is for something like 'unsigned long'
     |  TYPE_SPEC '*'
+    |  TYPE_SPEC TYPE_SPEC '*'  // This is for something like 'unsigned long*'
 */
 void parseTypeSpec(PMETHODPARAM pMethodParam)
 {
-  /* Return type  */
-  pMethodParam->chrType=getTypeSpecStringFromCurToken();
+  char *chrTemp;
+
+  /* Return type part 1 */
+  chrTemp=getTypeSpecStringFromCurToken();
+
+  /* A second typespec part (e.g. 'unsigned long')? */
+  if(matchNextKind(KIND_TYPESPEC))
+    {
+      char *chrTemp2=getTypeSpecStringFromCurToken();
+      pMethodParam->chrType=g_strconcat(chrTemp, " ", chrTemp2 ,NULL);
+      g_free(chrTemp2);
+      g_free(chrTemp);
+    }
+  else{
+    /* Return type  */
+    pMethodParam->chrType=chrTemp;
+  }
 
   /* Do we return a pointer (check for '*') */
   while(matchNext('*'))
     pMethodParam->uiStar++;
 }
+
+
 
 
 

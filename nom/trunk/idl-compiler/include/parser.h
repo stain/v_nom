@@ -79,10 +79,11 @@ typedef struct
 typedef struct
 {
   gchar* chrName;    /* Name of this interface   */
-  gchar *chrParent;  /* Name of parent interface */
+  gchar* chrParent;  /* Name of parent interface */
   gulong ulMajor;    /* Class version            */
   gulong ulMinor;    /* Class version            */
   gboolean fIsForwardDeclaration;
+  gchar* chrMetaClass; /* Pointer to metaclass name or NULL*/
   GPtrArray *pMethodArray;
   GPtrArray *pOverrideArray;
   GPtrArray *pInstanceVarArray;
@@ -128,6 +129,9 @@ enum
   IDL_SYMBOL_INSTANCEVAR,
   IDL_SYMBOL_OVERRIDE,
   IDL_SYMBOL_REGINTERFACE,  /* Used for registered interfaces */
+  IDL_SYMBOL_CLSNAME,
+  IDL_SYMBOL_OLDMETACLASS,
+  IDL_SYMBOL_METACLASS,
   IDL_SYMBOL_NATIVE,
   /* Some GLib types */
   IDL_SYMBOL_GULONG,           /* 275 */
@@ -139,6 +143,8 @@ enum
   /* Legacy support */
   IDL_SYMBOL_BOOLEAN,
   IDL_SYMBOL_STRING,
+  IDL_SYMBOL_LONG,
+  IDL_SYMBOL_UNSIGNED,
   /* Direction of method parameters */
   IDL_SYMBOL_IN,
   IDL_SYMBOL_OUT,
@@ -171,4 +177,4 @@ void parseClassVersion(void);
 void parseOverrideMethod(void);
 void parseHash(void);
 void parsePreprocLineInfo(void);
-
+void parseMetaClass(void);
