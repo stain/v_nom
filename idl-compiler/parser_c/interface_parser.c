@@ -129,6 +129,9 @@ void parseIBody(void)
           case IDL_SYMBOL_METACLASS:
             parseMetaClass();
             break;
+          case IDL_SYMBOL_FILESTEM:
+            parseFileStem();
+            break;
           default:
             g_scanner_unexp_token(gScanner,
                                   G_TOKEN_SYMBOL,

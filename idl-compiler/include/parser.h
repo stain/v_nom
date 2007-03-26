@@ -84,6 +84,7 @@ typedef struct
   gchar* chrMetaClass; /* Pointer to metaclass name or NULL*/
   char*  chrSourceFileName; /* The preprocessor includes files for us. This is the info
                                about the file this interface is defined in. */
+  char*  chrFileStem;  /* Holding output filestem */
   GPtrArray *pMethodArray;
   GPtrArray *pOverrideArray;
   GPtrArray *pInstanceVarArray;
@@ -124,6 +125,7 @@ enum
   IDL_SYMBOL_CLSNAME,
   IDL_SYMBOL_OLDMETACLASS,
   IDL_SYMBOL_METACLASS,
+  IDL_SYMBOL_FILESTEM,      /* Followed by the file name for output */
   IDL_SYMBOL_NATIVE,
   /* Some GLib types */
   IDL_SYMBOL_GULONG,           /* 275 */
@@ -170,6 +172,7 @@ void parseOverrideMethod(void);
 void parseHash(void);
 void parsePreprocLineInfo(void);
 void parseMetaClass(void);
+void parseFileStem(void);
 
 void emitHFile(GPtrArray* pInterfaceArray);
 
