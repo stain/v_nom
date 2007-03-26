@@ -174,7 +174,9 @@ void parsePreprocLineInfo(void);
 void parseMetaClass(void);
 void parseFileStem(void);
 
+/* Emitters */
 void emitHFile(GPtrArray* pInterfaceArray);
+void emitIHFile(GPtrArray* pInterfaceArray);
 
 /* In printdata.c */
 void printInterface(PINTERFACE pif);
