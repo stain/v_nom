@@ -108,7 +108,7 @@ static void emitClassVersion(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "#define %s_MinorVersion %ld\n\n", pif->chrName, pif->ulMinor);
 }
 
-static void emitClassDataStruct(PPARSEINFO pLocalPI, PINTERFACE pif)
+static void emitClassDataStructs(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   int a;
   FILE* fh=pLocalPI->outFile;
@@ -124,6 +124,12 @@ static void emitClassDataStruct(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "    nomMToken %s;\n", pm->chrName);
     }
   fprintf(fh, "}%sClassData\n\n", pif->chrName);
+
+  fprintf(fh, "NOMEXTERN struct %sCClassDataStructure {\n", pif->chrName);
+  fprintf(fh, "   nomMethodTabs parentMtab;\n");
+  fprintf(fh, "   nomDToken instanceDataToken;\n");
+  fprintf(fh, "} NOMDLINK %sCClassData;\n\n", pif->chrName);
+
 }
 
 
@@ -273,6 +279,47 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
     }
 };
 
+static void emitNewMacro(PPARSEINFO pLocalPI, PINTERFACE pif)
+{
+  FILE* fh=pLocalPI->outFile;
+
+  fprintf(fh, "/*\n * Class creation function\n */\n");
+  fprintf(fh, "NOMEXTERN NOMClass * NOMLINK %sNewClass(gulong clsMajorVersion, gulong clsMinorVersion);\n\n",
+          pif->chrName);
+  
+  fprintf(fh, "#define _%s (%s*)%sClassData.classObject\n\n",
+          pif->chrName, pif->chrMetaClass, pif->chrName);
+  
+  fprintf(fh, "/*\n * New macro for WPObject\n */\n\n");
+  fprintf(fh, "#define %sNew() \\\n", pif->chrName);
+  fprintf(fh, "        ((%s*)_nomNew((_%s ? _%s : ", pif->chrName, pif->chrName, pif->chrName);
+  fprintf(fh, "(%s*)%sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n\n",
+          pif->chrName, pif->chrName, pif->chrName, pif->chrName);
+
+}
+
+static void emitParentClassMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
+{
+  FILE* fh=pLocalPI->outFile;
+  PINTERFACE pifParent=pif;
+
+  while((pifParent=getParentInterface(pifParent))!=NULLHANDLE)
+    {
+      GPtrArray *pArray; 
+      int a;
+      /* Do this parents methods */
+      pArray=pifParent->pMethodArray;
+      for(a=0;a<pArray->len;a++)
+        {
+          PMETHOD pm=(PMETHOD)g_ptr_array_index(pArray, a);
+
+          fprintf(fh, "#define %s_%s \\\n", pif->chrName, pm->chrName);
+          fprintf(fh, "        %s_%s \n", pifParent->chrName, pm->chrName);
+        }
+    }
+  fprintf(fh, "\n");
+}
+
 static void emitHFileFooter(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
@@ -299,9 +346,11 @@ void emitHFile(GPtrArray* pInterfaceArray)
           emitHFileHeader(pLocalPI, pif);
           emitParentHeader(pLocalPI, pif);
           emitClassVersion(pLocalPI, pif);
-          emitClassDataStruct(pLocalPI, pif);
+          emitClassDataStructs(pLocalPI, pif);
+          emitNewMacro(pLocalPI, pif);
           emitObjectCheckFunction(pLocalPI, pif);
           emitNewMethods(pLocalPI, pif);
+          emitParentClassMethods(pLocalPI, pif);
           emitHFileFooter(pLocalPI, pif);
         }
     }
