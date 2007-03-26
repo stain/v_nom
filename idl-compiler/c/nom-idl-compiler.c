@@ -658,6 +658,8 @@ int main(int argc, char **argv)
   /* Write the output file */
   if(fOptionEmitH)
     emitHFile(parseInfo.pInterfaceArray);
+  if(fOptionEmitIH)
+    emitIHFile(parseInfo.pInterfaceArray);
 
 #if 0
   else if(fOptionEmitIH)

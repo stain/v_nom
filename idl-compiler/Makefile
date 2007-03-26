@@ -12,6 +12,7 @@ CDIR		=	./c
 
 PARSERDIR	=	./parser_c
 HEMITTERDIR	=	./h-emitter_c
+IHEMITTERDIR	=	./ih-emitter_c
 
 CFLAGS		=	-Zmt -Zcrtdll -D__OS2__ -D__ST_MT_ERRNO__ -c -Wall
 
@@ -37,6 +38,7 @@ PGOBJECTS	=	$(OBJDIR)/nom-idl-compiler.o \
 			$(OBJDIR)/metaclass_parser.o \
 			$(OBJDIR)/filestem_parser.o \
 			$(OBJDIR)/h_file_emitter.o \
+			$(OBJDIR)/ih_file_emitter.o \
 			$(OBJDIR)/printdata.o
 
 
@@ -69,6 +71,9 @@ $(OBJDIR)/%.o:	$(PARSERDIR)/%.c $(INCDIR)/parser.h
 	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
 
 $(OBJDIR)/%.o:	$(HEMITTERDIR)/%.c $(INCDIR)/parser.h
+	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
+
+$(OBJDIR)/%.o:	$(IHEMITTERDIR)/%.c $(INCDIR)/parser.h
 	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
 
 # Create the directories for temp files
