@@ -27,6 +27,7 @@ INC		= 	./include -I $(NOMPATH)/include
 
 PGOBJECTS	=	$(OBJDIR)/nom-idl-compiler.o \
 			$(OBJDIR)/token.o \
+			$(OBJDIR)/open_outfile.o \
 			$(OBJDIR)/typespec_parser.o \
 			$(OBJDIR)/method_parser.o \
 			$(OBJDIR)/instancevar_parser.o \

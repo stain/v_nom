@@ -54,7 +54,6 @@
 #include "parser.h"
 
 static gchar* chrOutputDir="";
-static gchar* chrOutputName="";
 static gboolean fOptionEmitH=FALSE;
 static gboolean fOptionEmitIH=FALSE;
 static gboolean fOptionEmitC=FALSE;
@@ -66,7 +65,6 @@ static GOptionEntry gOptionEntries[] =
   {"emit-h", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitH, "Emmit a header file (*.h)", NULL},
   {"emit-ih", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitIH, "Emmit an include header (*.ih)", NULL},
   {"emit-c", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitC, "Emmit an implementation template (*.c)", NULL},
-  {"output", 'o', 0, G_OPTION_ARG_FILENAME, &chrOutputName, "Output name. Must not be omitted.", NULL},
   {NULL}
 };
 
@@ -479,9 +477,7 @@ static void outputCompilerHelp(GOptionContext *gContext, gchar* chrExeName)
   char** argv2=helpCmd;
   helpCmd[0]=chrExeName;
 
-  g_printf("An output filename must always be specified. If the name is an absolute path\n\
-it will be used unmodified. Otherwise the output name is built from the given\n\
-name and the directory specification.\n\n\
+  g_printf("The output filename is specified in the IDL file using the 'filestem' keyword.\n\
 -If no directory is specified the output name is built from the current directory\n\
  path and the given filename.\n\
 -If the directory is a relative path the output name is built from the current\n\
@@ -532,7 +528,6 @@ int main(int argc, char **argv)
   int fd;
   /* Vars for filename building */
   char* chrOutputFileName="";
-  char* chrTemp;
 
   GError *gError = NULL;
   GOptionContext* gContext;
@@ -564,11 +559,6 @@ int main(int argc, char **argv)
     outputCompilerHelp(gContext, argv[0]);
   }
 
-  if(strlen(chrOutputName)==0)
-    {
-      g_printf("No output file name given.\n\n");
-      outputCompilerHelp(gContext, argv[0]);
-    }
   g_option_context_free(gContext);
 
 
@@ -584,31 +574,17 @@ int main(int argc, char **argv)
     }
 
   
-  /*** Create output file name ****/
-  if(!g_path_is_absolute(chrOutputName))
-    {
-      if(g_path_is_absolute(chrOutputDir))
-        chrOutputFileName=g_build_filename(chrOutputDir, chrOutputName, NULL);
-      else
-        {
-          /* Yes this is a memory leak but I don't care */
-          chrOutputFileName=g_build_filename(g_get_current_dir(), chrOutputDir, chrOutputName, NULL);
-        }
-    }
+  /*** Create output path name ****/
+  if(g_path_is_absolute(chrOutputDir))
+    chrOutputFileName=chrOutputDir;
   else
-    chrOutputFileName=chrOutputName;
+    {
+      /* Yes this is a memory leak but I don't care */
+      chrOutputFileName=g_build_filename(g_get_current_dir(), chrOutputDir, NULL);
+    }
 
-  /* Add emitter extension */
-  if(fOptionEmitH)
-    chrTemp=g_strconcat(chrOutputFileName, ".h", NULL);
-  else if(fOptionEmitIH)
-    chrTemp=g_strconcat(chrOutputFileName, ".ih", NULL);
-  else if(fOptionEmitC)
-    chrTemp=g_strconcat(chrOutputFileName, ".c", NULL);
-  g_free(chrOutputFileName);
-  chrOutputFileName=chrTemp;
-
-  g_message("Output file: %s", chrOutputFileName);
+  g_message("Output path: %s", chrOutputFileName);
+  parseInfo.chrOutfilePath=chrOutputFileName;
 
   /* Open input */
   if(!strcmp(argv[1], "-"))
@@ -621,9 +597,6 @@ int main(int argc, char **argv)
       g_message("Can't open input file %s", argv[1]);
       exit(1);
     }
-  
-  /* Open output */
-  parseInfo.outFile=fopen(chrOutputFileName, "w");
 
   g_printf("\n");
 
@@ -662,8 +635,6 @@ int main(int argc, char **argv)
     emitIHFile(parseInfo.pInterfaceArray);
 
 #if 0
-  else if(fOptionEmitIH)
-
   else if(fOptionEmitC)
     a++;
 
