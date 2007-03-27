@@ -37,6 +37,8 @@
 
 #include <glib.h> 
 #include <glib/gprintf.h> 
+
+#define INCL_FILE
 #include "parser.h"
 
 extern GScanner *gScanner;
@@ -339,19 +341,28 @@ void emitHFile(GPtrArray* pInterfaceArray)
   for(a=0;a<pInterfaceArray->len;a++)
     {
       PINTERFACE pif=g_ptr_array_index(pLocalPI->pInterfaceArray, a); 
+      /* Only interfaces from the file given on the command line */
       if(!strcmp(pif->chrSourceFileName, pLocalPI->chrRootSourceFile))
         {
-          printInterface(pif);
+          gchar*  chrTemp;
+          
+          chrTemp=g_strconcat(pif->chrFileStem, ".h", NULL);
 
-          emitHFileHeader(pLocalPI, pif);
-          emitParentHeader(pLocalPI, pif);
-          emitClassVersion(pLocalPI, pif);
-          emitClassDataStructs(pLocalPI, pif);
-          emitNewMacro(pLocalPI, pif);
-          emitObjectCheckFunction(pLocalPI, pif);
-          emitNewMethods(pLocalPI, pif);
-          emitParentClassMethods(pLocalPI, pif);
-          emitHFileFooter(pLocalPI, pif);
+          printInterface(pif);
+          if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
+            {
+              emitHFileHeader(pLocalPI, pif);
+              emitParentHeader(pLocalPI, pif);
+              emitClassVersion(pLocalPI, pif);
+              emitClassDataStructs(pLocalPI, pif);
+              emitNewMacro(pLocalPI, pif);
+              emitObjectCheckFunction(pLocalPI, pif);
+              emitNewMethods(pLocalPI, pif);
+              emitParentClassMethods(pLocalPI, pif);
+              emitHFileFooter(pLocalPI, pif);
+              closeOutfile(pLocalPI->outFile);
+            }
+          g_free(chrTemp);
         }
     }
 }

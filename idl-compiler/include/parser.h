@@ -82,9 +82,9 @@ typedef struct
   gboolean fIsForwardDeclaration;
   gboolean fIsInRootFile;
   gchar* chrMetaClass; /* Pointer to metaclass name or NULL*/
+  char*  chrFileStem;  /* Holding output filestem */
   char*  chrSourceFileName; /* The preprocessor includes files for us. This is the info
                                about the file this interface is defined in. */
-  char*  chrFileStem;  /* Holding output filestem */
   GPtrArray *pMethodArray;
   GPtrArray *pOverrideArray;
   GPtrArray *pInstanceVarArray;
@@ -110,6 +110,7 @@ typedef struct
   char*     chrRootSourceFile;   /* File we are intending to parse. Others may get included. */
   char*     chrCurrentSourceFile;/* The preprocessor includes files for us. This is the info
                                     about their name. */
+  char*  chrOutfilePath;         /* This is only the path, no filename */
   FILE*     outFile;             /* Output file handle */
 }PARSEINFO, *PPARSEINFO;
 
@@ -181,3 +182,8 @@ void emitIHFile(GPtrArray* pInterfaceArray);
 /* In printdata.c */
 void printInterface(PINTERFACE pif);
 void printAllInterfacec(void);
+
+#ifdef INCL_FILE
+FILE* openOutfile(GScanner *gScanner, gchar* chrOutName);
+void closeOutfile(FILE* pFile);
+#endif
