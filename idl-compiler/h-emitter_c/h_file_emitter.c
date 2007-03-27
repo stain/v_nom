@@ -71,22 +71,6 @@ static void emitHFileHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
 
 }
 
-/**
-   Returns the interface structure (holding all the interface information) of the
-   parent of an interface.
-
-   \Param pif Pointer to an interface structure.
-   \Returns The interface data structure of the parent interface or NULL if the
-   interface has no parent.
-
- */
-static PINTERFACE getParentInterface(PINTERFACE pif)
-{
-  if(pif->chrParent==NULL)
-    return NULL;
-
-  return findInterfaceFromName(pif->chrParent);
-}
 
 static void emitParentHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
@@ -144,54 +128,6 @@ static void emitObjectCheckFunction(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);\n\n");
 }
 
-/*
-  \param pArray Pointer to the list of parameters.
- */
-static void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
-{
-  FILE* fh=pLocalPI->outFile;
-  int a;
-
-  for(a=0;a<pArray->len;a++)
-    {
-      int b;
-      PMETHODPARAM pm=(PMETHODPARAM)g_ptr_array_index(pArray, a);
-
-      switch(pm->uiDirection)
-        {
-        case PARM_DIRECTION_IN:
-          fprintf(fh, "    const %s", pm->chrType);
-          break;
-        case PARM_DIRECTION_OUT:
-          fprintf(fh, "    %s*", pm->chrType);
-          break;
-        case PARM_DIRECTION_INOUT:
-
-          break;
-        default:
-          fprintf(fh, "    %s*", pm->chrType);
-          break;
-        }
-      for(b=0;b<pm->uiStar;b++)
-        fprintf(fh, "*");
-      fprintf(fh, " %s,\n", pm->chrName);      
-    }
-}
-
-/*
-  \param pArray Pointer to the list of parameters.
- */
-static void emitMethodParamsNoTypes(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
-{
-  FILE* fh=pLocalPI->outFile;
-  int a;
-
-  for(a=0;a<pArray->len;a++)
-    {
-      PMETHODPARAM pm=(PMETHODPARAM)g_ptr_array_index(pArray, a);
-      fprintf(fh, " %s,", pm->chrName);      
-    }
-}
 
 static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
 {

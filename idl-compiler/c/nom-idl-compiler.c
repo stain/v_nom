@@ -113,27 +113,6 @@ GScanner *gScanner;
 PARSEINFO parseInfo={0};
 PPARSEINFO pParseInfo=&parseInfo; /* This pointer will go away, don't use */
 
-/**
-   Helper function which scans the array of known interfaces and returns the interface
-   structure for the given name. 
-
-   \PARAM chrName Name of the interface.
-   \Returns If no interface with that name can be found NULL is returned otherwise a
-   pointer to the interface structure..
- */
-PINTERFACE findInterfaceFromName(gchar* chrName)
-{
-  int a;
-
-  for(a=0;a<parseInfo.pInterfaceArray->len;a++)
-    {
-      PINTERFACE pif=g_ptr_array_index(parseInfo.pInterfaceArray, a);
-      if(!strcmp(chrName, pif->chrName))
-        return pif;
-    }
-
-  return NULL;
-}
 
 /**
    Helper function which returns a copy of the typespec string of the current token.
