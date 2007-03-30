@@ -102,7 +102,7 @@ static void emitGetDataMacros(PPARSEINFO pLocalPI, PINTERFACE pif)
     {
       PMETHODPARAM piv=(PMETHODPARAM)g_ptr_array_index(pArray, a);
       
-      fprintf(fh, "#define  _%s (nomThis->%s);\n", piv->chrName, piv->chrName);
+      fprintf(fh, "#define  _%s (nomThis->%s)\n", piv->chrName, piv->chrName);
     }
   fprintf(fh, "\n");
 }
@@ -186,8 +186,9 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "/*\n * New method: %s\n */\n", pm->chrName);
       fprintf(fh, "#if !defined(_decl_impl_%s_%s_)\n", pif->chrName, pm->chrName);
       fprintf(fh, "#define _decl_impl_%s_%s_ 1\n", pif->chrName, pm->chrName);
-      fprintf(fh, "NOM_Scope %s ", pm->mpReturn.chrType);
-      fprintf(fh, "NOMLINK impl_%s_%s(%s *nomSelf,\n", pif->chrName, pm->chrName, pif->chrName);
+      fprintf(fh, "NOM_Scope ");
+      emitReturnType(pLocalPI, pif, pm);
+      fprintf(fh, " NOMLINK impl_%s_%s(%s *nomSelf,\n", pif->chrName, pm->chrName, pif->chrName);
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, " CORBA_Environment *ev);\n");
@@ -201,7 +202,7 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
 
       fprintf(fh, "  \"%s\", /* Return type */\n  {\n", pm->mpReturn.chrType);
       emitMethodParamStrings(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, "  }\n}\n");
+      fprintf(fh, "  }\n};\n");
 
       fprintf(fh, "#endif /* _decl_impl_%s_%s_ */\n\n", pif->chrName, pm->chrName);
     }
@@ -251,7 +252,7 @@ static void emitOverridenMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
               pif->chrName, pom->chrName);
       emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, " ev) \\\n");
-      fprintf(fh, "        (((nomTD_%s_%s) \\\n", pif->chrName, pom->chrName);
+      fprintf(fh, "        (((nomTD_%s_%s) \\\n", pifIntroduced->chrName, pom->chrName);
 
       fprintf(fh, "        %s_%s_parent_resolved)((%s*)nomSelf,",
               pif->chrName, pom->chrName, pifIntroduced->chrName);
@@ -268,7 +269,7 @@ static void emitOverridenMethodTable(PPARSEINFO pLocalPI, PINTERFACE pif)
   int a;
 
   fprintf(fh, "/* Table of the overriden methods by this class */\n");
-  fprintf(fh, "static nomOverridenMethodDesc nomOverridenMethodsWPRootFolder[] = {\n");
+  fprintf(fh, "static nomOverridenMethodDesc nomOverridenMethods%s[] = {\n", pif->chrName);
 
   for(a=0;a<pArray->len;a++)
     {
@@ -323,8 +324,11 @@ static void emitMetaClass(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
 
-  fprintf(fh, "/* The meta class for this class */\n");
-  fprintf(fh, "static char * nomIdStringMetaClass_%s = \"%s\";\n\n", pif->chrName, pif->chrMetaClass);
+  if(pif->chrMetaClass)
+    {
+      fprintf(fh, "/* The meta class for this class */\n");
+      fprintf(fh, "static char * nomIdStringMetaClass_%s = \"%s\";\n\n", pif->chrName, pif->chrMetaClass);
+    }
 }
 
 static void emitClassId(PPARSEINFO pLocalPI, PINTERFACE pif)
@@ -346,30 +350,33 @@ static void emitParentClasses(PPARSEINFO pLocalPI, PINTERFACE pif)
   PINTERFACE pifParent=pif;
   int a;
 
-  fprintf(fh, "/* Array of parent names (chain of parents) */\n");
-  fprintf(fh, "static char* nomParentClassNames%s[]=\n{\n", pif->chrName);
-  /* Emit the parents. We have to output them sorted beginning from the
-     leftmost parent. */
-  while(pifParent->chrParent && (pifParent=findInterfaceFromName(pifParent->chrParent))!=NULLHANDLE)
+  if(pif->chrParent)
     {
-      g_ptr_array_add(pArray, (gpointer) pifParent);
+      fprintf(fh, "/* Array of parent names (chain of parents) */\n");
+      fprintf(fh, "static char* nomParentClassNames%s[]=\n{\n", pif->chrName);
+      /* Emit the parents. We have to output them sorted beginning from the
+         leftmost parent. */
+      while(pifParent->chrParent && (pifParent=findInterfaceFromName(pifParent->chrParent))!=NULLHANDLE)
+        {
+          g_ptr_array_add(pArray, (gpointer) pifParent);
+        }
+      
+      for(a=pArray->len-1; a>=0; a--)
+        {
+          pifParent=(PINTERFACE)g_ptr_array_index(pArray, a);
+          fprintf(fh, "  \"%s\",\n", pifParent->chrName);
+        }
+      g_ptr_array_free(pArray, TRUE);
+      fprintf(fh, "};\n\n");
+      
+      fprintf(fh, "static char * nomIdString_Parent_%s = \"%s\";\n\n", pif->chrParent, pif->chrParent);
+      
+      fprintf(fh, "/* Array of parent IDs (direct parents, for now NOM only support single inheritance) */\n");
+      fprintf(fh, "static nomID nomParentClasses%s[]=\n", pif->chrName);
+      fprintf(fh, "{\n");
+      fprintf(fh, "  &nomIdString_Parent_%s,\n", pif->chrParent);
+      fprintf(fh, "};\n\n");
     }
-
-  for(a=pArray->len-1; a>=0; a--)
-    {
-      pifParent=(PINTERFACE)g_ptr_array_index(pArray, a);
-      fprintf(fh, "  \"%s\",\n", pifParent->chrName);
-    }
-  g_ptr_array_free(pArray, TRUE);
-  fprintf(fh, "};\n\n");
-
-  fprintf(fh, "static char * nomIdString_Parent_%s = \"%s\";\n\n", pif->chrParent, pif->chrParent);
-
-  fprintf(fh, "/* Array of parent IDs (direct parents, for now NOM only support single inheritance) */\n");
-  fprintf(fh, "static nomID nomParentClasses%s[]=\n", pif->chrName);
-  fprintf(fh, "{\n");
-  fprintf(fh, "  &nomIdString_Parent_%s,\n", pif->chrParent);
-  fprintf(fh, "};\n\n");
 }
 
 static gulong getNumberOfParentsInChain(PPARSEINFO pLocalPI, PINTERFACE pif)
@@ -442,6 +449,9 @@ static void emitStaticClassInfo(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
 
+  fprintf(fh, "/* Identify this class */\n");
+  fprintf(fh, "static char * nomIdString_%s = \"%s\";\n\n", pif->chrName, pif->chrName);
+
   fprintf(fh, "static nomStaticClassInfo %sSCI = {\n", pif->chrName);
   fprintf(fh, "  0,               /* Version */\n");
   fprintf(fh, "  %d, /* Number of static methods introduced by this class */\n", pif->pMethodArray->len);
@@ -460,10 +470,16 @@ static void emitStaticClassInfo(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "  (nomCClassDataStructure*)&%sCClassData,\n", pif->chrName);
   fprintf(fh, "  (nomStaticMethodDesc*)&nomStaticMethods%s,\n", pif->chrName);
   if(pif->chrParent)
+    {
     fprintf(fh, "  nomParentClasses%s,\n", pif->chrName);
+    fprintf(fh, "  nomParentClassNames%s, /* Name of all the parent classes in chain */\n", pif->chrName);
+    }
   else
-    fprintf(fh, "  NULL,\n");
-  fprintf(fh, "  nomParentClassNames%s, /* Name of all the parent classes in chain */\n", pif->chrName);
+    {
+      fprintf(fh, "    (void*)NULL,\n");
+      fprintf(fh, "    (void*)NULL,\n");
+    }
+
   fprintf(fh, "  %ld,                /* Number of parents in the chain of classes */\n",
           getNumberOfParentsInChain( pLocalPI,  pif));
   fprintf(fh, "  nomOverridenMethods%s,\n", pif->chrName);
@@ -520,8 +536,12 @@ static void emitClassCreationFunc(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "  %sNewClass(%s_MajorVersion, %s_MinorVersion);\n",
               pif->chrMetaClass, pif->chrMetaClass, pif->chrMetaClass);
     }
-  fprintf(fh, "  %sNewClass(%s_MajorVersion, %s_MinorVersion);\n",
-          pif->chrParent, pif->chrParent, pif->chrParent);
+  if(pif->chrParent)
+    {
+      fprintf(fh, "  /* Create the parent class */\n");
+      fprintf(fh, "  %sNewClass(%s_MajorVersion, %s_MinorVersion);\n",
+              pif->chrParent, pif->chrParent, pif->chrParent);
+    }
   fprintf(fh, "  result = nomBuildClass(1, &%sSCI, ulMajor, ulMinor);\n\n", pif->chrName);
   fprintf(fh, "  return result;\n");
   fprintf(fh, "};\n\n");
@@ -547,7 +567,7 @@ void emitIHFile(GPtrArray* pInterfaceArray)
         {
           gchar*  chrTemp;
 
-          printInterface(pif);
+          //printInterface(pif);
           
           chrTemp=g_strconcat(pif->chrFileStem, ".ih", NULL);
           if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)

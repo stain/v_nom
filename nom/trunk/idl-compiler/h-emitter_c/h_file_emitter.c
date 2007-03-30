@@ -79,10 +79,9 @@ static void emitParentHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
 
   /* Include header of parent */
   if(pifParent){
-    char* chrTemp=strlwr(g_strdup(pifParent->chrName));
     fprintf(fh, "/* Include for the parent class */\n");
-    fprintf(fh, "#include \"%s.h\"\n\n", chrTemp);
-    g_free(chrTemp);
+    if(pifParent->chrFileStem)
+      fprintf(fh, "#include \"%s.h\"\n\n", pifParent->chrFileStem);
   }
 }
 
@@ -109,7 +108,7 @@ static void emitClassDataStructs(PPARSEINFO pLocalPI, PINTERFACE pif)
       PMETHOD pm=(PMETHOD)g_ptr_array_index(pif->pMethodArray, a);
       fprintf(fh, "    nomMToken %s;\n", pm->chrName);
     }
-  fprintf(fh, "}%sClassData\n\n", pif->chrName);
+  fprintf(fh, "}%sClassData;\n\n", pif->chrName);
 
   fprintf(fh, "NOMEXTERN struct %sCClassDataStructure {\n", pif->chrName);
   fprintf(fh, "   nomMethodTabs parentMtab;\n");
@@ -123,9 +122,17 @@ static void emitObjectCheckFunction(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
 
-  fprintf(fh, "/* This function is used to check if a given object is valid and the\n");
-  fprintf(fh, "   object supports the method */\n");
-  fprintf(fh, "NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);\n\n");
+  if(strcmp(pif->chrName , "NOMObject"))
+    {
+      fprintf(fh, "/* This function is used to check if a given object is valid and the\n");
+      fprintf(fh, "   object supports the method */\n");
+      fprintf(fh, "NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);\n\n");
+    }
+  else
+    {
+      fprintf(fh, "/* This function is used to check if the given object is valid and a NOMObject */\n");
+      fprintf(fh, "NOMEXTERN gboolean NOMLINK nomCheckNOMObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);\n\n");
+    }
 }
 
 
@@ -156,8 +163,8 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
 
-      fprintf(fh, "    Corba_Environment *ev);\n");
-      fprintf(fh, "typedef nomTP_%s_%s *nomTD_%s_%s\n", pif->chrName,  pm->chrName,
+      fprintf(fh, "    CORBA_Environment *ev);\n");
+      fprintf(fh, "typedef nomTP_%s_%s *nomTD_%s_%s;\n", pif->chrName,  pm->chrName,
               pif->chrName,  pm->chrName);
       fprintf(fh, "/* define the name for this method */\n");
       fprintf(fh, "#define nomMNDef_%s_%s \"%s\"\n", pif->chrName, pm->chrName,  pm->chrName);
@@ -172,7 +179,7 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
               pif->chrName,  pm->chrName, pif->chrName);
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, "    Corba_Environment *ev);\n");
+      fprintf(fh, "    CORBA_Environment *ev);\n");
 
       fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
       /* Do parameters */
@@ -192,14 +199,20 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       /* Do parameters */
       emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, " ev) \\\n");
-      fprintf(fh, "        (nomCheckObjectPtr((NOMObject*)nomSelf, %sClassData.classObject,",pif->chrName);
+      if(strcmp(pif->chrName , "NOMObject"))
+        fprintf(fh, "        (nomCheckObjectPtr((NOMObject*)nomSelf, %sClassData.classObject,",pif->chrName);
+      else
+        fprintf(fh, "        (nomCheckNOMObjectPtr(nomSelf, %sClassData.classObject,",pif->chrName);
       fprintf(fh, "\"%s_%s\", ev) ? \\\n", pif->chrName, pm->chrName);
 
       fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
       fprintf(fh, "        (nomSelf,");
       /* Do parameters */
       emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, " ev)) : (gpointer) NULL)\n");
+      fprintf(fh, " ev)) : (%s", pm->mpReturn.chrType);
+      for(b=0;b<pm->mpReturn.uiStar;b++)
+        fprintf(fh, "*");
+      fprintf(fh, ") NULL)\n");
       fprintf(fh, "#endif\n");
       fprintf(fh, "#else /* NOM_NO_PARAM_CHECK */\n");
       fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
@@ -284,7 +297,7 @@ void emitHFile(GPtrArray* pInterfaceArray)
           
           chrTemp=g_strconcat(pif->chrFileStem, ".h", NULL);
 
-          printInterface(pif);
+          //printInterface(pif);
           if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
             {
               emitHFileHeader(pLocalPI, pif);

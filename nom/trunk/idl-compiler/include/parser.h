@@ -182,6 +182,7 @@ void emitIHFile(GPtrArray* pInterfaceArray);
 /* Emitter support function */
 void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray);
 void emitMethodParamsNoTypes(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray);
+void emitReturnType(PPARSEINFO pLocalPI, PINTERFACE pif, PMETHOD pm);
 
 /* In printdata.c */
 void printInterface(PINTERFACE pif);

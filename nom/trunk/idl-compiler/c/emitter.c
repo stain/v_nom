@@ -53,21 +53,30 @@ void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
   for(a=0;a<pArray->len;a++)
     {
       int b;
+      gchar *chrType;
       PMETHODPARAM pm=(PMETHODPARAM)g_ptr_array_index(pArray, a);
+
+      chrType= pm->chrType;
+
+      /* For old IDL files using orbit IDL compiler */
+      if(!strcmp(pm->chrType, "string"))
+        chrType="CORBA_char*";
+      if(!strcmp(pm->chrType, "long"))
+        chrType="CORBA_long";
 
       switch(pm->uiDirection)
         {
         case PARM_DIRECTION_IN:
-          fprintf(fh, "    const %s", pm->chrType);
+          fprintf(fh, "    const %s", chrType);
           break;
         case PARM_DIRECTION_OUT:
-          fprintf(fh, "    %s*", pm->chrType);
+          fprintf(fh, "    %s*", chrType);
           break;
         case PARM_DIRECTION_INOUT:
-
+          fprintf(fh, "    %s*", chrType);
           break;
         default:
-          fprintf(fh, "    %s*", pm->chrType);
+
           break;
         }
       for(b=0;b<pm->uiStar;b++)
@@ -89,4 +98,28 @@ void emitMethodParamsNoTypes(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pAr
       PMETHODPARAM pm=(PMETHODPARAM)g_ptr_array_index(pArray, a);
       fprintf(fh, " %s,", pm->chrName);      
     }
+}
+
+/**
+   This function emits the return type of a method. It translates CORBA identifiers
+   into another representation e.g. long->glong. At the moment it's used to be compatible
+   with old source written using the orbit IDL compiler.
+ */
+void emitReturnType(PPARSEINFO pLocalPI, PINTERFACE pif, PMETHOD pm)
+{
+  FILE* fh=pLocalPI->outFile;
+  int b;
+  gchar* chrType;
+
+  chrType= pm->mpReturn.chrType;
+
+  /* Support for orbit IDL files */
+  if(!strcmp(pm->mpReturn.chrType, "long"))
+    chrType="CORBA_long";
+  else if(!strcmp(pm->mpReturn.chrType, "boolean"))
+    chrType="CORBA_boolean";
+
+  fprintf(fh, "%s", chrType);
+  for(b=0;b<pm->mpReturn.uiStar;b++)
+    fprintf(fh, "*");
 }

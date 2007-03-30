@@ -547,11 +547,12 @@ int main(int argc, char **argv)
       return 1;
     }
 
+#if 0
   for(a=0; a<argc; a++)
     {
       g_message("arg %d: %s", a, argv[a]);
     }
-
+#endif
   
   /*** Create output path name ****/
   if(g_path_is_absolute(chrOutputDir))
