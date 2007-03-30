@@ -109,9 +109,6 @@ NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomCl
   if(!fInitialized)
     return TRUE;
 
-  //if(strstr( chrMethodName, "nomIsObj"))
-  //return TRUE;
-
   if(ev && (ev->fFlags & NOMENV_FLG_DONT_CHECK_OBJECT))
     return TRUE;
 

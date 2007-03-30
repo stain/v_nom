@@ -52,6 +52,9 @@ Class definition file for the NOM class NOMObject.
  */
 interface NOMObject
 {
+#ifdef __NOM_IDL_COMPILER__
+  filestem=nomobj;
+#endif
 
   NOMCLASSVERSION(1, 0 );
 

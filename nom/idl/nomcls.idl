@@ -49,6 +49,9 @@ Class definition file for NOM class NOMClass the root metaclass.
  */
 interface NOMClass:NOMObject
 {
+#ifdef __NOM_IDL_COMPILER__
+  filestem=nomcls;
+#endif
 
   NOMCLASSVERSION(1, 0 );
 
