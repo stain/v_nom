@@ -39,7 +39,7 @@ Class definition file for the NOM class NOMClassMgr
 #ifndef nomcm_idl
 #define nomcm_idl
 
-#include <nomobj.idl>
+#include "nomobj.idl"
 
 /** \interface NOMClassMgr
 
@@ -50,7 +50,9 @@ Class definition file for the NOM class NOMClassMgr
  */
 interface NOMClassMgr : NOMObject
 {
-
+#ifdef __NOM_IDL_COMPILER__
+  filestem=nomclassmanager;
+#endif
   NOMCLASSVERSION(1, 0 );
 
   /**
@@ -68,7 +70,7 @@ interface NOMClassMgr : NOMObject
      \return
      The class with the given name or NULL if not found.
    */
-  Object nomFindClassFromId(in long classId, 
+  PNOMObject nomFindClassFromId(in long classId, 
                             in long ulMajorVersion, 
                             in long ulMinorVersion);
   

@@ -22,6 +22,13 @@ TOOLDIR		=	./../tools
 
 GCLIB		=	./../../../o/gc.a
 
+# NOM IDL compiler
+NOMIDLINC	=
+#	-I$(FOUNDATIONPATH)/idl -I$(TKIDLDIR) \
+#		-I$(GUITKPATH)/idl
+
+NOMIDLCOMPILER	=	$(BINDIR)/nom-idl-compiler.exe 
+
 ADDLIBS		=
 #	-l$(OBJDIR)/voyfcls
 
@@ -83,10 +90,13 @@ BASE_SCCOMPILEC		=	sc -I $(IDLDIR) -p -r -sc -d$(CLASSCDIR) -maddstar -mnoint -S
 BASE_SCCOMPILEIH	=	sc -I $(IDLDIR) -p -r -sih -d$(CLASSINC) -maddstar -mnoint -S128000 -C128000  $< && $(FIXLINKAGEIH)
 BASE_SCCOMPILEH		=	sc -I $(IDLDIR) -p -r -sh -d$(CLASSINC) -maddstar -mnoint -S128000 -C128000  $< && $(FIXLINKAGEH)
 
-BASE_NOMCOMPILEH	=	$(IDLCOMP) --showcpperrors --header --output-dir=$(CLASSINC) $<
-BASE_NOMCOMPILEIH	=	$(IDLCOMP) --showcpperrors --ihfile --output-dir=$(CLASSINC) $<
+#BASE_NOMCOMPILEH	=	$(IDLCOMP) --showcpperrors --header --output-dir=$(CLASSINC) $<
+#BASE_NOMCOMPILEIH	=	$(IDLCOMP) --showcpperrors --ihfile --output-dir=$(CLASSINC) $<
 BASE_NOMCOMPILEC	=	$(IDLCOMP) --showcpperrors --c-template --output-dir=$(CLASSTEMPLATEDIR) $< 
  
+BASE_NOMCOMPILEH	=	gcc -E -x c -D__NOM_IDL_COMPILER__ $(NOMIDLINC) $< | $(NOMIDLCOMPILER) --emit-h -d $(CLASSINC) -
+BASE_NOMCOMPILEIH	=	gcc -E -x c -D__NOM_IDL_COMPILER__ $(NOMIDLINC) $< | $(NOMIDLCOMPILER) --emit-ih -d $(CLASSINC) -
+
 
 $(OBJDIR)/%.o:	$(CLASSCDIR)/%.c $(NOMINCLUDES)
 	$(CC) -I $(INC) $(GCCFLAGS)  -o$@ $<

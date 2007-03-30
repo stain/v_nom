@@ -97,6 +97,8 @@ typedef guchar    CORBA_octet;
 typedef gdouble   CORBA_long_double;
 typedef char*     CORBA_string;
 
+//typedef gboolean    boolean;
+
 #if 0
 #if !defined(ORBIT_DECL_CORBA_Object) && !defined(_CORBA_Object_defined)
 #define ORBIT_DECL_CORBA_Object 1
@@ -120,7 +122,7 @@ typedef void *nomToken;                /* Use a gpointer instead of void* here? 
 
 #ifndef NOM_BOOLEAN
   #define NOM_BOOLEAN
-  typedef unsigned char boolean;  
+  typedef gboolean boolean;  
 #endif /* NOM_BOOLEAN */
 
 
