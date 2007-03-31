@@ -159,10 +159,8 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
         fprintf(fh, "*");
 
       fprintf(fh, " NOMLINK nomTP_%s_%s(%s* nomSelf,\n", pif->chrName,  pm->chrName, pif->chrName);
-
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
-
       fprintf(fh, "    CORBA_Environment *ev);\n");
       fprintf(fh, "typedef nomTP_%s_%s *nomTD_%s_%s;\n", pif->chrName,  pm->chrName,
               pif->chrName,  pm->chrName);
@@ -175,44 +173,70 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "#ifndef NOM_NO_PARAM_CHECK /* Parameter check at all? */\n");
       fprintf(fh, "#ifdef %s_%s_ParmCheck_h /* Extended parameter check enabled */\n",
               pif->chrName, pm->chrName);
+      /* Forward declaration of parameter test function */
       fprintf(fh, "NOMEXTERN gboolean NOMLINK parmCheckFunc_%s_%s(%s *nomSelf,\n",
               pif->chrName,  pm->chrName, pif->chrName);
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, "    CORBA_Environment *ev);\n");
+      /* Macro to be used when several parameters are checked */
+      fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
+      /* Do parameters */
+      emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+      fprintf(fh, " ev) \\\n");
 
-      fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
-      /* Do parameters */
-      emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, " ev) \\\n");
-      fprintf(fh, "        (parmCheckFunc_%s_%s(nomSelf,", pif->chrName, pm->chrName);
-      /* Do parameters */
-      emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, " ev) ? \\\n");
-      fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
-      fprintf(fh, "        (nomSelf,");
-      /* Do parameters */
-      emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, " ev)) : %s_%s_retval)\n", pif->chrName, pm->chrName);
-      fprintf(fh, "#else /* Extended parameter check */\n");
-      fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
-      /* Do parameters */
-      emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, " ev) \\\n");
-      if(strcmp(pif->chrName , "NOMObject"))
-        fprintf(fh, "        (nomCheckObjectPtr((NOMObject*)nomSelf, %sClassData.classObject,",pif->chrName);
+      if(strcmp(pm->chrName, "nomIsObject"))
+        {
+          fprintf(fh, "        (parmCheckFunc_%s_%s(nomSelf,", pif->chrName, pm->chrName);
+          /* Do parameters */
+          emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+          fprintf(fh, " ev) ? \\\n");
+          fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
+          fprintf(fh, "        (nomSelf,");
+          /* Do parameters */
+          emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+          fprintf(fh, " ev)) : %s_%s_retval)\n", pif->chrName, pm->chrName);
+        }
       else
-        fprintf(fh, "        (nomCheckNOMObjectPtr(nomSelf, %sClassData.classObject,",pif->chrName);
-      fprintf(fh, "\"%s_%s\", ev) ? \\\n", pif->chrName, pm->chrName);
-
-      fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
-      fprintf(fh, "        (nomSelf,");
+        {
+          /* No check for nomIsObject or otherwise we have a recursion */
+          fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
+          fprintf(fh, "        (nomSelf,");
+          /* Do parameters */
+          emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+          fprintf(fh, " ev))\n");
+        }
+      fprintf(fh, "#else /* Extended parameter check */\n"); /* else NOM_NO_PARAM_CHECK */
+      /* Check object only  */
+      fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
       /* Do parameters */
       emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, " ev)) : (%s", pm->mpReturn.chrType);
-      for(b=0;b<pm->mpReturn.uiStar;b++)
-        fprintf(fh, "*");
-      fprintf(fh, ") NULL)\n");
+      fprintf(fh, " ev) \\\n");
+      if(strcmp(pm->chrName, "nomIsObject"))
+        {
+          if(strcmp(pif->chrName , "NOMObject"))
+            fprintf(fh, "        (nomCheckObjectPtr((NOMObject*)nomSelf, %sClassData.classObject,",pif->chrName);
+          else
+            fprintf(fh, "        (nomCheckNOMObjectPtr(nomSelf, %sClassData.classObject,",pif->chrName);
+          fprintf(fh, "\"%s_%s\", ev) ? \\\n", pif->chrName, pm->chrName);
+          fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
+          fprintf(fh, "        (nomSelf,");
+          /* Do parameters */
+          emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+          fprintf(fh, " ev)) : (%s", pm->mpReturn.chrType);
+          for(b=0;b<pm->mpReturn.uiStar;b++)
+            fprintf(fh, "*");
+          fprintf(fh, ") NULL)\n");
+        }
+      else
+        {
+          /* No check for nomIsObject or otherwise we have a recursion */
+          fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
+          fprintf(fh, "        (nomSelf,");
+          /* Do parameters */
+          emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+          fprintf(fh, " ev))\n");
+        }
       fprintf(fh, "#endif\n");
       fprintf(fh, "#else /* NOM_NO_PARAM_CHECK */\n");
       fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
@@ -238,14 +262,20 @@ static void emitNewMacro(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "NOMEXTERN NOMClass * NOMLINK %sNewClass(gulong clsMajorVersion, gulong clsMinorVersion);\n\n",
           pif->chrName);
   
-  fprintf(fh, "#define _%s (%s*)%sClassData.classObject\n\n",
-          pif->chrName, pif->chrMetaClass, pif->chrName);
-  
+#if 0
+  if(pif->chrMetaClass)
+    fprintf(fh, "#define _%s (%s*)%sClassData.classObject\n\n",
+            pif->chrName, pif->chrMetaClass, pif->chrName);
+  else
+#endif
+    fprintf(fh, "#define _%s %sClassData.classObject\n\n",
+            pif->chrName,  pif->chrName);
+
   fprintf(fh, "/*\n * New macro for WPObject\n */\n\n");
   fprintf(fh, "#define %sNew() \\\n", pif->chrName);
   fprintf(fh, "        ((%s*)_nomNew((_%s ? _%s : ", pif->chrName, pif->chrName, pif->chrName);
-  fprintf(fh, "(%s*)%sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n\n",
-          pif->chrName, pif->chrName, pif->chrName, pif->chrName);
+  fprintf(fh, "%sNewClass(%s_MajorVersion, %s_MinorVersion)), (void*) 0))\n\n",
+          pif->chrName, pif->chrName, pif->chrName);
 
 }
 
