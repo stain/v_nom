@@ -61,8 +61,10 @@ void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
       /* For old IDL files using orbit IDL compiler */
       if(!strcmp(pm->chrType, "string"))
         chrType="CORBA_char*";
-      if(!strcmp(pm->chrType, "long"))
+      else if(!strcmp(pm->chrType, "long"))
         chrType="CORBA_long";
+      else if(!strcmp(pm->chrType, "unsigned long"))
+        chrType="CORBA_unsigned_long";
 
       switch(pm->uiDirection)
         {
@@ -118,6 +120,8 @@ void emitReturnType(PPARSEINFO pLocalPI, PINTERFACE pif, PMETHOD pm)
     chrType="CORBA_long";
   else if(!strcmp(pm->mpReturn.chrType, "boolean"))
     chrType="CORBA_boolean";
+  else if(!strcmp(pm->mpReturn.chrType, "unsigned long"))
+    chrType="CORBA_unsigned_long";
 
   fprintf(fh, "%s", chrType);
   for(b=0;b<pm->mpReturn.uiStar;b++)
