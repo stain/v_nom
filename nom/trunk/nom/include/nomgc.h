@@ -42,6 +42,7 @@ typedef struct _REGDLL
 }REGDLL,*HREGDLL;
 
 /* Garbage collector */
+void _System nomInitGarbageCollection(void* pMemPtr); //The parameter will go away
 NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void);
 NOMEXTERN void NOMLINK nomEndRegisterDLLWithGC(const HREGDLL hRegisterDLL );
 NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName);
