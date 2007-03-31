@@ -74,7 +74,7 @@ all:	$(BINDIR)/nobjtk.dll
 $(BINDIR)/nobjtk.dll:	 $(OBJDIR)/o.dep $(IHFILES) $(NOMOBJECTS) $(OBJECTS) $(GCLIB) ./exports.def
 	@echo "[33;1;mLinking "$@"...[0;m"
 	cmd.exe /C create_vobjtk_def $(OBJDIR)/nobjtk.def
-	$(CC) $(GCCLDFLAGS)  -o $@ $(OBJECTS) $(LIBS) $(ADDLIBS) $(GCLIB) $(OBJDIR)/nobjtk.def
+	$(CC) $(GCCLDFLAGS) -Zmap -o $@ $(OBJECTS) $(LIBS) $(ADDLIBS) $(GCLIB) $(OBJDIR)/nobjtk.def
 	emximp -o $(OBJDIR)/$(basename $(notdir $@)).a $(OBJDIR)/nobjtk.def
 	@echo "[32;1;mDone linking "$@"...[0;m"
 

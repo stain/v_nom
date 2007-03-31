@@ -111,7 +111,7 @@ void test()
 
   if(DosQueryModFromEIP( &hModule, &ulObj, CCHMAXPATH, thePath, &ulOffset, (ULONG)test)!=0) {
     hModule=0;
-    return NULLHANDLE; /* Error */
+    return ; /* Error */
   }
 
 }
@@ -226,7 +226,7 @@ NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
             pModRec=qsFindModuleRec(pRegDLL->pMainAnchor,  p->pLibRec[i]);
 
             if(pModRec){
-              //if(pModRec->pName)
+              //  if(pModRec->pName)
               //g_message("%s", pModRec->pName);
               qsAddDLLToList(pRegDLL, pModRec);
             }
@@ -239,6 +239,7 @@ NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
        Every import is added to the end of the list (except duplicates). So while going over
        the list we touch every DLL and check every import. Import cycles are no problem, because
        later duplicates are ignored. */
+    //g_message("\n\n");
     lTemp=pRegDLL->dllList;
     while(lTemp)
       {
@@ -258,13 +259,16 @@ NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
                 qsLrec_t * pModImp;
                 
                 pModImp=qsFindModuleRec(pRegDLL->pMainAnchor,  pImpHmte[iImps]);
-                if(pModImp)
+                if(pModImp){
+                  //if(pModImp->pName)
+                  //  g_message("%s", pModImp->pName);
                   qsAddDLLToList(pRegDLL, pModImp);
+                }
               }/* for()*/
           }/* if() */
         lTemp=g_slist_next(lTemp);
       };/* while() */
-    //qsPrintDLLList();
+    //  qsPrintDLLList();
     hReg=pRegDLL;
   }
   else{

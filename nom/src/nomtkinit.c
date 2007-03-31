@@ -160,6 +160,7 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
   nomPrintf("\n**** Building NOMClassMgr class and NOMClassMgrObject...\n");
 #endif
   NOMClassMgrObject=NOMClassMgrNew();
+
   if(!NOMClassMgrObject)
     g_error("Can't create the NOMClassMgr class object!\n");
 
