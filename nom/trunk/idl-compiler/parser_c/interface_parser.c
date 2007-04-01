@@ -46,6 +46,8 @@ static void registerInterface(void)
 {
   PSYMBOL pNewSymbol=g_malloc0(sizeof(SYMBOL));
 
+  // g_message("In %s for %s", __FUNCTION__, pParseInfo->pCurInterface->chrName);
+
   pParseInfo->pCurInterface->pSymbolIFace=pNewSymbol;
 
   if(!strcmp(pParseInfo->chrRootSourceFile, pParseInfo->pCurInterface->chrSourceFileName))
@@ -78,6 +80,8 @@ static void registerInterface(void)
 
 static void deRegisterInterface(PINTERFACE pif)
 {
+  //  g_message("In %s", __FUNCTION__);
+
   /* Remove the interface from our list */
   g_ptr_array_remove(pParseInfo->pInterfaceArray, (gpointer) pif);
 
@@ -362,11 +366,13 @@ void parseInterface(GTokenType token)
         {
           g_free(pParseInfo->pCurInterface);
         }
-      pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
-      pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
-      /* It's save to register the interface right here even if the struct is almost empty. 
-         If anything goes wrong later we will exit anyway. */
-      registerInterface();  
+      else{
+        pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
+        pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
+        /* It's save to register the interface right here even if the struct is almost empty. 
+           If anything goes wrong later we will exit anyway. */
+        registerInterface();  
+      }
     }
   else
     {
@@ -395,13 +401,11 @@ void parseInterface(GTokenType token)
             }
         }
       pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
-      pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
       /* It's save to register the interface right here even if the struct is almost empty. 
          If anything goes wrong later we will exit anyway. */
       registerInterface();  
       if(matchNext(':'))
-        {
-          
+        {          
           parseSubclassedIFace();
         }
       else if(matchNext('{'))

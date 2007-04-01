@@ -623,8 +623,10 @@ int main(int argc, char **argv)
 #endif
 
   g_scanner_destroy(gScanner);
-  close(fd);
-  fclose(parseInfo.outFile);
+  if(0!=fd)
+    close(fd); /* We read from stdin */
+  if(parseInfo.outFile)
+    fclose(parseInfo.outFile);
   return 0;
 }
 
