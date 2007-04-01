@@ -46,6 +46,8 @@ static void registerInterface(void)
 {
   PSYMBOL pNewSymbol=g_malloc0(sizeof(SYMBOL));
 
+  pParseInfo->pCurInterface->pSymbolIFace=pNewSymbol;
+
   if(!strcmp(pParseInfo->chrRootSourceFile, pParseInfo->pCurInterface->chrSourceFileName))
     pParseInfo->pCurInterface->fIsInRootFile=TRUE;
 
@@ -64,6 +66,7 @@ static void registerInterface(void)
   /* For legacy support and convenience we automatically register a pointer type
      to the interface. */
   pNewSymbol=g_malloc0(sizeof(SYMBOL));
+  pParseInfo->pCurInterface->pSymbolIFacePtr=pNewSymbol;
   pNewSymbol->uiKind=KIND_TYPESPEC;
   pNewSymbol->uiSymbolToken=IDL_SYMBOL_REGINTERFACE;
   pNewSymbol->chrSymbolName=g_strconcat("P", pParseInfo->pCurInterface->chrName, NULL);
@@ -71,6 +74,24 @@ static void registerInterface(void)
   g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pNewSymbol->chrSymbolName,
                              pNewSymbol);
   //g_message("%s: %s", __FUNCTION__, pNewSymbol->chrSymbolName);
+}
+
+static void deRegisterInterface(PINTERFACE pif)
+{
+  /* Remove the interface from our list */
+  g_ptr_array_remove(pParseInfo->pInterfaceArray, (gpointer) pif);
+
+  /* Any found interface was registered as a new type so it can be
+     used in other classes. */
+  g_tree_remove(pParseInfo->pSymbolTree, pif->pSymbolIFace);
+
+  g_scanner_scope_remove_symbol(gScanner, ID_SCOPE, pif->pSymbolIFace->chrSymbolName);
+  /* For legacy support and convenience we automatically registered a pointer type
+     to the interface. */
+  g_tree_remove(pParseInfo->pSymbolTree, pif->pSymbolIFacePtr);
+  g_scanner_scope_remove_symbol(gScanner, ID_SCOPE, pif->pSymbolIFacePtr->chrSymbolName);
+  /* We don't clean up. Looking at the whole mess with string dupes and stuff in side the
+     structs I just decided to use a GC instead... */
 }
 
 static PINTERFACE createInterfaceStruct()
@@ -163,12 +184,46 @@ void parseIBody(void)
   Parse the interface name.
   Note that the current token is the 'interface' keyword.
 
-  I:= IDL_SYMBOL_INTERFACE G_TOKEN_INDENTIFIER
+  I:= IDL_SYMBOL_INTERFACE G_TOKEN_IDENTIFIER
  */
 static void parseIFace(GTokenType token)
 {
-  if(!matchNext(G_TOKEN_IDENTIFIER))
+  if(matchNext(G_TOKEN_IDENTIFIER))
     {
+      /* Save interface info */
+      GTokenValue value=gScanner->value;
+      pParseInfo->pCurInterface->chrName=g_strdup(value.v_identifier);
+    }
+  else
+    if(matchNext(G_TOKEN_SYMBOL))
+      {
+        /* If the interface name is a symbol, it means the interface was
+           already registered before. Maybe because of a forward statement.
+           We will check that in the function which called us. */
+        
+        /* Check if it's one of our interface symbols */
+        PSYMBOL pCurSymbol;
+        GTokenValue value;
+        
+        value=gScanner->value;
+        pCurSymbol=value.v_symbol;
+        if(IDL_SYMBOL_REGINTERFACE!=pCurSymbol->uiSymbolToken)
+          {
+            //g_message("%s %d", pCurSymbol->chrSymbolName, pCurSymbol->uiKind);
+            g_scanner_unexp_token(gScanner,
+                                  G_TOKEN_SYMBOL,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  "Keyword 'interface' is not followed by a valid identifier.",
+                                  TRUE); /* is_error */
+            exit(1);
+          }
+        
+        /* Save interface info */
+        pParseInfo->pCurInterface->chrName=g_strdup(value.v_identifier);
+      }
+    else{
       g_scanner_unexp_token(gScanner,
                             G_TOKEN_IDENTIFIER,
                             NULL,
@@ -178,9 +233,6 @@ static void parseIFace(GTokenType token)
                             TRUE); /* is_error */
       exit(1);
     }
-  /* Save interface info */
-  GTokenValue value=gScanner->value;
-  pParseInfo->pCurInterface->chrName=g_strdup(value.v_identifier);
 }
 
 /*
@@ -272,8 +324,7 @@ static void parseSubclassedIFace()
                             NULL,
                             "No opening brace in interface definition.",
                             TRUE); /* is_error */
-      exit(1);
-      
+      exit(1);      
     }
   parseIFaceBody();
 }
@@ -300,28 +351,68 @@ void parseInterface(GTokenType token)
 
   /* Get the interface name */
   parseIFace(token);
-  pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
 
-  /* It's save to register the interface right here even if the struct is almost empty. 
-     If anything goes wrong later we will exit anyway. */
-  registerInterface();  
-
-  if(matchNext(';'))
+  if(matchNext(';')) /* forward declaration */
     {
+      PINTERFACE pif;
+
+      /* Check if we already have a (maybe forward) declaration */
+      pif=findInterfaceFromName(pParseInfo->pCurInterface->chrName);
+      if(pif)
+        {
+          g_free(pParseInfo->pCurInterface);
+        }
+      pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
       pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
-    }
-  else if(matchNext(':'))
-    {
-      parseSubclassedIFace();
-    }
-  else if(matchNext('{'))
-    {
-      parseIFaceBody();
+      /* It's save to register the interface right here even if the struct is almost empty. 
+         If anything goes wrong later we will exit anyway. */
+      registerInterface();  
     }
   else
     {
-      g_message("Line %d: Error in interface declaration",  g_scanner_cur_line(gScanner));
-      exit(0);
+      PINTERFACE pif;
+
+      /* Check if we already have a (maybe forward) declaration */
+      pif=findInterfaceFromName(pParseInfo->pCurInterface->chrName);
+      if(pif)
+        {
+          if(pif->fIsForwardDeclaration)
+            {
+              /* Remove the forward declaration and insert the real thing afterwards. */
+              deRegisterInterface(pif);
+            }
+          else
+            {
+              /* Oops, we already have an interface declaration */
+              g_scanner_unexp_token(gScanner,
+                                    G_TOKEN_SYMBOL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    "An interface with this name was already declared.",
+                                    TRUE); /* is_error */
+              exit(1);
+            }
+        }
+      pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
+      pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
+      /* It's save to register the interface right here even if the struct is almost empty. 
+         If anything goes wrong later we will exit anyway. */
+      registerInterface();  
+      if(matchNext(':'))
+        {
+          
+          parseSubclassedIFace();
+        }
+      else if(matchNext('{'))
+        {          
+          parseIFaceBody();
+        }
+      else
+        {
+          g_message("Line %d: Error in interface declaration",  g_scanner_cur_line(gScanner));
+          exit(0);
+        }
     }
 }
 
