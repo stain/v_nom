@@ -301,8 +301,14 @@ static void emitParentClassMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
         {
           PMETHOD pm=(PMETHOD)g_ptr_array_index(pArray, a);
 
-          fprintf(fh, "#define %s_%s \\\n", pif->chrName, pm->chrName);
-          fprintf(fh, "        %s_%s \n", pifParent->chrName, pm->chrName);
+          fprintf(fh, "#define %s_%s(nomSelf, ", pif->chrName, pm->chrName);
+          /* Do parameters */
+          emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+          fprintf(fh, " ev) \\\n");
+          fprintf(fh, "        %s_%s((%s*) nomSelf, ", pifParent->chrName, pm->chrName, pifParent->chrName);
+          /* Do parameters */
+          emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
+          fprintf(fh, " ev)\n");
         }
     }
   fprintf(fh, "\n");

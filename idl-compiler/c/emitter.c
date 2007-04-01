@@ -65,6 +65,8 @@ void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
         chrType="CORBA_long";
       else if(!strcmp(pm->chrType, "unsigned long"))
         chrType="CORBA_unsigned_long";
+      else if(!strcmp(pm->chrType, "boolean"))
+        chrType="CORBA_boolean";
 
       switch(pm->uiDirection)
         {
