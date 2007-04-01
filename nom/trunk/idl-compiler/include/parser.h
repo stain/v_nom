@@ -72,6 +72,14 @@ typedef struct
   GPtrArray *pParamArray;
 }METHOD, *PMETHOD;
 
+/* Info about a symbol */
+typedef struct
+{
+  gchar* chrSymbolName;
+  guint  uiSymbolToken;
+  guint  uiKind;
+}SYMBOL, *PSYMBOL;
+
 /* Struct holding all the info of a defined or declared interface */
 typedef struct
 {
@@ -80,6 +88,11 @@ typedef struct
   gulong ulMajor;    /* Class version            */
   gulong ulMinor;    /* Class version            */
   gboolean fIsForwardDeclaration;
+  PSYMBOL pSymbolIFace; /* Found interfaces are registered as a symbol with the parser.
+                           This is a pointer to the registered struct holding the necessary
+                           info and may be used to deregister a symbol later.*/
+  PSYMBOL pSymbolIFacePtr; /* Same as before but for the pointer on an interface which is
+                            registered automatically. */
   gboolean fIsInRootFile;
   gchar* chrMetaClass; /* Pointer to metaclass name or NULL*/
   char*  chrFileStem;  /* Holding output filestem */
@@ -90,13 +103,6 @@ typedef struct
   GPtrArray *pInstanceVarArray;
 }INTERFACE,*PINTERFACE;
 
-/* Info about a symbol */
-typedef struct
-{
-  gchar* chrSymbolName;
-  guint  uiSymbolToken;
-  guint  uiKind;
-}SYMBOL, *PSYMBOL;
 
 typedef struct
 {

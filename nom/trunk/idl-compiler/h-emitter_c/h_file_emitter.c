@@ -71,18 +71,25 @@ static void emitHFileHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
 
 }
 
-
-static void emitParentHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
+/**
+   This function writes an #include statement to the header for each found
+   interface. Thus all the interface information is known to the sourcefile
+   using this header.
+ */
+static void emitInterfaceIncludes(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
-  PINTERFACE pifParent=getParentInterface(pif);
+  int a;
 
-  /* Include header of parent */
-  if(pifParent){
-    fprintf(fh, "/* Include for the parent class */\n");
-    if(pifParent->chrFileStem)
-      fprintf(fh, "#include \"%s.h\"\n\n", pifParent->chrFileStem);
-  }
+  for(a=0;a<pLocalPI->pInterfaceArray->len;a++)
+    {
+      PINTERFACE pifAll=g_ptr_array_index(pLocalPI->pInterfaceArray, a);
+
+      fprintf(fh, "/* Include for class %s */\n", pifAll->chrName);
+      if(pifAll->chrFileStem)
+        fprintf(fh, "#include \"%s.h\"\n", pifAll->chrFileStem);
+    }
+  fprintf(fh, "\n");
 }
 
 static void emitClassVersion(PPARSEINFO pLocalPI, PINTERFACE pif)
@@ -331,7 +338,7 @@ void emitHFile(GPtrArray* pInterfaceArray)
           if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
             {
               emitHFileHeader(pLocalPI, pif);
-              emitParentHeader(pLocalPI, pif);
+              emitInterfaceIncludes(pLocalPI, pif);
               emitClassVersion(pLocalPI, pif);
               emitClassDataStructs(pLocalPI, pif);
               emitNewMacro(pLocalPI, pif);
