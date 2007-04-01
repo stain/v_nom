@@ -611,16 +611,10 @@ int main(int argc, char **argv)
   /* Write the output file */
   if(fOptionEmitH)
     emitHFile(parseInfo.pInterfaceArray);
-  if(fOptionEmitIH)
+  else if(fOptionEmitIH)
     emitIHFile(parseInfo.pInterfaceArray);
-
-#if 0
   else if(fOptionEmitC)
-    a++;
-
-  if(pInterfaceArray->len)
-    printInterface();
-#endif
+    emitCFile(parseInfo.pInterfaceArray);
 
   g_scanner_destroy(gScanner);
   if(0!=fd)

@@ -13,6 +13,7 @@ CDIR		=	./c
 PARSERDIR	=	./parser_c
 HEMITTERDIR	=	./h-emitter_c
 IHEMITTERDIR	=	./ih-emitter_c
+CEMITTERDIR	=	./c-emitter_c
 
 CFLAGS		=	-Zmt -Zcrtdll -D__OS2__ -D__ST_MT_ERRNO__ -c -Wall
 
@@ -30,6 +31,7 @@ PGOBJECTS	=	$(OBJDIR)/nom-idl-compiler.o \
 			$(OBJDIR)/util.o \
 			$(OBJDIR)/emitter.o \
 			$(OBJDIR)/open_outfile.o \
+			$(OBJDIR)/printdata.o \
 			$(OBJDIR)/typespec_parser.o \
 			$(OBJDIR)/method_parser.o \
 			$(OBJDIR)/instancevar_parser.o \
@@ -42,7 +44,7 @@ PGOBJECTS	=	$(OBJDIR)/nom-idl-compiler.o \
 			$(OBJDIR)/filestem_parser.o \
 			$(OBJDIR)/h_file_emitter.o \
 			$(OBJDIR)/ih_file_emitter.o \
-			$(OBJDIR)/printdata.o
+			$(OBJDIR)/c_file_emitter.o
 
 
 #$(CLASSINC)/wpnativetypes.ih \
@@ -77,6 +79,9 @@ $(OBJDIR)/%.o:	$(HEMITTERDIR)/%.c $(INCDIR)/parser.h
 	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
 
 $(OBJDIR)/%.o:	$(IHEMITTERDIR)/%.c $(INCDIR)/parser.h
+	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
+
+$(OBJDIR)/%.o:	$(CEMITTERDIR)/%.c $(INCDIR)/parser.h
 	$(CC) -I $(INC) $(CFLAGS)  -o$@ $<
 
 # Create the directories for temp files

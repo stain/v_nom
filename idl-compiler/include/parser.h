@@ -184,6 +184,7 @@ void parseFileStem(void);
 /* Emitters */
 void emitHFile(GPtrArray* pInterfaceArray);
 void emitIHFile(GPtrArray* pInterfaceArray);
+void emitCFile(GPtrArray* pInterfaceArray);
 
 /* Emitter support function */
 void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray);
@@ -198,6 +199,7 @@ PINTERFACE getParentInterface(PINTERFACE pif);
 PINTERFACE findInterfaceFromMethodName(PINTERFACE pif, gchar* chrName);
 PINTERFACE findInterfaceFromName(gchar* chrName);
 PMETHOD findMethodInfoFromMethodName(PINTERFACE pif, gchar* chrName);
+gboolean queryMessageReturnsAValue(PMETHOD pm);
 
 #ifdef INCL_FILE
 FILE* openOutfile(GScanner *gScanner, gchar* chrOutName);
