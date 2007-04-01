@@ -161,9 +161,8 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "#define _decl_%s_%s_\n\n", pif->chrName,  pm->chrName);
 
       /* Do return type */
-      fprintf(fh, "typedef %s", pm->mpReturn.chrType);
-      for(b=0;b<pm->mpReturn.uiStar;b++)
-        fprintf(fh, "*");
+      fprintf(fh, "typedef ");
+      emitReturnType(pLocalPI, pif, pm);
 
       fprintf(fh, " NOMLINK nomTP_%s_%s(%s* nomSelf,\n", pif->chrName,  pm->chrName, pif->chrName);
       /* Do parameters */

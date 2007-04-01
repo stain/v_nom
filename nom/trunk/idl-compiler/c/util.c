@@ -161,3 +161,15 @@ PINTERFACE getParentInterface(PINTERFACE pif)
 
   return findInterfaceFromName(pif->chrParent);
 }
+
+gboolean queryMessageReturnsAValue(PMETHOD pm)
+{
+  if(pm->mpReturn.uiStar)
+    return TRUE;
+
+  if(!strcmp(pm->mpReturn.chrType, "void"))
+    return FALSE;
+
+  return TRUE;
+}
+
