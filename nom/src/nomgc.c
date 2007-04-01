@@ -145,8 +145,9 @@ static void qsPrintDLLList(HREGDLL hReg)
 }
 #endif
 
-/*
-  Find a library record in the buffer filled by DosQuerySysState().
+/**
+  Find a library record in the buffer filled by DosQuerySysState(). This function
+  searches in the list of all known libs, not in the process libs list.
  */
 static qsLrec_t* qsFindModuleRec(const qsPtrRec_t * hRegisterDLL,  USHORT hMod){
   qsLrec_t *       pModRec;
@@ -156,7 +157,7 @@ static qsLrec_t* qsFindModuleRec(const qsPtrRec_t * hRegisterDLL,  USHORT hMod){
   while(NULL!=pModRec)
     {
       a++;
-      /* printf("%d Checking: %x -> %04X (%s)\n", a, pModRec, pModRec->hmte, pModRec->pName); */
+      /* g_message("%d Checking: %x -> %04X (%s)", a, pModRec, pModRec->hmte, pModRec->pName); */
 
       if (NULLHANDLE==pModRec->pObjInfo   && pModRec->ctObj > 0)
         {
@@ -177,6 +178,11 @@ static qsLrec_t* qsFindModuleRec(const qsPtrRec_t * hRegisterDLL,  USHORT hMod){
   return pModRec;
 }
 
+/**
+   Get the info about the current DLLs from OS/2. Go over all found
+   DLLs and insert them in a list. For all found DLLs go over the imports
+   of them and add them to the list etc. Duplicates are ignored.
+ */
 #define BUFSIZE 1024*1024
 NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
 {
@@ -212,22 +218,30 @@ NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
 
     pRegDLL->pMainAnchor=(qsPtrRec_t*) buf;
 
+    /* Pointer to process information */
     p=pRegDLL->pMainAnchor->pProcRec;
 
     while(p && p->RecType == 1)
       {
+        qsLrec_t * pModRec; /* Info about a DLL */
 
-        if (p->cLib) {
+        /* Get record for executable */
+        pModRec=qsFindModuleRec(pRegDLL->pMainAnchor,  p->hMte);
+        if(pModRec){
+          //if(pModRec->pName)
+          //g_message("exe) %s", pModRec->pName);
+          qsAddDLLToList(pRegDLL, pModRec);
+        }
+
+        if (p->cLib) { /* Number of lib imports */
           int i;
 
           for (i=0; i<p->cLib; i++){
-            qsLrec_t * pModRec;
-
             pModRec=qsFindModuleRec(pRegDLL->pMainAnchor,  p->pLibRec[i]);
 
             if(pModRec){
-              //  if(pModRec->pName)
-              //g_message("%s", pModRec->pName);
+              //if(pModRec->pName)
+              //g_message("a) %s", pModRec->pName);
               qsAddDLLToList(pRegDLL, pModRec);
             }
           }/* for() */
@@ -261,7 +275,7 @@ NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
                 pModImp=qsFindModuleRec(pRegDLL->pMainAnchor,  pImpHmte[iImps]);
                 if(pModImp){
                   //if(pModImp->pName)
-                  //  g_message("%s", pModImp->pName);
+                  //g_message("b) %s", pModImp->pName);
                   qsAddDLLToList(pRegDLL, pModImp);
                 }
               }/* for()*/
@@ -292,7 +306,7 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
 {
   GSList* lTemp;
 
-  //g_message("Trying to register DLL %s\n", chrDLLName);
+  //g_message("Trying to register DLL %s", chrDLLName);
   lTemp=hRegisterDLL->dllList;
   while(lTemp)
     {
@@ -300,7 +314,7 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
       
       pModRec=(qsLrec_t*)lTemp->data;
       if(pModRec){
-        //g_message("DLL name: %s\n", pModRec->pName);
+        //  g_message("DLL name: %s", pModRec->pName);
         if(pModRec->pName && (NULLHANDLE!=strstr( pModRec->pName, chrDLLName)))
           {
             qsLObjrec_t  *pObjInfo;
