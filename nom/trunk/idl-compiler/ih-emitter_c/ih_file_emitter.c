@@ -236,10 +236,8 @@ static void emitOverridenMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
           exit(1);
         }
 
-      fprintf(fh, "NOM_Scope %s", pm->mpReturn.chrType);
-      for(b=0;b<pm->mpReturn.uiStar;b++)
-        fprintf(fh, "*");
-
+      fprintf(fh, "NOM_Scope ");
+      emitReturnType(pLocalPI, pif, pm);
       fprintf(fh, " NOMLINK impl_%s_%s(%s* nomSelf,\n", pif->chrName, pom->chrName, pif->chrName);
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
@@ -331,18 +329,6 @@ static void emitMetaClass(PPARSEINFO pLocalPI, PINTERFACE pif)
     }
 }
 
-static void emitClassId(PPARSEINFO pLocalPI, PINTERFACE pif)
-{
-  FILE* fh=pLocalPI->outFile;
-
-  if(pif->chrMetaClass)
-    {
-      fprintf(fh, "/* Identify this class */\n");
-      fprintf(fh, "static char * nomIdString_%s = \"%s\";\n\n", pif->chrName, pif->chrName);
-    }
-}
-
-
 static void emitParentClasses(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
@@ -431,6 +417,8 @@ static gulong calculateInstanceDataSize(PPARSEINFO pLocalPI, PINTERFACE pif)
         ulRet+=sizeof(gfloat);
       else if(!strcmp(piv->chrType, "gdouble"))
         ulRet+=sizeof(gdouble);
+      else if(!strcmp(piv->chrType, "string"))
+        ulRet+=sizeof(gpointer);
       else
         /* Check if it's an interface */
         if(findInterfaceFromName(piv->chrType))
@@ -565,30 +553,32 @@ void emitIHFile(GPtrArray* pInterfaceArray)
       PINTERFACE pif=g_ptr_array_index(pLocalPI->pInterfaceArray, a); 
       if(!strcmp(pif->chrSourceFileName, pLocalPI->chrRootSourceFile))
         {
-          gchar*  chrTemp;
-
-          //printInterface(pif);
-          
-          chrTemp=g_strconcat(pif->chrFileStem, ".ih", NULL);
-          if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
+          /* Only interfaces which are fully defined. No forwarder */
+          if(!pif->fIsForwardDeclaration)
             {
-              emitIHFileHeader(pLocalPI, pif);
-              emitInstanceVariables(pLocalPI, pif);
-              emitGetDataMacros(pLocalPI, pif);
-              emitIHClassDataStructs(pLocalPI, pif);
-              emitNewMethods(pLocalPI, pif);
-              emitOverridenMethods(pLocalPI, pif);
-              emitOverridenMethodTable(pLocalPI, pif);
-              emitStaticMethodTable(pLocalPI, pif);
-              emitMetaClass(pLocalPI, pif);
-              emitClassId(pLocalPI, pif);
-              emitParentClasses(pLocalPI, pif);
-              emitStaticClassInfo(pLocalPI, pif);
-              emitClassCreationFunc(pLocalPI, pif);
+              gchar*  chrTemp;
 
-              emitIHFileFooter(pLocalPI, pif);
-            }
-          g_free(chrTemp);
+              //printInterface(pif);
+              chrTemp=g_strconcat(pif->chrFileStem, ".ih", NULL);
+              if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
+                {
+                  emitIHFileHeader(pLocalPI, pif);
+                  emitInstanceVariables(pLocalPI, pif);
+                  emitGetDataMacros(pLocalPI, pif);
+                  emitIHClassDataStructs(pLocalPI, pif);
+                  emitNewMethods(pLocalPI, pif);
+                  emitOverridenMethods(pLocalPI, pif);
+                  emitOverridenMethodTable(pLocalPI, pif);
+                  emitStaticMethodTable(pLocalPI, pif);
+                  emitMetaClass(pLocalPI, pif);
+                  emitParentClasses(pLocalPI, pif);
+                  emitStaticClassInfo(pLocalPI, pif);
+                  emitClassCreationFunc(pLocalPI, pif);
+                  
+                  emitIHFileFooter(pLocalPI, pif);
+                }
+              g_free(chrTemp);
+            }/* fIsForwardDeclaration */
         }
     }
 }
