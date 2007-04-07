@@ -61,7 +61,7 @@ static void emitCFileHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "#include <nomtk.h>\n\n");
 
   if(pif->chrFileStem)
-    fprintf(fh, "#include \"%s.h\"\n\n", pif->chrFileStem);
+    fprintf(fh, "#include \"%s.ih\"\n\n", pif->chrFileStem);
 }
 
 
@@ -140,7 +140,7 @@ static void emitOverridenMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "%s_%s_parent(nomSelf,\n", pif->chrName,  pm->chrName);
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
-      fprintf(fh, "    CORBA_Environment *ev);\n");
+      fprintf(fh, "    ev);\n");
       fprintf(fh, "}\n\n");
     }
 };
