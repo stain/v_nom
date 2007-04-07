@@ -200,7 +200,9 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "static nomParmInfo nomParm_%s_%s = {\n", pif->chrName, pm->chrName);
       fprintf(fh, "  %d,  /* Number of parameters */\n", pm->pParamArray->len);
 
-      fprintf(fh, "  \"%s\", /* Return type */\n  {\n", pm->mpReturn.chrType);
+      fprintf(fh, "  \"");
+      emitReturnType(pLocalPI, pif, pm);
+      fprintf(fh, "\", /* Return type */\n  {\n");
       emitMethodParamStrings(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, "  }\n};\n");
 
@@ -219,7 +221,6 @@ static void emitOverridenMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
 
   for(a=0;a<pArray->len;a++)
     {
-      int b;
       POVERMETHOD pom=(POVERMETHOD)g_ptr_array_index(pArray, a);
       /* Method information */
       PMETHOD pm=findMethodInfoFromMethodName(pif, pom->chrName);
