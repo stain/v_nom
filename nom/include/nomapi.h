@@ -52,6 +52,7 @@ typedef struct nomMethodTabStruct {
   char            *nomClassName;      /* Pointer to this class' name               */
   gulong          ulInstanceSize;     /* Size of an instance of this class         */
   gulong          mtabSize;           /* Size of this mtab (includes method ptrs.) */
+  nomId           classNomId;         /* The unique ID of this class               */
   nomMethodProc*  entries[1];
 } nomMethodTab, *nomMethodTabPtr;
 

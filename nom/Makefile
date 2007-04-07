@@ -92,10 +92,11 @@ BASE_SCCOMPILEH		=	sc -I $(IDLDIR) -p -r -sh -d$(CLASSINC) -maddstar -mnoint -S1
 
 #BASE_NOMCOMPILEH	=	$(IDLCOMP) --showcpperrors --header --output-dir=$(CLASSINC) $<
 #BASE_NOMCOMPILEIH	=	$(IDLCOMP) --showcpperrors --ihfile --output-dir=$(CLASSINC) $<
-BASE_NOMCOMPILEC	=	$(IDLCOMP) --showcpperrors --c-template --output-dir=$(CLASSTEMPLATEDIR) $< 
+#BASE_NOMCOMPILEC	=	$(IDLCOMP) --showcpperrors --c-template --output-dir=$(CLASSTEMPLATEDIR) $< 
  
 BASE_NOMCOMPILEH	=	gcc -E -x c -D__NOM_IDL_COMPILER__ $(NOMIDLINC) $< | $(NOMIDLCOMPILER) --emit-h -d $(CLASSINC) -
 BASE_NOMCOMPILEIH	=	gcc -E -x c -D__NOM_IDL_COMPILER__ $(NOMIDLINC) $< | $(NOMIDLCOMPILER) --emit-ih -d $(CLASSINC) -
+BASE_NOMCOMPILEC	=	gcc -E -x c -D__NOM_IDL_COMPILER__ $(NOMIDLINC) $< | $(NOMIDLCOMPILER) --emit-c -d $(CLASSTEMPLATEDIR) -
 
 
 $(OBJDIR)/%.o:	$(CLASSCDIR)/%.c $(NOMINCLUDES)

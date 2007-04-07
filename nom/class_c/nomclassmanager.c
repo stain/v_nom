@@ -61,11 +61,11 @@
 
    \remark This method isn't implemented yet.
  */
-NOM_Scope PNOMObject NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* nomSelf,
-                                                                 const CORBA_long classId,
-                                                                 const CORBA_long ulMajorVersion,
-                                                                 const CORBA_long ulMinorVersion,
-                                                                 CORBA_Environment *ev)
+NOM_Scope NOMClass* NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* nomSelf,
+                                                                const CORBA_long classId,
+                                                                const CORBA_long ulMajorVersion,
+                                                                const CORBA_long ulMinorVersion,
+                                                                CORBA_Environment *ev)
 {
   /*  NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf); */
   CORBA_Object nomRetval;
@@ -78,11 +78,11 @@ NOM_Scope PNOMObject NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* no
 /**
    \brief Function which implements the nomFindClassFromName() method of NOMClassMgr.
  */
-NOM_Scope PNOMObject NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* nomSelf, 
-                                                                   const CORBA_char * className,
-                                                                   const CORBA_long ulMajorVersion,
-                                                                   const CORBA_long ulMinorVersion,
-                                                                   CORBA_Environment *ev)
+NOM_Scope NOMClass* NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* nomSelf, 
+                                                                  const CORBA_char * className,
+                                                                  const CORBA_long ulMajorVersion,
+                                                                  const CORBA_long ulMinorVersion,
+                                                                  CORBA_Environment *ev)
 {
   CORBA_Object nomRetval=NULLHANDLE;
   nomMethodTab * mtab;
@@ -94,16 +94,10 @@ NOM_Scope PNOMObject NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* 
 
   mtab=g_datalist_get_data(&_gdataClassList, className);
 
-  //nomPrintf("-----> %s %s %x\n", __FUNCTION__, className, mtab);
-
   if(mtab){
     NOMClassPriv* ncPriv;
     ncPriv=(NOMClassPriv*)mtab->nomClsInfo;
-    //if(1==ncPriv->ulIsMetaClass){
-    //    nomPrintf("%s: found %s\n", __FUNCTION__, mtab->nomClassName);
     nomRetval=(CORBA_Object)ncPriv->sci->nomCds->nomClassObject;
-    //}
-
   }
   return nomRetval;
 }
@@ -141,11 +135,11 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
   g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
   g_tree_insert(_pClassListTree, mtab, mtab->nomClassName); /* key is the mtab because we want to use
                                                                this tree for fast lookup of mtabs to 
-                                                               check for objects. */
+                                                               check for valid objects. */
 
-  //  g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
-  //nomPrintf("%s: registering %lx, %s classList: %lx\n", __FUNCTION__, 
-  //classMtab, mtab->nomClassName, _gdataClassList);
+  //nomPrintf("%s: registering %lx, %s classList: %lx ID: %ld\n", __FUNCTION__, 
+  //        classMtab, mtab->nomClassName, _gdataClassList, g_quark_try_string(mtab->nomClassName));
+  mtab->classNomId=g_quark_try_string(mtab->nomClassName);
 }
 
 
@@ -155,8 +149,6 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
 NOM_Scope PGData NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, CORBA_Environment *ev)
 {
   NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf);
-  nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
-            __FUNCTION__, nomSelf, nomSelf->mtab->nomClassName);
 
   return _gdataClassList;
 }
@@ -211,9 +203,6 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterMethod(NOMClassMgr* nomSelf,
   mtab=(nomMethodTab*) classMtab;
 
   g_datalist_set_data_full(&_gdataMethodList, chrMethodName, classMtab, priv_handleMethodRemoveFromList);
-  //g_datalist_set_data_full(&_gdataClassList, mtab->nomClassName, classMtab, priv_handleClassRemove);
-  // nomPrintf("%s: registering %lx, %s methodList: %lx\n", __FUNCTION__, classMtab, chrMethodName, _gdataMethodList);
-
 }
 
 /**
@@ -239,9 +228,11 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomSubstituteClass(NOMClassMgr*
                                                                     CORBA_Environment *ev)
 {
 /* NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf); */
-  NOMObject* oClass;
-  NOMObject* rClass;
+  NOMClass* oClass;
+  NOMClass* rClass;
+  NOMClassPriv* ncp;
 
+  /* This returns a meta class */
   if((oClass=_nomFindClassFromName( nomSelf, oldClass, 0, 0, NULLHANDLE))==NULLHANDLE)
     return FALSE;
 
@@ -249,6 +240,10 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomSubstituteClass(NOMClassMgr*
     return FALSE;
 
   /* Check if the class is a direct child */
+  ncp=(NOMClassPriv*)_nomGetObjectCreateInfo(rClass, NULLHANDLE);
+  
+  if(strcmp(ncp->parentMtabStruct.next->mtab->nomClassName, oldClass))
+    return FALSE;
 
   /* Save old class object pointer. Hmm, maybe not it's still in the old parentMtab */
 
