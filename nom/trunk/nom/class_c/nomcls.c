@@ -191,9 +191,6 @@ NOM_Scope void NOMLINK impl_NOMClass_nomSetObjectCreateInfo(NOMClass* nomSelf, c
 {
   NOMClassData* nomThis=NOMClassGetData(nomSelf);
 
-  //nomPrintf("    Entering %s  with nomSelf: 0x%x. nomSelf is: %s.\n",
-  //          __FUNCTION__,  nomSelf, nomSelf->mtab->nomClassName);
-
   _ncpObject=ncpObject;
 }
 

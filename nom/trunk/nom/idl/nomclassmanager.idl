@@ -48,6 +48,9 @@ Class definition file for the NOM class NOMClassMgr
     put into the global variable \i NOMClassMgrObject.
     
  */
+
+interface NOMClass;
+
 interface NOMClassMgr : NOMObject
 {
 #ifdef __NOM_IDL_COMPILER__
@@ -56,7 +59,7 @@ interface NOMClassMgr : NOMObject
   NOMCLASSVERSION(1, 0 );
 
   /**
-     Find the class with the given nomId in the internal class list managed by the
+     Find the class object for the class with the given nomId in the internal class list managed by the
      class manager.
 
      \remark This method is only a stub for now.
@@ -68,29 +71,29 @@ interface NOMClassMgr : NOMObject
      \param ulMajorVersion This parameter is not used at the moment and should be set to 0.
      \param ulMinorVersion This parameter is not used at the moment and should be set to 0.
      \return
-     The class with the given name or NULL if not found.
+     The class object for the class with the given name or NULL if not found.
    */
-  PNOMObject nomFindClassFromId(in long classId, 
+  NOMClass* nomFindClassFromId(in long classId, 
                             in long ulMajorVersion, 
                             in long ulMinorVersion);
   
   /**
-     Find the class with the given name in the internal class list managed by the
+     Find the class object for the class with the given name in the internal class list managed by the
      class manager. 
      
      \remark
-     This method will return classes and metaclasses.
+     This method will return the metaclasses for the given class name.
 
      \par How to override
      This method is usually not overriden.
      
-     \param className The name of the class to be found as a C string.
+     \param className The name of the class as a C string.
      \param ulMajorVersion This parameter is not used at the moment and should be set to 0.
      \param ulMinorVersion This parameter is not used at the moment and should be set to 0.
      \return
-     The class with the given name or NULL if not found.
+     The class object for the class with the given name or NULL if not found.
    */
-  PNOMObject nomFindClassFromName(in string className, 
+  NOMClass* nomFindClassFromName(in string className, 
                               in long ulMajorVersion, 
                               in long ulNinorVersion);
 

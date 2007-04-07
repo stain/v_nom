@@ -144,7 +144,10 @@ interface NOMClass:NOMObject
   void nomSetObjectCreateInfo(in gpointer ncpObject);
 
   /**
+     Query the structure holding all the info needed for creating new objects.
+
      \remarks
+     You should know what you're doing if you want to use the structure returned by this  method...
      The return type may change.
    */
   gpointer nomGetObjectCreateInfo();
@@ -168,7 +171,7 @@ interface NOMClass:NOMObject
      \warning
      The type of this variable will change!
   */
-  NOMINSTANCEVAR(string ncpObject);     //NOMClassPriv structure holding info about the object this class can create
+  NOMINSTANCEVAR(gpointer ncpObject);     //NOMClassPriv structure holding info about the object this class can create
   NOMOVERRIDE(nomInit); 
 
 };
