@@ -1,0 +1,9 @@
+PROTMODE
+CODE PRELOAD DISCARDABLE
+DATA SHARED LOADONCALL
+
+EXPORTS  
+	_AClassClassData    
+	_AClassCClassData  
+	AClassNewClass     
+
