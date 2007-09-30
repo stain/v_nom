@@ -81,6 +81,7 @@ void parseFileStem(void)
   value=gScanner->value;
   pParseInfo->pCurInterface->chrFileStem=g_strdup(value.v_identifier);
 
+  /* Thre must be a ';' at the end of the statement */
   if(!matchNext(';'))
     {
       getNextToken(); /* Make sure error references the correct token */
