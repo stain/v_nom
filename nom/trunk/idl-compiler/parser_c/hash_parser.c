@@ -40,6 +40,7 @@
 #include "parser.h"
 
 extern GScanner *gScanner;
+
 /*
   Current token is a '#'.
 
