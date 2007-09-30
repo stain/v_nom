@@ -73,12 +73,13 @@ static GOptionEntry gOptionEntries[] =
 //GPtrArray* pInterfaceArray;
 
 /* Symbols defined for our IDL language.
-   Keep this in synch with the defined enums! */
+   Keep this in synch with the defined enums in parser.h! */
 SYMBOL idlSymbols[]={
   {"interface", IDL_SYMBOL_INTERFACE, KIND_UNKNOWN}, /* 71 */
   {"NOMCLASSVERSION", IDL_SYMBOL_CLSVERSION, KIND_UNKNOWN},
   {"NOMINSTANCEVAR", IDL_SYMBOL_INSTANCEVAR, KIND_UNKNOWN},
   {"NOMOVERRIDE", IDL_SYMBOL_OVERRIDE, KIND_UNKNOWN},
+  {"override", IDL_SYMBOL_OVERRIDE2, KIND_UNKNOWN},
   {"NOMREGISTEREDIFACE", IDL_SYMBOL_REGINTERFACE, KIND_TYPESPEC},
   {"NOMCLASSNAME", IDL_SYMBOL_CLSNAME, KIND_UNKNOWN},
   {"NOMMETACLASS", IDL_SYMBOL_OLDMETACLASS, KIND_UNKNOWN},
@@ -489,7 +490,6 @@ static gint funcSymbolCompare(gconstpointer a, gconstpointer b)
    mangles all include files together and thus the line numbers are not as expected by the user.
    This function prints the error messages with corrected linenumbers and the source file name
    in which to find the problem.
-   
  */
 void funcMsgHandler(GScanner *gScanner, gchar *message, gboolean error)
 {
