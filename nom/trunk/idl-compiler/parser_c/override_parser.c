@@ -37,6 +37,7 @@
 #include <string.h>
 
 #include <glib.h> 
+#include <glib/gprintf.h>
 #include "parser.h"
 
 
@@ -66,7 +67,7 @@ PINTERFACE findInterfaceForMethod(PINTERFACE pStartInterface, gchar* chrMethodNa
 }
 
 /*
-  Parse the class version. Note that the identifier is the current symbol..
+  Parse override. Note that 'NOMOVERRIDE' is the current symbol..
 
   OM:= IDL_SYMBOL_OVERRIDE '(' IDENT ')' ';'
  */
@@ -89,6 +90,7 @@ void parseOverrideMethod(void)
       exit(1);
     }
 
+  /* This is the method we actually try to override */
   if(!matchNext(G_TOKEN_IDENTIFIER))
     {
       getNextToken(); /* Make sure error references the correct token */
@@ -97,7 +99,7 @@ void parseOverrideMethod(void)
                             NULL,
                             NULL,
                             NULL,
-                            "Error in NOMOVERRIDE()",
+                            "Error in NOMOVERRIDE(). Identifier expected.",
                             TRUE); /* is_error */
       exit(1);
     }
@@ -107,9 +109,9 @@ void parseOverrideMethod(void)
   /* Now check if the method was introduced by some parent */
   if((pif=findInterfaceForMethod(pParseInfo->pCurInterface, pOMethod->chrName))==NULL)
     {
-
-      g_message("%s:%d: Method '%s' was not introduced by some parent interface.", gScanner->input_name,
-                g_scanner_cur_line(gScanner), pOMethod->chrName);
+      g_printf("%s:%d: error: Method '%s' was not introduced by some parent interface.\n",
+               pParseInfo->chrCurrentSourceFile, g_scanner_cur_line(gScanner)-pParseInfo->uiLineCorrection,
+               pOMethod->chrName);
       exit(1);
     }
   pOMethod->chrIntroducingIFace=pif->chrName; /* No copy of string here. Nobody should free the
@@ -123,7 +125,7 @@ void parseOverrideMethod(void)
                             NULL,
                             NULL,
                             NULL,
-                            "Error in NOMOVERRIDE()",
+                            "Error in NOMOVERRIDE(). Closing ')' is missing.",
                             TRUE); /* is_error */
       exit(1);
     }
@@ -135,7 +137,100 @@ void parseOverrideMethod(void)
                             NULL,
                             NULL,
                             NULL,
-                            "Error in NOMOVERRIDE()",
+                            "Error in NOMOVERRIDE(). Missing ';' at end of statement.",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+  g_ptr_array_add(pParseInfo->pCurInterface->pOverrideArray, (gpointer) pOMethod);
+}
+
+
+/*
+  Parse override. Note that the identifier is the current symbol.
+
+  OM:= IDENT ':' IDL_SYMBOL_OVERRIDE2 ';'
+ */
+void parseOverrideMethodFromIdentifier(void)
+{
+  GTokenValue value;
+  POVERMETHOD pOMethod=g_malloc0(sizeof(OVERMETHOD));
+  PINTERFACE pif;
+
+  /* Keep the current identifier. We need to check for existance later if we find
+     we are in an override statement. */
+  value=gScanner->value;
+  pOMethod->chrName=g_strdup(value.v_identifier);
+
+  if(!matchNext(':'))
+    {
+      getNextToken(); /* Make sure error references the correct token */
+      g_scanner_unexp_token(gScanner,
+                            ':',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+
+  /* Check for 'override' */
+  if(!matchNext(G_TOKEN_SYMBOL))
+    {
+      getNextToken(); /* Make sure error references the correct token */
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_SYMBOL,
+                            NULL,
+                            NULL,
+                            NULL,
+                            "'override' keyword expected.",
+                            TRUE); /* is_error */
+      exit(1);
+    }
+  else
+    {
+      /* Check if symbol is 'override' */
+      PSYMBOL pCurSymbol;
+
+      value=gScanner->value;
+      pCurSymbol=value.v_symbol;
+
+      if(pCurSymbol->uiSymbolToken != IDL_SYMBOL_OVERRIDE2)
+        {
+          g_scanner_unexp_token(gScanner,
+                                G_TOKEN_SYMBOL,
+                                NULL,
+                                NULL,
+                                NULL,
+                                "'override' keyword expected after ':'.",
+                                TRUE); /* is_error */
+          exit(1);
+        }
+    }
+  
+  /* Now check if the method was introduced by some parent */
+  if((pif=findInterfaceForMethod(pParseInfo->pCurInterface, pOMethod->chrName))==NULL)
+    {
+      g_printf("%s:%d: error: Method '%s' was not introduced by some parent interface.\n",
+               pParseInfo->chrCurrentSourceFile, g_scanner_cur_line(gScanner)-pParseInfo->uiLineCorrection,
+               pOMethod->chrName);
+      exit(1);
+    }
+
+
+  pOMethod->chrIntroducingIFace=pif->chrName; /* No copy of string here. Nobody should free the
+                                                 interface info under our feet. */
+
+  /* Check for trailing ';' */  
+  if(!matchNext(';'))
+    {
+      getNextToken(); /* Make sure error references the correct token */
+      g_scanner_unexp_token(gScanner,
+                            ';',
+                            NULL,
+                            NULL,
+                            NULL,
+                            "Error in override statement. Trailing ';' is missing.",
                             TRUE); /* is_error */
       exit(1);
     }

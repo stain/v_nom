@@ -31,6 +31,11 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+
+/*
+  Main file containing the interface parser. Whenever a valid keyword is found
+  a specialized parser function in another source file is called from here.
+ */
 #include <os2.h>
 #include <stdlib.h>
 #include <string.h>
@@ -112,6 +117,7 @@ static PINTERFACE createInterfaceStruct()
 
 /*
   Function to parse the body of an interface declaration.
+  Current token is '{'.
 
   IB:= CV                                             // NOMCLASSVERSION()
      | IV                                             // NOMINSTANCEVAR()
@@ -133,6 +139,11 @@ void parseIBody(void)
       }
     else if(matchNext('#'))
       parseHash();
+    else if(matchNext(G_TOKEN_IDENTIFIER))
+      {
+        /* This may be an override statement */
+        parseOverrideMethodFromIdentifier();
+      }
     else if(matchNext(G_TOKEN_SYMBOL))
       {
         PSYMBOL pCurSymbol;
@@ -142,11 +153,11 @@ void parseIBody(void)
         pCurSymbol=value.v_symbol;
         switch(pCurSymbol->uiSymbolToken)
           {
+          case IDL_SYMBOL_OVERRIDE: /* This one is deprecated */
+            parseOverrideMethod();
+            break;
           case IDL_SYMBOL_CLSVERSION:
             parseClassVersion();
-            break;
-          case IDL_SYMBOL_OVERRIDE:
-            parseOverrideMethod();
             break;
           case IDL_SYMBOL_INSTANCEVAR:
             parseInstanceVar();
@@ -158,14 +169,16 @@ void parseIBody(void)
             parseFileStem();
             break;
           default:
-            g_scanner_unexp_token(gScanner,
-                                  G_TOKEN_SYMBOL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  "Trying to parse interface body.",
-                                  TRUE); /* is_error */
-            exit(1);
+            {
+              g_scanner_unexp_token(gScanner,
+                                    G_TOKEN_SYMBOL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    "Trying to parse interface body.",
+                                    TRUE); /* is_error */
+              exit(1);
+            }
           }/* switch */
       }
     else
