@@ -128,6 +128,7 @@ enum
   IDL_SYMBOL_CLSVERSION,
   IDL_SYMBOL_INSTANCEVAR,
   IDL_SYMBOL_OVERRIDE,
+  IDL_SYMBOL_OVERRIDE2,
   IDL_SYMBOL_REGINTERFACE,  /* Used for registered interfaces */
   IDL_SYMBOL_CLSNAME,
   IDL_SYMBOL_OLDMETACLASS,
@@ -176,6 +177,7 @@ void parseInterface(GTokenType token);
 void parseClassVersion(void);
 void parseClassVersion(void);
 void parseOverrideMethod(void);
+void parseOverrideMethodFromIdentifier(void);
 void parseHash(void);
 void parsePreprocLineInfo(void);
 void parseMetaClass(void);
