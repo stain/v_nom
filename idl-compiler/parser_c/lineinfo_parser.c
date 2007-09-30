@@ -31,6 +31,13 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
+
+/*
+  Parse the line information included by the gcc preprocessor. We use that
+  to know the current source file and to calculate a correction value for
+  the line numbers so that error messages show the correct source file line.
+ */
+
 #include <os2.h>
 #include <stdio.h>
 #include <stdlib.h>
