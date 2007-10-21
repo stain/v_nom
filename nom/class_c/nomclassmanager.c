@@ -54,7 +54,7 @@
 
 #include "nomclassmanager.ih"
 
-#include "nomfilepath.h"
+//#include "nomfilepath.h"
 
 /**
    \brief Function which implements the nomFindClassFromID() method of NOMClassMgr.
@@ -62,9 +62,9 @@
    \remark This method isn't implemented yet.
  */
 NOM_Scope NOMClass* NOMLINK impl_NOMClassMgr_nomFindClassFromId(NOMClassMgr* nomSelf,
-                                                                const CORBA_long classId,
-                                                                const CORBA_long ulMajorVersion,
-                                                                const CORBA_long ulMinorVersion,
+                                                                const gulong classId,
+                                                                const gulong ulMajorVersion,
+                                                                const gulong ulMinorVersion,
                                                                 CORBA_Environment *ev)
 {
   /*  NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf); */
