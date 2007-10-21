@@ -73,9 +73,9 @@ interface NOMClassMgr : NOMObject
      \return
      The class object for the class with the given name or NULL if not found.
    */
-  NOMClass* nomFindClassFromId(in long classId, 
-                            in long ulMajorVersion, 
-                            in long ulMinorVersion);
+  NOMClass* nomFindClassFromId(in gulong classId, 
+                            in gulong ulMajorVersion, 
+                            in gulong ulMinorVersion);
   
   /**
      Find the class object for the class with the given name in the internal class list managed by the
@@ -213,8 +213,8 @@ interface NOMClassMgr : NOMObject
      Override of nomInit(). The list of methods and the list of classes are initialized
      in that method. In addition the balanced binary tree for registering mtabs is created.
    */
-  NOMOVERRIDE(nomInit);
-
+  //NOMOVERRIDE(nomInit);
+  nomInit : override;
   /**
      The list of registered classes. Normal classes and metaclasses are registered.
      The method nomGetClassList() can be used to get it.
