@@ -17,7 +17,8 @@ CLASSINC	=	./class_h
 INCDIR		=	./include
 IDLDIR		=	./idl
 
-TKIDLDIR	=	$(NOMPATH)/idl  # The object TK lives here
+# The object TK lives here
+TKIDLDIR	=	$(NOMPATH)/idl
 
 INC		= 	./include -I ./class_h \
 			-I $(NOMPATH)/class_h -I $(NOMPATH)/include \
@@ -28,7 +29,8 @@ NOMIDLINC	=	-I$(TKIDLDIR)
 NOMIDLCOMPILER	=	$(BINDIR)/nom-idl-compiler.exe 
 
 
-ADDLIBS		=	 -l$(OBJDIR)/nobjtk -l$(OBJDIR)/nomtest -l$(OBJDIR)/nobjtk
+NOMTKLIB	=	-l$(OBJDIR)/nobjtk
+ADDLIBS		=	-l$(OBJDIR)/nomtest $(NOMTKLIB) 
 
 # Define objects to build
 
@@ -51,7 +53,7 @@ all:	$(BINDIR)/$(DLLNAME).dll $(BINDIR)/test-nom.exe
 $(BINDIR)/$(DLLNAME).dll:	 $(OBJDIR)/o.dep $(CLASSOBJECTS) exports.def
 	@echo "[33;1;mLinking "$@"...[0;m"
 	@cmd.exe /C create_$(DLLNAME)_def $(OBJDIR)/$(DLLNAME).def
-	$(CC) $(GCCLDFLAGS) -o $@ $(CLASSOBJECTS) $(LIBS) $(ADDLIBS) $(OBJDIR)/$(DLLNAME).def
+	$(CC) $(GCCLDFLAGS) -o $@ $(CLASSOBJECTS) $(LIBS) $(NOMTKLIB) $(OBJDIR)/$(DLLNAME).def
 	emximp -o $(OBJDIR)/$(basename $(notdir $@)).a $(OBJDIR)/$(DLLNAME).def
 	@echo "[32;1;mDone linking "$@"...[0;m"
 
