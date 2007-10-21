@@ -53,16 +53,20 @@
 #include "nomgc.h"
 #include "aclass.h"
 
-void createAClass()
+#define ULONG_TESTVALUE_1  0xffeeddcc
+#define ULONG_TESTVALUE_2  0x55aa1122
+
+AClass*  createAClassObject()
 {
   AClass*  aClass;
-
+  
   aClass=AClassNew();
-
+  
   if(nomIsObj(aClass))
-    g_message("AClass creationt\t\t\tOK");
+    g_message("AClass creation\t\t\t\tOK\n");
   else
-    g_message("AClass created\t\t\t\tFAILED");
+    g_message("AClass creation\t\t\t\t\tFAILED\n");
+  return aClass;
 }
 
 /**
@@ -70,11 +74,11 @@ void createAClass()
  */
 int main(int argc, char **argv)
 {
-  APIRET rc;
   NOMClassMgr *NOMClassMgrObject;
   HREGDLL hReg=NULLHANDLE;
-  UCHAR uchrError[256];
-  HMODULE hModuleGC;
+  AClass*  aObject;
+  ULONG ulRC;
+
 #if 0
   /* Preload the DLL otherwise it won't be found by the GC registering function */
   if((rc=DosLoadModule(uchrError, sizeof(uchrError),"nobjtk.dll", &hModuleGC))!=NO_ERROR)
@@ -102,26 +106,51 @@ int main(int argc, char **argv)
 #endif
   g_assert(nomRegisterDLLByName(hReg, "NOBJTK.DLL"));
 
-#if 0
-  // g_assert(nomRegisterDLLByName(hReg, "VDESKTOP.DLL"));
-  //g_assert(nomRegisterDLLByName(hReg, "VOYFCLS.DLL"));
-  //g_assert(nomRegisterDLLByName(hReg, "VOYWP.DLL"));
-  //g_assert(nomRegisterDLLByName(hReg, "VOYGUITK.DLL"));
-  //  g_assert(nomRegisterDLLByName(hReg, "PBL-PNG.DLL"));
-  //  g_assert(nomRegisterDLLByName(hReg, "BASIC-FC.DLL"));
-  /* Add Pango */
-  //g_assert(nomRegisterDLLByName(hReg, "PANGO.DLL"));
-#endif
   nomEndRegisterDLLWithGC(hReg);
 
-  g_message("NOM test application started.\n");
+  g_message("NOM test application started.");
 
   /* Init NOM */
   NOMClassMgrObject=nomEnvironmentNew();
 
-  NOMObjectNew();
-    createAClass();
-  //DosSleep(20000);
+  /* Try to create an object */
+  aObject=createAClassObject();
+  g_assert(aObject);
+
+  /* -- Call methods on the object --- */
+  g_message("================================================================");
+  g_message("===== Testing init values of instance variables. Must be 0 =====");
+  g_message("================================================================");
+
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t%ld\t\t%s", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t%ld\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+
+  g_message("=================================================");
+  g_message("===== Testing setting of instance variables =====");
+  g_message("=================================================");
+  _tstSetUlongVar1(aObject, ULONG_TESTVALUE_1, NULLHANDLE);
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_1==ulRC);
+
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+
+  _tstSetUlongVar2(aObject, ULONG_TESTVALUE_2, NULLHANDLE);
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_1==ulRC);
+
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t%s\n", ulRC, (ULONG_TESTVALUE_2!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_2==ulRC);
+
   return 0;
 };
 

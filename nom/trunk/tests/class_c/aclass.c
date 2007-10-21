@@ -50,3 +50,34 @@ NOM_Scope void NOMLINK impl_AClass_tstPrintHello(AClass* nomSelf, CORBA_Environm
   g_message("Hello");
 }
 
+NOM_Scope gulong NOMLINK impl_AClass_tstQueryUlongVar1(AClass* nomSelf, CORBA_Environment *ev)
+{
+  AClassData* nomThis=AClassGetData(nomSelf);
+
+  return _ulVar1;
+}
+
+NOM_Scope gulong NOMLINK impl_AClass_tstQueryUlongVar2(AClass* nomSelf, CORBA_Environment *ev)
+{
+  AClassData* nomThis=AClassGetData(nomSelf);
+
+  return _ulVar2;
+}
+
+NOM_Scope void NOMLINK impl_AClass_tstSetUlongVar1(AClass* nomSelf, const gulong ulNew, CORBA_Environment *ev)
+{
+  AClassData* nomThis=AClassGetData(nomSelf);
+
+  g_message("In %s, setting ulVar1 to 0x%lx", __FUNCTION__, ulNew);
+  _ulVar1=ulNew;
+}
+
+NOM_Scope void NOMLINK impl_AClass_tstSetUlongVar2(AClass* nomSelf, const gulong ulNew, CORBA_Environment *ev)
+{
+  AClassData* nomThis=AClassGetData(nomSelf);
+
+  g_message("In %s, setting ulVar2 to 0x%lx", __FUNCTION__, ulNew);
+  _ulVar2=ulNew;
+}
+
+
