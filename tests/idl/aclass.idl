@@ -47,11 +47,18 @@ interface AClass:NOMObject
 #ifdef __NOM_IDL_COMPILER__
   filestem=aclass;
 #endif
-
-  void tstPrintHello();
   NOMCLASSVERSION(1, 0 );
 
-  NOMINSTANCEVAR(string ncpObject);     //NOMClassPriv structure holding info about the object this class can create
+  void tstPrintHello();
+  gulong tstQueryUlongVar1();
+  gulong tstQueryUlongVar2();
+
+  void tstSetUlongVar1(in gulong ulNew);
+  void tstSetUlongVar2(in gulong ulNew);
+
+  NOMINSTANCEVAR(gulong ulVar1 );
+  NOMINSTANCEVAR(gulong ulVar2 );
+
 };
 
 #endif /* ACLASS_IDL_INCLUDED */
