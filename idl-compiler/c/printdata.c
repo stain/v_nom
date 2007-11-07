@@ -40,7 +40,6 @@
 #include <fcntl.h>
 #include <sys\stat.h>
 
-#include <gtk/gtk.h> 
 #include <glib/gprintf.h>
 
 #include "nom.h"

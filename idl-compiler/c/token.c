@@ -33,7 +33,7 @@
 * ***** END LICENSE BLOCK ***** */
 
 #include <os2.h>
-#include <gtk/gtk.h> 
+#include <stdio.h>
 #include "nom.h"
 
 #include "parser.h"
