@@ -7,3 +7,6 @@ EXPORTS
 	_AClassCClassData  
 	AClassNewClass     
 
+	_BClassClassData    
+	_BClassCClassData  
+	BClassNewClass     

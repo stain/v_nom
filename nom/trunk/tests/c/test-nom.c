@@ -51,10 +51,14 @@
 #include "nom.h"
 #include "nomtk.h"
 #include "nomgc.h"
-#include "aclass.h"
 
-#define ULONG_TESTVALUE_1  0xffeeddcc
-#define ULONG_TESTVALUE_2  0x55aa1122
+#include "aclass.h"
+#include "bclass.h"
+
+#define ULONG_TESTVALUE_1         0xffeeddcc
+#define ULONG_TESTVALUE_2         0x55aa1122
+#define ULONG_TESTVALUE_BCLASS_1  0x50403020
+#define ULONG_TESTVALUE_BCLASS_2  0xf0e0d0c0
 
 AClass*  createAClassObject()
 {
@@ -69,6 +73,112 @@ AClass*  createAClassObject()
   return aClass;
 }
 
+AClass*  createBClassObject()
+{
+  BClass*  bClass;
+  
+  bClass=BClassNew();
+  
+  if(nomIsObj(bClass))
+    g_message("BClass creation\t\t\t\tOK\n");
+  else
+    g_message("BClass creation\t\t\t\t\tFAILED\n");
+  return bClass;
+}
+
+void tstAClassInstanceVarInitValues(AClass * aObject)
+{
+  ULONG ulRC;
+
+  g_message("================================================================");
+  g_message("===== Testing init values of instance variables. Must be 0 =====");
+  g_message("================================================================");
+  
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t%ld\t\t%s", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+  
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t%ld\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+}
+
+
+void tstBClassInstanceVarInitValues(BClass * aObject)
+{
+  ULONG ulRC;
+
+  g_message("================================================================");
+  g_message("===== Testing init values of instance variables. Must be 0 =====");
+  g_message("================================================================");
+  
+  ulRC=_tstQueryBClassUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryBClassUlongVar1():\t%ld\t\t%s", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+  
+  ulRC=_tstQueryBClassUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryBClassUlongVar2():\t%ld\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+}
+
+
+void tstSetAClassInstanceVar(AClass * aObject)
+{
+  ULONG ulRC;
+
+  g_message("========================================================");
+  g_message("===== Testing setting of AClass instance variables =====");
+  g_message("========================================================");
+  /* Set 1. value */
+  _tstSetUlongVar1(aObject, ULONG_TESTVALUE_1, NULLHANDLE);
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_1==ulRC);
+
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+
+  /* Set 2. value */
+  _tstSetUlongVar2(aObject, ULONG_TESTVALUE_2, NULLHANDLE);
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_1==ulRC);
+
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t%s\n\n", ulRC, (ULONG_TESTVALUE_2!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_2==ulRC);
+}
+
+void tstSetBClassInstanceVar(BClass * aObject)
+{
+  ULONG ulRC;
+
+  g_message("========================================================");
+  g_message("===== Testing setting of BClass instance variables =====");
+  g_message("========================================================");
+  /* Set 1. value */
+  _tstSetBClassUlongVar1(aObject, ULONG_TESTVALUE_BCLASS_1, NULLHANDLE);
+  ulRC=_tstQueryBClassUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryBClassUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_BCLASS_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_BCLASS_1==ulRC);
+
+  ulRC=_tstQueryBClassUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryBClassUlongVar2():\t0x%lx\t\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_assert(0==ulRC);
+
+  /* Set 2. value */
+  _tstSetBClassUlongVar2(aObject, ULONG_TESTVALUE_BCLASS_2, NULLHANDLE);
+  ulRC=_tstQueryBClassUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryBClassUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_BCLASS_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_BCLASS_1==ulRC);
+
+  ulRC=_tstQueryBClassUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryBClassUlongVar2():\t0x%lx\t\t%s\n\n", ulRC, (ULONG_TESTVALUE_BCLASS_2!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_BCLASS_2==ulRC);
+}
+
+
 /**
    Main entry point for the idl compiler.
  */
@@ -77,7 +187,7 @@ int main(int argc, char **argv)
   NOMClassMgr *NOMClassMgrObject;
   HREGDLL hReg=NULLHANDLE;
   AClass*  aObject;
-  ULONG ulRC;
+  BClass*  bObject;
 
 #if 0
   /* Preload the DLL otherwise it won't be found by the GC registering function */
@@ -113,43 +223,30 @@ int main(int argc, char **argv)
   /* Init NOM */
   NOMClassMgrObject=nomEnvironmentNew();
 
-  /* Try to create an object */
+  g_message("\n");
+  g_message("================================================================");
+  g_message("=====          Testing AClass, child of NOMObject          =====");
+  g_message("================================================================");
+  /* Try to create an AClass object */
   aObject=createAClassObject();
   g_assert(aObject);
 
   /* -- Call methods on the object --- */
+  tstAClassInstanceVarInitValues(aObject);
+  tstSetAClassInstanceVar(aObject);
+
   g_message("================================================================");
-  g_message("===== Testing init values of instance variables. Must be 0 =====");
+  g_message("=====          Testing BClass, child of AClass             =====");
   g_message("================================================================");
+  /* Try to create an AClass object */
+  bObject=createBClassObject();
+  g_assert(bObject);
 
-  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
-  g_message("Calling tstQueryUlongVar1():\t%ld\t\t%s", ulRC, (0!=ulRC ? "FAILED" : "OK"));
-  g_assert(0==ulRC);
+  tstAClassInstanceVarInitValues(bObject);
+  tstBClassInstanceVarInitValues(bObject);
 
-  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
-  g_message("Calling tstQueryUlongVar2():\t%ld\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
-  g_assert(0==ulRC);
-
-  g_message("=================================================");
-  g_message("===== Testing setting of instance variables =====");
-  g_message("=================================================");
-  _tstSetUlongVar1(aObject, ULONG_TESTVALUE_1, NULLHANDLE);
-  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
-  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
-  g_assert(ULONG_TESTVALUE_1==ulRC);
-
-  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
-  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
-  g_assert(0==ulRC);
-
-  _tstSetUlongVar2(aObject, ULONG_TESTVALUE_2, NULLHANDLE);
-  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
-  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
-  g_assert(ULONG_TESTVALUE_1==ulRC);
-
-  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
-  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t%s\n", ulRC, (ULONG_TESTVALUE_2!=ulRC ? "FAILED" : "OK"));
-  g_assert(ULONG_TESTVALUE_2==ulRC);
+  tstSetAClassInstanceVar(bObject);
+  tstSetBClassInstanceVar(bObject);
 
   return 0;
 };
