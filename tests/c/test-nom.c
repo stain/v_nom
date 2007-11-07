@@ -159,16 +159,38 @@ void tstSetBClassInstanceVar(BClass * aObject)
   g_message("========================================================");
   /* Set 1. value */
   _tstSetBClassUlongVar1(aObject, ULONG_TESTVALUE_BCLASS_1, NULLHANDLE);
+
+  /* AClass */
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_1==ulRC);
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_2!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_2==ulRC);
+
+  /* BClass*/
   ulRC=_tstQueryBClassUlongVar1(aObject, NULLHANDLE);
   g_message("Calling tstQueryBClassUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_BCLASS_1!=ulRC ? "FAILED" : "OK"));
   g_assert(ULONG_TESTVALUE_BCLASS_1==ulRC);
 
   ulRC=_tstQueryBClassUlongVar2(aObject, NULLHANDLE);
-  g_message("Calling tstQueryBClassUlongVar2():\t0x%lx\t\t\t%s\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
+  g_message("Calling tstQueryBClassUlongVar2():\t0x%lx\t\t\t%s\n\n", ulRC, (0!=ulRC ? "FAILED" : "OK"));
   g_assert(0==ulRC);
+
+
 
   /* Set 2. value */
   _tstSetBClassUlongVar2(aObject, ULONG_TESTVALUE_BCLASS_2, NULLHANDLE);
+
+  /* AClass */
+  ulRC=_tstQueryUlongVar1(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_1!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_1==ulRC);
+  ulRC=_tstQueryUlongVar2(aObject, NULLHANDLE);
+  g_message("Calling tstQueryUlongVar2():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_2!=ulRC ? "FAILED" : "OK"));
+  g_assert(ULONG_TESTVALUE_2==ulRC);
+
+  /* BClass*/
   ulRC=_tstQueryBClassUlongVar1(aObject, NULLHANDLE);
   g_message("Calling tstQueryBClassUlongVar1():\t0x%lx\t\t%s", ulRC, (ULONG_TESTVALUE_BCLASS_1!=ulRC ? "FAILED" : "OK"));
   g_assert(ULONG_TESTVALUE_BCLASS_1==ulRC);
@@ -176,6 +198,7 @@ void tstSetBClassInstanceVar(BClass * aObject)
   ulRC=_tstQueryBClassUlongVar2(aObject, NULLHANDLE);
   g_message("Calling tstQueryBClassUlongVar2():\t0x%lx\t\t%s\n\n", ulRC, (ULONG_TESTVALUE_BCLASS_2!=ulRC ? "FAILED" : "OK"));
   g_assert(ULONG_TESTVALUE_BCLASS_2==ulRC);
+
 }
 
 
