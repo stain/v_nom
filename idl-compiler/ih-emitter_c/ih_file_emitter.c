@@ -31,7 +31,10 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif /* __OS2__ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -79,13 +82,17 @@ static void emitInstanceVariables(PPARSEINFO pLocalPI, PINTERFACE pif)
               fprintf(fh, "*");
             fprintf(fh, "  %s;\n", piv->chrName);
     }
-  fprintf(fh, "}%sData;\n\n", pif->chrName);
+#ifdef _MSC_VER
+  if(!a)
+    fprintf(fh, "  int iDummy;\n"); /* HACK ALERT! */
+#endif
+  fprintf(fh, "} %sData;\n\n", pif->chrName);
 }
 
 static void emitGetDataMacros(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
-  GPtrArray *pArray=pif->pInstanceVarArray;;
+  GPtrArray *pArray=pif->pInstanceVarArray;
   int a;
 
   fprintf(fh, "/*\n * Get data macros for %s\n */\n", pif->chrName);
@@ -115,8 +122,8 @@ static void emitIHClassDataStructs(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "#ifdef NOM_%s_IMPLEMENTATION_FILE\n\n", pif->chrName);
 
   fprintf(fh, "/*** Class data structures ***/\n");
-  fprintf(fh, "struct %sClassDataStructure %sClassData = {0};\n", pif->chrName, pif->chrName );
-  fprintf(fh, "static struct %sCClassDataStructure %sCClassData = {0};\n\n",
+  fprintf(fh, "NOMDLLEXPORT struct %sClassDataStructure %sClassData = {0};\n", pif->chrName, pif->chrName );
+  fprintf(fh, "NOMDLLEXPORT struct %sCClassDataStructure %sCClassData = {0};\n\n",
           pif->chrName, pif->chrName);
 }
 
@@ -125,7 +132,7 @@ static void emitIHClassDataStructs(PPARSEINFO pLocalPI, PINTERFACE pif)
 #ifdef NOM_NO_PARAM_CHECK /* Disabled by now because not working */
 NOMEXTERN gboolean NOMLINK objectCheckFunc_WPRootFolder(WPRootFolder *nomSelf, gchar* chrMethodName)
 {
-if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf , WPRootFolderClassData.classObject, NULLHANDLE))
+if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf , WPRootFolderClassData.classObject, NULL))
   {
   nomPrintObjectPointerError(nomSelf, "WPRootFolder", chrMethodName);
   g_message("Note that NULL is returned for the call (if the method returns a value). This may not be correct. Use the NOMPARMCHECK() macro to specify default return values for methods.");
@@ -169,6 +176,10 @@ static void emitMethodParamStrings(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArra
         fprintf(fh, "*");
       fprintf(fh, "\",\n");      
     }
+#ifdef _MSC_VER
+  if(!a)
+    fprintf(fh, "  NULL\n");
+#endif
 }
 
 static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
@@ -186,7 +197,7 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "/*\n * New method: %s\n */\n", pm->chrName);
       fprintf(fh, "#if !defined(_decl_impl_%s_%s_)\n", pif->chrName, pm->chrName);
       fprintf(fh, "#define _decl_impl_%s_%s_ 1\n", pif->chrName, pm->chrName);
-      fprintf(fh, "NOM_Scope ");
+      fprintf(fh, "NOMDLLEXPORT NOM_Scope ");
       emitReturnType(pLocalPI, pif, pm);
       fprintf(fh, " NOMLINK impl_%s_%s(%s *nomSelf,\n", pif->chrName, pm->chrName, pif->chrName);
       /* Do parameters */
@@ -237,7 +248,7 @@ static void emitOverridenMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
           exit(1);
         }
 
-      fprintf(fh, "NOM_Scope ");
+      fprintf(fh, "NOMDLLEXPORT NOM_Scope ");
       emitReturnType(pLocalPI, pif, pm);
       fprintf(fh, " NOMLINK impl_%s_%s(%s* nomSelf,\n", pif->chrName, pom->chrName, pif->chrName);
       /* Do parameters */
@@ -270,6 +281,8 @@ static void emitOverridenMethodTable(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "/* Table of the overriden methods by this class */\n");
   fprintf(fh, "static nomOverridenMethodDesc nomOverridenMethods%s[] = {\n", pif->chrName);
 
+  pArray=pif->pOverrideArray;
+
   for(a=0;a<pArray->len;a++)
     {
       POVERMETHOD pom=(POVERMETHOD)g_ptr_array_index(pArray, a);
@@ -288,7 +301,11 @@ static void emitOverridenMethodTable(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "    &%s_%s_parent_resolved\n", pif->chrName,  pom->chrName);
       fprintf(fh, "  },\n");
     }
-    fprintf(fh, "};\n\n");
+#ifdef _MSC_VER
+  if(!a)
+    fprintf(fh, "  { NULL, NULL, NULL }\n");
+#endif
+  fprintf(fh, "};\n\n");
 }
 
 
@@ -315,6 +332,10 @@ static void emitStaticMethodTable(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "  &nomParm_%s_%s\n", pif->chrName,  pm->chrName);
       fprintf(fh, "},\n");
     }
+#ifdef _MSC_VER
+  if(!a)
+    fprintf(fh, "  { NULL, NULL, NULL, NULL, NULL }\n");
+#endif
   fprintf(fh, "};\n\n");
 }
 
@@ -343,7 +364,7 @@ static void emitParentClasses(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "static char* nomParentClassNames%s[]=\n{\n", pif->chrName);
       /* Emit the parents. We have to output them sorted beginning from the
          leftmost parent. */
-      while(pifParent->chrParent && (pifParent=findInterfaceFromName(pifParent->chrParent))!=NULLHANDLE)
+      while(pifParent->chrParent && (pifParent=findInterfaceFromName(pifParent->chrParent))!=NULL)
         {
           g_ptr_array_add(pArray, (gpointer) pifParent);
         }
@@ -371,7 +392,7 @@ static gulong getNumberOfParentsInChain(PPARSEINFO pLocalPI, PINTERFACE pif)
   gulong ulRet=0;
   PINTERFACE pifParent=pif;
 
-  while(pifParent->chrParent && (pifParent=findInterfaceFromName(pifParent->chrParent))!=NULLHANDLE)
+  while(pifParent->chrParent && (pifParent=findInterfaceFromName(pifParent->chrParent))!=NULL)
     ulRet++;
 
   return ulRet;
@@ -497,6 +518,11 @@ static void emitClassCreationFunc(PPARSEINFO pLocalPI, PINTERFACE pif)
         }
     }
   fprintf(fh, "#include \"nomgc.h\"\n");
+  fprintf(fh, "#ifdef NOM_%s_IMPLEMENTATION_FILE\n", pif->chrName);
+  fprintf(fh, "NOMDLLEXPORT\n");
+  fprintf(fh, "#else\n");
+  fprintf(fh, "NOMDLLIMPORT\n");
+  fprintf(fh, "#endif\n");
   fprintf(fh, "NOMClass* NOMLINK %sNewClass(gulong ulMajor, gulong ulMinor)\n", pif->chrName);
   fprintf(fh, "{\n");
   fprintf(fh, "  NOMClass* result;\n");
@@ -515,6 +541,12 @@ static void emitClassCreationFunc(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "    g_assert(nomRegisterDLLByName(hReg, thePath));\n");
   fprintf(fh, "    nomEndRegisterDLLWithGC(hReg);\n");
   fprintf(fh, "    }\n");
+  fprintf(fh, "#elif defined(_WIN32)\n");
+  fprintf(fh, " /* FIXME: check this up with the GC. */\n");
+  fprintf(fh, "#elif defined(__APPLE__)\n");
+  fprintf(fh, "# warning FIXME: Check out GC/dylib.\n");
+  fprintf(fh, "#elif defined(__linux__)\n");
+  fprintf(fh, "# warning FIXME: Check out GC/so on linux.\n");
   fprintf(fh, "#else\n");
   fprintf(fh, "#error DLL must be registered with the garbage collector!\n");
   fprintf(fh, "#endif\n\n");
@@ -561,7 +593,7 @@ void emitIHFile(GPtrArray* pInterfaceArray)
 
               //printInterface(pif);
               chrTemp=g_strconcat(pif->chrFileStem, ".ih", NULL);
-              if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
+              if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULL)
                 {
                   emitIHFileHeader(pLocalPI, pif);
                   emitInstanceVariables(pLocalPI, pif);

@@ -32,18 +32,20 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#define INCL_DOS
-#define INCL_DOSFILEMGR
-#define INCL_DOSERRORS
-#define INCL_WIN
-#define INCL_WINWORKPLACE
-#define INCL_OS2MM
-#define INCL_MMIOOS2
-#define INCL_MCIOS2
-#define INCL_GPI
-#define INCL_PM
+#ifdef __OS2__
+# define INCL_DOS
+# define INCL_DOSFILEMGR
+# define INCL_DOSERRORS
+# define INCL_WIN
+# define INCL_WINWORKPLACE
+# define INCL_OS2MM
+# define INCL_MMIOOS2
+# define INCL_MCIOS2
+# define INCL_GPI
+# define INCL_PM
+# include <os2.h>
+#endif /* __OS2__ */
 
-#include <os2.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -64,8 +66,8 @@ NOMEXTERN void NOMLINK nomPrintObjectPointerErrorMsg(NOMObject*  nomObject, NOMC
     if(!nomIsObj(nomObject))
       g_error("The object used to call the method %s is not a valid NOM object. ", chrMethodName);
     else
-      g_error("The object for which the method %s should be called is not valid for this method.\nThe object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, NOMClass_nomGetCreatedClassName(nomClass, NULLHANDLE), 
-                NOMObject_nomGetClassName(nomObject, NULLHANDLE));
+      g_error("The object for which the method %s should be called is not valid for this method.\nThe object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, NOMClass_nomGetCreatedClassName(nomClass, NULL), 
+                NOMObject_nomGetClassName(nomObject, NULL));
   }
 }
 
@@ -113,7 +115,7 @@ NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomCl
     return TRUE;
 
   //  g_message("In %s with %s %px nomClass: %px (%s)", __FUNCTION__, chrMethodName, nomSelf, nomClass, nomClass->mtab->nomClassName);
-  if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf, nomClass, NULLHANDLE))
+  if(!nomIsObj(nomSelf) || !_nomIsANoClsCheck(nomSelf, nomClass, NULL))
     {
       nomPrintObjectPointerErrorMsg(nomSelf, nomClass, chrMethodName);
       nomPrintAdditionalErrorMsg();
@@ -153,7 +155,7 @@ NOMEXTERN  void NOMLINK dumpClasses(void)
 
   nomPrintf("----- %s -----  NOMClassMgrObject: %lx\n", __FUNCTION__, NOMClassMgrObject);
 
-  pgdata=_nomGetClassList(NOMClassMgrObject, NULLHANDLE);
+  pgdata=_nomGetClassList(NOMClassMgrObject, NULL);
   if(pgdata){
     nomPrintf("%s: classlist: %lx\n", __FUNCTION__, pgdata);
     g_datalist_foreach(&pgdata, dumpClassFunc, pgdata);
@@ -175,7 +177,7 @@ void _dumpSci(nomStaticClassInfo* sci)
   if(sci->nomExplicitMetaId)
     nomPrintf("explicitMetaId (meta class): %s\n", *sci->nomExplicitMetaId);
   else
-    nomPrintf("explicitMetaId (meta class): NULLHANDLE\n");
+    nomPrintf("explicitMetaId (meta class): NULL\n");
   //  somPrintf("*parents: 0x%x\n", sci->parents);
   nomPrintf("somClassDataStructure cds: 0x%x\n",sci->nomCds);
   if(sci->nomCds)
@@ -189,7 +191,7 @@ void _dumpSci(nomStaticClassInfo* sci)
 }
 
 
-void _dumpClassDataStruct(nomClassDataStructure* cds, ULONG ulNumMethods)
+void _dumpClassDataStruct(nomClassDataStructure* cds, gulong ulNumMethods)
 {
   int a;
 
@@ -214,7 +216,7 @@ void  _dumpMtab(nomMethodTab* mtab)
   nomPrintf("  className: %s\n", mtab->nomClassName);
   nomPrintf("  instanceSize (this and all parents): %d 0x%x\n", mtab->ulInstanceSize, mtab->ulInstanceSize);
   nomPrintf("  mtabSize: %d 0x%x\n", mtab->mtabSize, mtab->mtabSize);
-  nomPrintf("  somMethodProcs: (%ld)\n", (mtab->mtabSize-(LONG)sizeof(nomMethodTab))/4);
+  nomPrintf("  somMethodProcs: (%ld)\n", (mtab->mtabSize-(glong)sizeof(nomMethodTab))/4);
   //  entries=sObj->mtab->entries[0];
    for(a=0; a<=(mtab->mtabSize-sizeof(nomMethodTab))/4; a++)
     nomPrintf("  %d: somMethodProc: 0x%x at 0x%x\n", a, mtab->entries[a], &mtab->entries[a]);
@@ -233,7 +235,7 @@ void  _dumpObjShort(NOMObject* sObj)
 #if 0
   nomPrintf("*classInfo: 0x%x\n", *sObj->mtab->nomClsInfo);
 
-  so=(ULONG*)sObj->mtab->classInfo;
+  so=(gulong*)sObj->mtab->classInfo;
 #endif
   nomPrintf("className: %s\n", sObj->mtab->nomClassName);
   nomPrintf("instanceSize (this and all parents): %d 0x%x\n", sObj->mtab->ulInstanceSize, sObj->mtab->ulInstanceSize);
@@ -248,7 +250,7 @@ void  _dumpObjShort(NOMObject* sObj)
 
 
 #if 0
-void _dumpStaticMTab(somStaticMethod_t* smt, ULONG ulMethod)
+void _dumpStaticMTab(somStaticMethod_t* smt, gulong ulMethod)
 {
   somStaticMethod_t* tmpSmt=&smt[ulMethod];
 
@@ -261,7 +263,7 @@ void _dumpStaticMTab(somStaticMethod_t* smt, ULONG ulMethod)
   somPrintf("-----------------------------\n");
 }
 
-void _dumpOverrideMTab(somOverrideMethod_t* omt, ULONG ulMethod)
+void _dumpOverrideMTab(somOverrideMethod_t* omt, gulong ulMethod)
 {
   somOverrideMethod_t* tmpOmt=&omt[ulMethod];
 
@@ -299,7 +301,7 @@ void _dumpParentMTabList(somParentMtabStructPtr pMtabPtr)
     if(tempPtr->next)
       tempPtr=(void*)tempPtr->next->mtab;
     else
-      tempPtr=NULLHANDLE;
+      tempPtr=NULL;
   }
 
 }
@@ -399,7 +401,7 @@ void SOMLINK _dumpObj(SOMObject* sObj)
   somPrintf("  className: %s\n", sObj->mtab->className);
   somPrintf("  instanceSize (this and all parents): %d 0x%x\n", sObj->mtab->instanceSize, sObj->mtab->instanceSize);
   somPrintf("  mtabSize: %d 0x%x\n", sObj->mtab->mtabSize, sObj->mtab->mtabSize);
-  somPrintf("  somMethodProcs: (%ld)\n", (sObj->mtab->mtabSize-(LONG)sizeof(somMethodTab))/4);
+  somPrintf("  somMethodProcs: (%ld)\n", (sObj->mtab->mtabSize-(glong)sizeof(somMethodTab))/4);
   //  entries=sObj->mtab->entries[0];
    for(a=0; a<=(sObj->mtab->mtabSize-sizeof(somMethodTab))/4; a++)
     somPrintf("  %d: somMethodProc: 0x%x at 0x%x\n", a, sObj->mtab->entries[a], &sObj->mtab->entries[a]);

@@ -31,7 +31,9 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif 
 #include <stdlib.h>
 #include <string.h>
 
@@ -78,7 +80,7 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       PMETHOD pm=(PMETHOD)g_ptr_array_index(pArray, a);
 
       /* Do return type */
-      fprintf(fh, "NOM_Scope ");
+      fprintf(fh, "NOMDLLEXPORT NOM_Scope ");
       emitReturnType(pLocalPI, pif, pm);
 
       fprintf(fh, " NOMLINK impl_%s_%s(%s* nomSelf,\n", pif->chrName,  pm->chrName, pif->chrName);
@@ -122,7 +124,7 @@ static void emitOverridenMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
           exit(1);
         }
 
-      fprintf(fh, "NOM_Scope ");
+      fprintf(fh, "NOMDLLEXPORT NOM_Scope ");
       emitReturnType(pLocalPI, pif, pm);
       fprintf(fh, " NOMLINK impl_%s_%s(%s* nomSelf,\n", pif->chrName, pom->chrName, pif->chrName);
       /* Do parameters */
@@ -166,12 +168,13 @@ void emitCFile(GPtrArray* pInterfaceArray)
               chrTemp=g_strconcat(pif->chrFileStem, "-template.c", NULL);
               
               //printInterface(pif);              
-              if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
+              if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULL)
                 {
                   emitCFileHeader(pLocalPI, pif);
                   emitNewMethods(pLocalPI, pif);
                   emitOverridenMethods(pLocalPI, pif);
                   closeOutfile(pLocalPI->outFile);
+                  pLocalPI->outFile = NULL;
                 }
               g_free(chrTemp);
             }/* fIsForwardDeclaration */

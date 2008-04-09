@@ -36,7 +36,10 @@
   Main file containing the interface parser. Whenever a valid keyword is found
   a specialized parser function in another source file is called from here.
  */
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif /* __OS2__ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -291,6 +294,7 @@ static void parseIFaceBody(void)
 static void parseSubclassedIFace()
 {
   PSYMBOL pCurSymbol;
+  GTokenValue value;
 
   /* Parent interface */
   if(!matchNext(G_TOKEN_SYMBOL))
@@ -304,7 +308,7 @@ static void parseSubclassedIFace()
                             TRUE); /* is_error */
       exit(1);
     }
-  GTokenValue value=gScanner->value;
+  value=gScanner->value;
   /* Make sure it's the correct symbol */
   pCurSymbol=value.v_symbol;
 

@@ -42,7 +42,7 @@
  #ifdef __cplusplus
   #define NOMEXTERN extern "C"
  #else
-   #define NOMEXTERN extern
+  #define NOMEXTERN extern
  #endif
 #endif
 
@@ -64,10 +64,35 @@
 
 #define NOMDLINK
 
+/** @def NOMDLLEXPORT 
+ * Used for exporting a symbol. 
+ * See __declspec(dllexport) in the Visual C++ reference for details. */
+/** @def NOMDLLIMPORT 
+ * Used for importing a symbol from a DLL/so. 
+ * See __declspec(dllimport) in the Visual C++ reference for details. */
+#if defined(_WIN32) || (defined(__OS2__) && defined(__GNUC__) && defined(__declspec))
+# define NOMDLLEXPORT __declspec(dllexport)
+# define NOMDLLIMPORT __declspec(dllimport)
+#elif defined(__GNUC__)
+# if __GNUC__ >= 4
+#  define NOMDLLEXPORT __attribute__((visibility("default")))
+# else
+#  define NOMDLLEXPORT
+# endif
+# define NOMDLLIMPORT
+#else
+# define NOMDLLEXPORT
+# define NOMDLLIMPORT
+#endif
+
 typedef void* NOMLINK nomMethodProc(void*);
 
 #ifndef NULL
-#define NULL ((void *) 0)
+# ifdef __cplusplus
+#  define NULL 0
+# else
+#  define NULL ((void *) 0)
+# endif
 #endif
 
 #ifndef IN

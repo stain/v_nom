@@ -38,7 +38,10 @@
   the line numbers so that error messages show the correct source file line.
  */
 
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif /* __OS2__ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

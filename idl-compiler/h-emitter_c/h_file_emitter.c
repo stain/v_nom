@@ -31,7 +31,10 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif  /* __OS2__ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -106,6 +109,11 @@ static void emitClassDataStructs(PPARSEINFO pLocalPI, PINTERFACE pif)
   FILE* fh=pLocalPI->outFile;
 
   fprintf(fh, "/* Class data structure */\n");
+  fprintf(fh, "#ifdef NOM_%s_IMPLEMENTATION_FILE\n", pif->chrName);
+  fprintf(fh, "NOMDLLEXPORT\n");
+  fprintf(fh, "#else\n");
+  fprintf(fh, "NOMDLLIMPORT\n");
+  fprintf(fh, "#endif\n");
   fprintf(fh, "NOMEXTERN struct %sClassDataStructure {\n", pif->chrName);
 
   fprintf(fh, "    NOMClass *classObject;\n");
@@ -115,8 +123,13 @@ static void emitClassDataStructs(PPARSEINFO pLocalPI, PINTERFACE pif)
       PMETHOD pm=(PMETHOD)g_ptr_array_index(pif->pMethodArray, a);
       fprintf(fh, "    nomMToken %s;\n", pm->chrName);
     }
-  fprintf(fh, "}%sClassData;\n\n", pif->chrName);
+  fprintf(fh, "} NOMDLINK %sClassData;\n\n", pif->chrName);
 
+  fprintf(fh, "#ifdef NOM_%s_IMPLEMENTATION_FILE\n", pif->chrName);
+  fprintf(fh, "NOMDLLEXPORT\n");
+  fprintf(fh, "#else\n");
+  fprintf(fh, "NOMDLLIMPORT\n");
+  fprintf(fh, "#endif\n");
   fprintf(fh, "NOMEXTERN struct %sCClassDataStructure {\n", pif->chrName);
   fprintf(fh, "   nomMethodTabs parentMtab;\n");
   fprintf(fh, "   nomDToken instanceDataToken;\n");
@@ -131,6 +144,7 @@ static void emitObjectCheckFunction(PPARSEINFO pLocalPI, PINTERFACE pif)
 
   if(strcmp(pif->chrName , "NOMObject"))
     {
+/* FIXME: why is this here too? it's already in nomtk.h... */
       fprintf(fh, "/* This function is used to check if a given object is valid and the\n");
       fprintf(fh, "   object supports the method */\n");
       fprintf(fh, "NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomClass, gchar* chrMethodName, CORBA_Environment *ev);\n\n");
@@ -180,6 +194,11 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       fprintf(fh, "#ifdef %s_%s_ParmCheck_h /* Extended parameter check enabled */\n",
               pif->chrName, pm->chrName);
       /* Forward declaration of parameter test function */
+      fprintf(fh, "#ifdef NOM_%s_IMPLEMENTATION_FILE\n", pif->chrName);
+      fprintf(fh, "NOMDLLEXPORT\n");
+      fprintf(fh, "#else\n");
+      fprintf(fh, "NOMDLLIMPORT\n");
+      fprintf(fh, "#endif\n");
       fprintf(fh, "NOMEXTERN gboolean NOMLINK parmCheckFunc_%s_%s(%s *nomSelf,\n",
               pif->chrName,  pm->chrName, pif->chrName);
       /* Do parameters */
@@ -265,6 +284,11 @@ static void emitNewMacro(PPARSEINFO pLocalPI, PINTERFACE pif)
   FILE* fh=pLocalPI->outFile;
 
   fprintf(fh, "/*\n * Class creation function\n */\n");
+  fprintf(fh, "#ifdef NOM_%s_IMPLEMENTATION_FILE\n", pif->chrName);
+  fprintf(fh, "NOMDLLEXPORT\n");
+  fprintf(fh, "#else\n");
+  fprintf(fh, "NOMDLLIMPORT\n");
+  fprintf(fh, "#endif\n");
   fprintf(fh, "NOMEXTERN NOMClass * NOMLINK %sNewClass(gulong clsMajorVersion, gulong clsMinorVersion);\n\n",
           pif->chrName);
   
@@ -290,7 +314,7 @@ static void emitParentClassMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
   FILE* fh=pLocalPI->outFile;
   PINTERFACE pifParent=pif;
 
-  while((pifParent=getParentInterface(pifParent))!=NULLHANDLE)
+  while((pifParent=getParentInterface(pifParent))!=NULL)
     {
       GPtrArray *pArray; 
       int a;
@@ -344,7 +368,7 @@ void emitHFile(GPtrArray* pInterfaceArray)
               chrTemp=g_strconcat(pif->chrFileStem, ".h", NULL);
               
               //printInterface(pif);              
-              if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULLHANDLE)
+              if((pLocalPI->outFile=openOutfile(gScanner, chrTemp))!=NULL)
                 {
                   emitHFileHeader(pLocalPI, pif);
                   emitInterfaceIncludes(pLocalPI, pif);
@@ -356,6 +380,7 @@ void emitHFile(GPtrArray* pInterfaceArray)
                   emitParentClassMethods(pLocalPI, pif);
                   emitHFileFooter(pLocalPI, pif);
                   closeOutfile(pLocalPI->outFile);
+                  pLocalPI->outFile = NULL;
                 }
               g_free(chrTemp);
             }/* fIsForwardDeclaration */

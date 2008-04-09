@@ -31,7 +31,10 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif /* __OS2__ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,10 +47,14 @@ extern GScanner *gScanner;
 /*
   Current token is a '#'.
 
-  H:= '#' INT STRING INT     // Line info from the preprocessor 
+  H:= '#line' INT STRING INT // Line info from the preprocessor 
+  H:= '#' INT STRING INT     // Line info from the preprocessor (gcc short hand)
  */
 void parseHash(void)
 {
+  if (g_scanner_peek_next_token(gScanner) == G_TOKEN_IDENTIFIER
+   && !strcmp(gScanner->next_value.v_identifier, "line"))
+    getNextToken(); /* skip the line part. */
 
   if(matchNext(G_TOKEN_INT))
     parsePreprocLineInfo();

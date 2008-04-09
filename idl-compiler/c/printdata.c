@@ -31,14 +31,21 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <io.h>
+#ifdef HAVE_IO_H
+# include <io.h>
+#endif
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 #include <fcntl.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 
 #include <glib/gprintf.h>
 

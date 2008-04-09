@@ -32,10 +32,12 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#define INCL_DOS
-#define INCL_DOSERRORS
+#ifdef __OS2__
+# define INCL_DOS
+# define INCL_DOSERRORS
+# include <os2.h>
+#endif /* __OS2__ */
 
-#include <os2.h>
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
@@ -66,14 +68,14 @@ extern PNOM_ENV pGlobalNomEnv;
   RET
 */
 
-static ULONG thunk[]={0x0424448b, 0x00000405, 0x0000c300};
+static gulong thunk[]={0x0424448b, 0x00000405, 0x0000c300};
 
 /*
 MOV ECX,DWORD PTR [ESP+4] : move object pointer from stack in ECX
 MOV EDX,DWORD PTR [ECX]   : move [ECX] in EDX -> mtab in EDX
 JMP DWORD PTR [EDX+0ACh]  : JMP to address pointing to by EDX+0ACh
  */
-static ULONG mThunkCode[]={0x04244c8b, 0xff00518b, 0x0000aca2 , 0x16000000};
+static gulong mThunkCode[]={0x04244c8b, 0xff00518b, 0x0000aca2 , 0x16000000};
 
 /********************************************************/
 
@@ -99,7 +101,7 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
 
   gulong mtabSize;
   gulong ulMemSize=0;
-  BYTE * mem;
+  guint8 * mem;
   int a;
 
   /* ulMemsize will be the size of our private class structure NOMClassPriv */
@@ -115,8 +117,8 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
   ulMemSize+=mtabSize; /* Add size of base mtab struct */
   
   /* Alloc private class struct using NOMCalloc. */
-  if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
-    return NULLHANDLE;
+  if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULL)
+    return NULL;
   
 
   /* The size of each instance of this class. A SOM object has a method tab pointer
@@ -137,7 +139,9 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
   /**********************************/
   nClass->mtab->mtabSize=mtabSize;        /* This mtab is the same as the one used in the public NOMClass */
   nClass->mtab->nomClsInfo=(nomClassInfo*)nClass;        /* Hold a pointer to the private data that is this NOMClassPriv */
+#ifndef _MSC_VER
 #warning !!!!! Change this when nomId is a GQuark !!!!!
+#endif
   nClass->mtab->nomClassName=*sci->nomClassId;
   nClass->mtab->ulInstanceSize=sci->ulInstanceDataSize+sizeof(nomMethodTabPtr); /* sizeof(methodTabStruct*) + size of instance data of this class
                                                                                    and all parent classes. This is NOMObject so we have no parents. */
@@ -150,7 +154,7 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
     nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
     if(!nClass->mThunk) {
       NOMFree(nClass);
-      return NULLHANDLE; 
+      return NULL; 
     }
   }
 
@@ -171,10 +175,10 @@ static NOMClassPriv *buildNOMClassPrivStructForNOMObject(nomStaticClassInfo *sci
     memcpy( mem, sci->nomCds, sizeof(NOMClass*)+sci->ulNumStaticMethods*sizeof(nomMethodProc*));
     /* Now finally put the thunking in so the procedures are resolved correctly. */
     for(a=0;a<sci->ulNumStaticMethods;a++) {
-      ULONG ulOffset;
+      gulong ulOffset;
 
       memcpy(&nClass->mThunk[a], mThunkCode, sizeof(mThunkCode));               /* Copy method thunking code template  */
-      ulOffset=(ULONG)((char*)(mem+sizeof(NOMClass*))-(char*)nClass->mtab);     /* Skip priv class data pointer        */
+      ulOffset=(gulong)((char*)(mem+sizeof(NOMClass*))-(char*)nClass->mtab);     /* Skip priv class data pointer        */
       nClass->mThunk[a].thunk[2]=((ulOffset+a*sizeof(nomMethodProc*))<<8)+0xa2; /* Calculate offset for assembler code */
 #ifdef DEBUG_BUILDNOMOBJECT
       nomPrintf(" %d: %d : Thunk offset: %d (0x%x) -> address will be: %x\n",
@@ -201,7 +205,7 @@ NOMClassPriv * NOMLINK priv_buildNOMObjectClassInfo(gulong ulReserved,
                                                     gulong minorVersion)
 {
   NOMClassPriv *nClassPriv; /* This struct holds our private data. A pointer will be in mtab->nomClsInfo */
-  ULONG ulParentDataSize=0;
+  gulong ulParentDataSize=0;
 
 #ifdef DEBUG_BUILDNOMOBJECT
   nomPrintf("%d: Entering %s to build the NOMClassPriv for NOMObjects\n", __LINE__, __FUNCTION__);
@@ -209,8 +213,8 @@ NOMClassPriv * NOMLINK priv_buildNOMObjectClassInfo(gulong ulReserved,
 #endif
 
   /* Note: NOMObject has no parents */
-  if((nClassPriv=buildNOMClassPrivStructForNOMObject(sci))==NULLHANDLE)
-    return NULLHANDLE;
+  if((nClassPriv=buildNOMClassPrivStructForNOMObject(sci))==NULL)
+    return NULL;
 
 #ifdef DEBUG_BUILDNOMOBJECT
   nomPrintf("mtab: %x nClassPriv: %x\n", nClassPriv->mtab, nClassPriv);
@@ -220,7 +224,7 @@ NOMClassPriv * NOMLINK priv_buildNOMObjectClassInfo(gulong ulReserved,
   /* Fill somParentMtabStruct in CClassDataStructure */
   sci->ccds->parentMtab->mtab=nClassPriv->mtab;         /* This class mtab                               */
   sci->ccds->parentMtab->next=NULL;                     /* We dont have parents because we are NOMObject */
-  sci->ccds->parentMtab->nomClassObject=NULLHANDLE;     /* NOMClass* Class object. We don't have one yet */
+  sci->ccds->parentMtab->nomClassObject=NULL;     /* NOMClass* Class object. We don't have one yet */
   sci->ccds->parentMtab->ulInstanceSize=nClassPriv->mtab->ulInstanceSize;
   /* C Class data structure */
 
@@ -266,8 +270,8 @@ NOMClassPriv * NOMLINK priv_buildNOMObjectClassInfo(gulong ulReserved,
   */
 
   /* Run initialization code if any */
-  _nomInit((NOMObject*)nClassPriv, NULLHANDLE);
-  return NULLHANDLE;
+  _nomInit((NOMObject*)nClassPriv, NULL);
+  return NULL;
 }
 
 

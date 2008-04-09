@@ -40,10 +40,13 @@
 #define NOM_NOMObject_IMPLEMENTATION_FILE
 #endif
 
-#define INCL_DOS
-#include <os2.h>
+#ifdef __OS2__
+# define INCL_DOS
+# include <os2.h>
+#endif /* __OS2__ */
+
 #include <string.h>
-#include <gtk/gtk.h>
+/* #include <gtk/gtk.h> - why? */
 
 #include "nom.h"
 #include "nomtk.h"
@@ -109,7 +112,7 @@ NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environme
   }
 
   /* Give object the chance to free resources */
-  _nomUnInit(nomSelf, NULLHANDLE);
+  _nomUnInit(nomSelf, NULL);
 
   /* And now delete the object */
   /*
@@ -154,8 +157,8 @@ NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Enviro
      <CkassName>New() here.
      It is possible that we are called by a subclass. So get the class object and let the
      class object create the correct class. */
-  nomCls=NOMObject_nomGetClass(nomSelf, NULLHANDLE);
-  return NOMClass_nomNew(nomCls, NULLHANDLE);
+  nomCls=NOMObject_nomGetClass(nomSelf, NULL);
+  return NOMClass_nomNew(nomCls, NULL);
 }
 
 
@@ -202,7 +205,7 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsInstanceOf(NOMObject* nomSel
     return FALSE;
   }
  
-  if(nomClass==_nomGetClass(nomSelf, NULLHANDLE))
+  if(nomClass==_nomGetClass(nomSelf, NULL))
     return TRUE;
   
   return FALSE;

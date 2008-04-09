@@ -134,7 +134,7 @@
 # define GC_DLL
 #endif
 
-#if defined(__MINGW32__) && defined(GC_DLL)
+#if (defined(__MINGW32__) || defined(__KLIBC__)) && defined(GC_DLL)
 # ifdef GC_BUILD
 #   define GC_API __declspec(dllexport)
 # else

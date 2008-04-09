@@ -32,10 +32,12 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#define INCL_DOS
-#define INCL_DOSERRORS
-#define INCL_DOSMEMMGR
-#include <os2.h>
+#ifdef __OS2__
+# define INCL_DOS
+# define INCL_DOSERRORS
+# define INCL_DOSMEMMGR
+# include <os2.h>
+#endif /* __OS2__ */
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -58,7 +60,7 @@
 /********************************************************/
 PNOM_ENV pGlobalNomEnv;
 /* Global class manager object */
-NOMClassMgr* NOMClassMgrObject=NULLHANDLE; /* Referenced from different files */
+NOMClassMgr* NOMClassMgrObject=NULL; /* Referenced from different files */
 
 gboolean fInitialized=FALSE;
 
@@ -79,7 +81,7 @@ gboolean fInitialized=FALSE;
 NOMEXTERN gboolean NOMLINK nomIsObj(gpointer nomObj)
 {
   if(NOMClassMgrObject)
-    return NOMClassMgr_nomIsObject(NOMClassMgrObject, (PNOMObject)nomObj, NULLHANDLE);
+    return NOMClassMgr_nomIsObject(NOMClassMgrObject, (PNOMObject)nomObj, NULL);
 
   if(!nomObj)
     return FALSE;
@@ -103,7 +105,7 @@ NOMEXTERN int NOMLINK nomPrintf(string chrFormat, ...)
 
 NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void)
 {
-  PVOID memPtr;
+  void *memPtr;
 
   if(pGlobalNomEnv)
     return pGlobalNomEnv; /* Already done */
@@ -169,13 +171,13 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
 #endif
 
   /* Now register the classes we already have */
-  _nomClassReady(pGlobalNomEnv->defaultMetaClass, NULLHANDLE); //NOMClass
-  _nomClassReady(  _NOMClassMgr, NULLHANDLE); //NOMClassMgr
+  _nomClassReady(pGlobalNomEnv->defaultMetaClass, NULL); //NOMClass
+  _nomClassReady(  _NOMClassMgr, NULL); //NOMClassMgr
   ncPriv=(NOMClassPriv*)pGlobalNomEnv->nomObjectMetaClass->mtab->nomClsInfo;
 
   /* Do not register the NOMObject metaclass here. It's already registered because it's 
      NOMClass in fact. */
-  _nomClassReady(_NOMObject, NULLHANDLE); //NOMObject
+  _nomClassReady(_NOMObject, NULL); //NOMObject
 
 
 #if 0
@@ -185,19 +187,19 @@ NOMEXTERN NOMClassMgr * NOMLINK nomEnvironmentNew (void)
   nomPrintf("NOMTest2 object: %x\n", nomTst2Obj);
 
   nomPrintf("\nCalling _nomTestFunc_NOMTest2() 1\n", nomTst2Obj);
-  _nomTestFunc_NOMTest2(nomTst2Obj, NULLHANDLE);
+  _nomTestFunc_NOMTest2(nomTst2Obj, NULL);
   nomPrintf("\nCalling _nomTestFuncString_NOMTest2() 1\n", nomTst2Obj);
-  nomPrintf("--> %s\n",_nomTestFuncString_NOMTest2(nomTst2Obj, NULLHANDLE));
+  nomPrintf("--> %s\n",_nomTestFuncString_NOMTest2(nomTst2Obj, NULL));
   nomPrintf("\nCalling _nomTestFunc_NOMTest2() 2\n", nomTst2Obj);
-  _nomTestFunc_NOMTest2(nomTst2Obj, NULLHANDLE);
+  _nomTestFunc_NOMTest2(nomTst2Obj, NULL);
 
   nomPrintf("\nCalling _nomTestFunc() with NOMTest2 object: %x\n", nomTst2Obj);
-  _nomTestFunc(nomTst2Obj, NULLHANDLE);
+  _nomTestFunc(nomTst2Obj, NULL);
   nomPrintf("\nCalling _nomTestFuncString() with NOMTest2: %x\n", nomTst2Obj);
-  nomPrintf("--> %s\n",_nomTestFuncString(nomTst2Obj, NULLHANDLE));
+  nomPrintf("--> %s\n",_nomTestFuncString(nomTst2Obj, NULL));
   nomPrintf("\n");
-  _nomTestFunc(nomTst2Obj, NULLHANDLE);
-  _nomTestFunc_NOMTest2(nomTst2Obj, NULLHANDLE);
+  _nomTestFunc(nomTst2Obj, NULL);
+  _nomTestFunc_NOMTest2(nomTst2Obj, NULL);
 #endif
   /* This must be done last! */
   //  NOMClassMgrObject=NOMClassMgrObject_priv;

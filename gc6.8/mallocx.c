@@ -597,6 +597,9 @@ DCL_LOCK_STATE;
 /* Debug version is tricky and currently missing.	*/
 #include <limits.h>
 
+#ifdef __OS2__ /* required for linking the testcase */
+GC_API
+#endif 
 GC_PTR GC_memalign(size_t align, size_t lb) 
 { 
     size_t new_lb;

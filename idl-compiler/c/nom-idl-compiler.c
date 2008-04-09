@@ -31,21 +31,28 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-#define INCL_DOSPROCESS
-#define INCL_DOS
-#define INCL_DOSPROFILE
-#define INCL_DOSERRORS
+#ifdef __OS2__
+# define INCL_DOSPROCESS
+# define INCL_DOS
+# define INCL_DOSPROFILE
+# define INCL_DOSERRORS
+# include <os2.h>
+#endif /* __OS2__ */
 
-#include <os2.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <io.h>
+#ifdef HAVE_IO_H
+# include <io.h>
+#endif
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 #include <fcntl.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 
-#include <glib.h> 
+#include <glib.h>
 #include <glib/gprintf.h>
 
 #include "nom.h"
@@ -59,7 +66,7 @@ static gboolean fOptionEmitIH=FALSE;
 static gboolean fOptionEmitC=FALSE;
 
 /* Command line options */
-static GOptionEntry gOptionEntries[] = 
+static GOptionEntry gOptionEntries[] =
 {
   {"directory", 'd', 0, G_OPTION_ARG_FILENAME, &chrOutputDir, "Output directory", NULL},
   {"emit-h", 0, 0, G_OPTION_ARG_NONE, &fOptionEmitH, "Emmit a header file (*.h)", NULL},
@@ -360,7 +367,7 @@ static void parseNative(void)
 /**
    This is the root parse function. Here starts the fun. When a token is found in the
    input stream which matches one of the known token types the respective parsing function
-   is called for further processing. In case of an error the parsing function in question 
+   is called for further processing. In case of an error the parsing function in question
    prints an error which describes the problem and exits the application.
 
    This function scans the input until EOF is hit.
@@ -369,11 +376,12 @@ void parseIt(void)
 {
   while(g_scanner_peek_next_token(gScanner) != G_TOKEN_EOF) {
     GTokenType token;
+    GTokenValue value;
 
     g_scanner_get_next_token(gScanner);
     token=gScanner->token;
-    GTokenValue value=gScanner->value;
-    
+    value=gScanner->value;
+
     switch(token)
       {
       case '#':
@@ -467,7 +475,7 @@ static void outputCompilerHelp(GOptionContext *gContext, gchar* chrExeName)
 Note that an emitter specific extension will always be appended to the output\n\
 filename\n\n");
 
-  /* This prints the standard option help to screen. */  
+  /* This prints the standard option help to screen. */
   g_option_context_parse (gContext, &argc2, &argv2, &gError);
 }
 
@@ -493,7 +501,8 @@ static gint funcSymbolCompare(gconstpointer a, gconstpointer b)
  */
 void funcMsgHandler(GScanner *gScanner, gchar *message, gboolean error)
 {
-  g_printf("%s:%d: error: %s (%d %d)\n", parseInfo.chrCurrentSourceFile,
+  g_printf("%s:%d: error: %s (%d %d)\n",
+           parseInfo.chrCurrentSourceFile ? parseInfo.chrCurrentSourceFile : "<null>", /* glib doesn't check for NULL like printf. */
            g_scanner_cur_line(gScanner)-parseInfo.uiLineCorrection, message,
            g_scanner_cur_line(gScanner), parseInfo.uiLineCorrection);
 }
@@ -553,7 +562,7 @@ int main(int argc, char **argv)
       g_message("arg %d: %s", a, argv[a]);
     }
 #endif
-  
+
   /*** Create output path name ****/
   if(g_path_is_absolute(chrOutputDir))
     chrOutputFileName=chrOutputDir;
@@ -571,7 +580,7 @@ int main(int argc, char **argv)
     fd=0; /* Read from stdin */
   else
     fd=open(argv[1], O_RDONLY);
-  
+
   if(-1==fd)
     {
       g_message("Can't open input file %s", argv[1]);
@@ -599,7 +608,9 @@ int main(int argc, char **argv)
   parseInfo.pSymbolTree=g_tree_new((GCompareFunc) funcSymbolCompare);
   while(pSymbols->chrSymbolName)
     {
-#warning !!! Create a copy here so it is the same as with new symbols added later.
+#ifndef _MSC_VER
+# warning !!! Create a copy here so it is the same as with new symbols added later.
+#endif
       g_scanner_scope_add_symbol(gScanner, ID_SCOPE, pSymbols->chrSymbolName,
                                  pSymbols);
       g_tree_insert(parseInfo.pSymbolTree, pSymbols, pSymbols->chrSymbolName);

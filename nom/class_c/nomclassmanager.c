@@ -43,10 +43,15 @@
 #define NOM_NOMClassMgr_IMPLEMENTATION_FILE
 #endif
 
-#define INCL_DOS
-#include <os2.h>
+#ifdef __OS2__
+# define INCL_DOS
+# include <os2.h>
+#endif /* __OS2__ */
+
 #include <string.h>
-#include <gtk/gtk.h>
+#ifdef NOM_WITH_GTK
+# include <gtk/gtk.h>
+#endif
 
 
 #include "nom.h"
@@ -84,13 +89,13 @@ NOM_Scope NOMClass* NOMLINK impl_NOMClassMgr_nomFindClassFromName(NOMClassMgr* n
                                                                   const CORBA_long ulMinorVersion,
                                                                   CORBA_Environment *ev)
 {
-  CORBA_Object nomRetval=NULLHANDLE;
+  CORBA_Object nomRetval=NULL;
   nomMethodTab * mtab;
   NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf);
 
   /* This is only for NOMClass objects */
   if(strchr(className, ':'))
-    return NULLHANDLE;
+    return NULL;
 
   mtab=g_datalist_get_data(&_gdataClassList, className);
 
@@ -163,13 +168,13 @@ NOM_Scope gpointer NOMLINK impl_NOMClassMgr_nomGetClassInfoPtrFromName(NOMClassM
 
   /* This is only for NOMClassPriv objects */
   if(strchr(className, ':'))
-    return NULLHANDLE;
+    return NULL;
 
   mtab=g_datalist_get_data(&_gdataClassList, className);
   if(mtab)
     return mtab->nomClsInfo;
   else
-    return NULLHANDLE;
+    return NULL;
 }
 
 
@@ -213,10 +218,10 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomIsObject(NOMClassMgr* nomSel
 {
   NOMClassMgrData* nomThis=NOMClassMgrGetData(nomSelf);
 
-  if(NULLHANDLE==nomObject)
+  if(NULL==nomObject)
     return FALSE;
 
-  return (g_tree_lookup(_pClassListTree, nomObject->mtab)!= NULLHANDLE); 
+  return (g_tree_lookup(_pClassListTree, nomObject->mtab)!= NULL); 
 }
 
 /**
@@ -233,14 +238,14 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMClassMgr_nomSubstituteClass(NOMClassMgr*
   NOMClassPriv* ncp;
 
   /* This returns a meta class */
-  if((oClass=_nomFindClassFromName( nomSelf, oldClass, 0, 0, NULLHANDLE))==NULLHANDLE)
+  if((oClass=_nomFindClassFromName( nomSelf, oldClass, 0, 0, NULL))==NULL)
     return FALSE;
 
-  if((rClass=_nomFindClassFromName( nomSelf, replacementClass, 0, 0, NULLHANDLE))==NULLHANDLE)
+  if((rClass=_nomFindClassFromName( nomSelf, replacementClass, 0, 0, NULL))==NULL)
     return FALSE;
 
   /* Check if the class is a direct child */
-  ncp=(NOMClassPriv*)_nomGetObjectCreateInfo(rClass, NULLHANDLE);
+  ncp=(NOMClassPriv*)_nomGetObjectCreateInfo(rClass, NULL);
   
   if(strcmp(ncp->parentMtabStruct.next->mtab->nomClassName, oldClass))
     return FALSE;
@@ -268,7 +273,7 @@ NOM_Scope CORBA_string NOMLINK impl_NOMClassMgr_nomQueryDLLForClass(NOMClassMgr*
   if(!chrClassName)
     return NULL;
 
-  if((thePath=NOMPathNew())==NULLHANDLE)
+  if((thePath=NOMPathNew())==NULL)
     return NULL;
 
   /* We probably use the home dir later */

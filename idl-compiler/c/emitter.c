@@ -31,12 +31,15 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-#include <os2.h>
+#ifdef __OS2__
+# include <os2.h>
+#endif /* __OS2__ */
+
 #include <stdlib.h>
 #include <string.h>
 
-#include <glib.h> 
-#include <glib/gprintf.h> 
+#include <glib.h>
+#include <glib/gprintf.h>
 
 #define INCL_FILE
 #include "parser.h"
@@ -85,7 +88,7 @@ void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
         }
       for(b=0;b<pm->uiStar;b++)
         fprintf(fh, "*");
-      fprintf(fh, " %s,\n", pm->chrName);      
+      fprintf(fh, " %s,\n", pm->chrName);
     }
 }
 
@@ -100,7 +103,7 @@ void emitMethodParamsNoTypes(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pAr
   for(a=0;a<pArray->len;a++)
     {
       PMETHODPARAM pm=(PMETHODPARAM)g_ptr_array_index(pArray, a);
-      fprintf(fh, " %s,", pm->chrName);      
+      fprintf(fh, " %s,", pm->chrName);
     }
 }
 
