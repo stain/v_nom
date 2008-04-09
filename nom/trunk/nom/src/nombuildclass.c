@@ -35,14 +35,19 @@
     This File contains most of the magic to create classes for NOM.
  */
 
-#define INCL_DOS
-#define INCL_DOSERRORS
+#ifdef __OS2__
+# define INCL_DOS
+# define INCL_DOSERRORS
+# include <os2.h>
+#endif /* __OS2__ */
 
-#include <os2.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <alloca.h>
+#include <stdlib.h>
+#if !defined(_MSC_VER)
+# include <alloca.h>
+#endif
 #include <glib.h>
 #define SOM_NO_OBJECTS  /* Otherwise som.h includes the IBM SOM classes */
 
@@ -68,12 +73,19 @@
     #define BUILDNOMCLASS_LEAVE
 #endif
 
-#ifdef DEBUG_NOMBUILDCLASS
-#define DBG_BUILD_LINE(a)
-#define DBG_NOMBUILDCLASS(a, b,...)   if(a) nomPrintf("%d: " b , __LINE__,  __VA_ARGS__);
+#ifdef _MSC_VER
+void _inline DBG_NOMBUILDCLASS(gboolean a, const char fmt, ...)
+{
+    /* sorry nothing here. */
+}
 #else
-#define DBG_NOMBUILDCLASS(a, b,...)
-#endif
+# ifdef DEBUG_NOMBUILDCLASS
+#  define DBG_BUILD_LINE(a)
+#  define DBG_NOMBUILDCLASS(a, b,...)   if(a) nomPrintf("%d: " b , __LINE__,  __VA_ARGS__);
+# else
+#  define DBG_NOMBUILDCLASS(a, b,...)
+# endif
+#endif 
 
 #define DBGBUILDNOMCLASS_ENTER BUILDNOMCLASS_ENTER
 #define DBGBUILDNOMCLASS_LEAVE BUILDNOMCLASS_LEAVE
@@ -94,14 +106,14 @@ extern PNOM_ENV pGlobalNomEnv;
   RET
 */
 
-static ULONG thunk[]={0x0424448b, 0x00000405, 0x0000c300};
+static gulong thunk[]={0x0424448b, 0x00000405, 0x0000c300};
 
 /*
 MOV ECX,DWORD PTR [ESP+4] : move object pointer from stack in ECX
 MOV EDX,DWORD PTR [ECX]   : move [ECX] in EDX -> mtab in EDX
 JMP DWORD PTR [EDX+0ACh]  : JMP to address pointing to by EDX+0ACh
  */
-static ULONG mThunkCode[]={0x04244c8b, 0xff00518b, 0x0000aca2 , 0x16000000};
+static gulong mThunkCode[]={0x04244c8b, 0xff00518b, 0x0000aca2 , 0x16000000};
 
 
 /***********************************************************************************/
@@ -115,7 +127,7 @@ static ULONG mThunkCode[]={0x04244c8b, 0xff00518b, 0x0000aca2 , 0x16000000};
 
  */
 
-static BOOL priv_nomIsA(NOMObject *nomSelf, NOMClass* aClassObj)
+static gboolean priv_nomIsA(NOMObject *nomSelf, NOMClass* aClassObj)
 {
   nomParentMtabStructPtr pParentMtab=&((NOMClassPriv * )nomSelf)->parentMtabStruct;
   nomMethodTabs psmTab;
@@ -194,7 +206,7 @@ gulong priv_getIndexOfMethodInEntries(NOMClassPriv* nClass, nomStaticClassInfo *
             g_error("%s line %d: No overriding for base classes yet (%s)!\n",
                     __FUNCTION__, __LINE__, gstr->str);
           idx++; /* This is the position for the class pointer */
-          ncPriv=_nomGetClassInfoPtrFromName(NOMClassMgrObject, sci->chrParentClassNames[a], NULLHANDLE);
+          ncPriv=_nomGetClassInfoPtrFromName(NOMClassMgrObject, sci->chrParentClassNames[a], NULL);
           /* now find the index */
           ulNumMethods=nomGetNumIntroducedMethods(ncPriv);
           for(b=0;b<ulNumMethods;b++)
@@ -244,7 +256,7 @@ gulong priv_getIndexOfMethodInEntries(NOMClassPriv* nClass, nomStaticClassInfo *
               }/* for(aLoop) */
           }
           else{
-            ncPriv=_nomGetClassInfoPtrFromName(NOMClassMgrObject, sci->chrParentClassNames[a], NULLHANDLE);
+            ncPriv=_nomGetClassInfoPtrFromName(NOMClassMgrObject, sci->chrParentClassNames[a], NULL);
             //nomPrintf("   %s did not introduce the method. Adding %d to index\n",
             //        sci->chrParentClassNames[a], nomGetNumIntroducedMethods(ncPriv)+1);
             idx+=nomGetNumIntroducedMethods(ncPriv)+1; /* classObject pointer */
@@ -274,7 +286,7 @@ void priv_resolveOverrideMethods(NOMClassPriv *nClass, nomStaticClassInfo *sci)
     /* There're some methods to override */
     for(b=0;b<sci->ulNumStaticOverrides;b++) {/* For every overriden method do */
       nomMethodProc** entries;
-      ULONG index;
+      gulong index;
 
       entries=&nClass->mtab->entries[0];  /* Adress of array where we enter our resoved method */
 
@@ -332,7 +344,7 @@ void fillCClassDataStructParentMtab(nomStaticClassInfo *sci, NOMClassPriv *nClas
  */
 boolean addMethodAndDataToThisPrivClassStruct(NOMClassPriv* nClass, NOMClassPriv* ncpParent, nomStaticClassInfo *sci) 
 {
-  BYTE * mem;
+  guint8 * mem;
   int a;
 
 BUILDNOMCLASS_ENTER
@@ -388,11 +400,11 @@ BUILDNOMCLASS_ENTER
 
     /* Now finally put the thunking in so the procedures are resolved correctly. */
     for(a=0;a<sci->ulNumStaticMethods;a++) {
-      ULONG ulOffset;
+      gulong ulOffset;
 
       memcpy(&nClass->mThunk[a], mThunkCode, sizeof(mThunkCode)); /* Copy thunking code */
 
-      ulOffset=(ULONG)((char*)(mem+sizeof(NOMClass*))-(char*)nClass->mtab); /* Skip class object pointer */
+      ulOffset=(gulong)((char*)(mem+sizeof(NOMClass*))-(char*)nClass->mtab); /* Skip class object pointer */
       nClass->mThunk[a].thunk[2]=((ulOffset+a*sizeof(nomMethodProc*))<<8)+0xa2;
       /* Put thunking code address into CClassStruct */
        sci->nomCds->nomTokens[a]=(void*)&nClass->mThunk[a];
@@ -430,7 +442,7 @@ static NOMClassPriv* priv_getClassFromName(gchar* chrClassName)
   else
     {
       ncpParent=_nomGetClassInfoPtrFromName(NOMClassMgrObject, chrClassName,
-                                  NULLHANDLE);
+                                  NULL);
     }
 
   return ncpParent;
@@ -494,15 +506,15 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
                                                         long minorVersion,
                                                         NOMClass* nomClass)
 {
-  ULONG ulParentDataSize=0;
-  ULONG mtabSize;
-  ULONG ulMemSize=0;
+  gulong ulParentDataSize=0;
+  gulong mtabSize;
+  gulong ulMemSize=0;
   NOMClassPriv  *nClass, *ncpParent;
 
   DBGBUILDNOMCLASS_ENTER
 
   if(!nomClass||!sci)
-    return NULLHANDLE;
+    return NULL;
 
   /* The addresse of static methods in sci are already resolved. See nomBuildClass() */
 
@@ -511,13 +523,13 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
     ncpParent=priv_getClassFromName(sci->chrParentClassNames[sci->ulNumParentsInChain]);
   }/* nomIdAllParents */
   else
-    ncpParent = NULLHANDLE;
+    ncpParent = NULL;
 
   if(!ncpParent) {
     g_warning("We are supposed to create a NOMClassPriv but there's no parent!\n");
     /* FIXME:       
        Maybe we should panic here.  */
-    return NULLHANDLE; /* Only NOMObject has no parent, so we have a problem here. */
+    return NULL; /* Only NOMObject has no parent, so we have a problem here. */
   }
 
   /* Calculate size of new class object */
@@ -539,8 +551,8 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
                     , __FUNCTION__, mtabSize, ulParentDataSize);
 
   /* Alloc private class struct using NOMCalloc. */
-  if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
-    return NULLHANDLE;
+  if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULL)
+    return NULL;
 #if 0
   //Moved to addMethodAndDataToThisPrivClassStruct()
   /* Get mem for method thunking code */
@@ -548,7 +560,7 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
     nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
     if(!nClass->mThunk) {
       NOMFree(nClass);
-      return NULLHANDLE;
+      return NULL;
     }
   }
 #endif
@@ -560,7 +572,7 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
   */
   if(!addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci)){
     NOMFree(nClass);
-    return NULLHANDLE;
+    return NULL;
   };
   
   DBG_NOMBUILDCLASS(TRUE, "%s:  mtab: %x\n", __FUNCTION__, nClass->mtab);
@@ -579,7 +591,9 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
   nClass->mtab->mtabSize=mtabSize;
   nClass->mtab->nomClassObject=nomClass; /* Class object (metaclass). We build a normal class here. */
   nClass->mtab->nomClsInfo=(nomClassInfo*)nClass;
+#ifndef _MSC_VER
 #warning !!!!! Change this when nomId is a GQuark !!!!!
+#endif
   nClass->mtab->nomClassName=*sci->nomClassId;
   nClass->mtab->ulInstanceSize=sci->ulInstanceDataSize+ulParentDataSize; /* Size of instance data of this class and all
                                                                             parent classes. This isn't actually allocated for this class
@@ -588,7 +602,7 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
 
   DBG_NOMBUILDCLASS(TRUE, "New NOMClassPriv*: %x\n", nClass);
 
-  _nomSetObjectCreateInfo(nomClass, nClass, NULLHANDLE);
+  _nomSetObjectCreateInfo(nomClass, nClass, NULL);
 
   /* Mark the class as using nomUnInit() if any parent did that. We just have to
      check the flag and the flag of the parent class. This information is important
@@ -609,28 +623,32 @@ NOMClass * NOMLINK priv_buildWithExplicitMetaClass(glong ulReserved,
   NOMClass *nomClass, *nomClassMeta;
   
   if(NULL==NOMClassMgrObject)
-    return NULLHANDLE;
+    return NULL;
 
   /* Search for meta class. */
+#ifndef _MSC_VER
 #warning !!!!! Change this when nomID is a GQuark !!!!!
-  nomClassMeta=_nomFindClassFromName(NOMClassMgrObject, *sci->nomExplicitMetaId, majorVersion, minorVersion, NULLHANDLE);
+#endif
+  nomClassMeta=_nomFindClassFromName(NOMClassMgrObject, *sci->nomExplicitMetaId, majorVersion, minorVersion, NULL);
 
     DBG_NOMBUILDCLASS(TRUE, "%x %s %s\n", nomClassMeta, *sci->nomClassId, *sci->nomExplicitMetaId);
 
   if(!nomClassMeta)
-    return NULLHANDLE;
+    return NULL;
 
   /* Create a new class object. We create a copy here because we may change the mtab entries
      through overriding or two classes may use the same meta class but have different
      sizes, methods etc. I wonder how IBM SOM manages to use the same metaclass
      for different classes without (apparently) copying it for different uses... */
-  if((nomClass=(NOMClass*)NOMCalloc(1, _nomGetSize(nomClassMeta, NULLHANDLE)))==NULLHANDLE)
-    return NULLHANDLE;
+  if((nomClass=(NOMClass*)NOMCalloc(1, _nomGetSize(nomClassMeta, NULL)))==NULL)
+    return NULL;
 
   /* Maybe we should just copy the whole struct here? */
   nomClass->mtab=nomClassMeta->mtab;
+#ifndef _MSC_VER
 #warning !!!!! No call of _nomSetInstanceSize  !!!!!
 #warning !!!!! No call of _nomSetObjectsSCI   !!!!!
+#endif
 #if 0
   /* Set object data */
   _nomSetInstanceSize(nomClass, _nomGetSize(nomClassMeta));
@@ -677,7 +695,7 @@ NOMClass * NOMLINK priv_findExplicitMetaClassFromParents(nomStaticClassInfo *sci
   for(a=sci->ulNumParentsInChain-1;a>=0; a--)
     {
       NOMObject *nObject;
-      nObject=_nomFindClassFromName(NOMClassMgrObject, sci->chrParentClassNames[a], 0, 0, NULLHANDLE);
+      nObject=_nomFindClassFromName(NOMClassMgrObject, sci->chrParentClassNames[a], 0, 0, NULL);
 
       DBG_NOMBUILDCLASS( TRUE , "   Parent %d: %s, class object: %x\n" ,
                          a, sci->chrParentClassNames[a], nObject);
@@ -709,7 +727,9 @@ NOMClass * NOMLINK priv_buildWithNOMClassChildAsMeta(gulong ulReserved,
   NOMClassPriv *nClass;
 
 #ifdef DEBUG_NOMBUILDCLASS
+# ifndef _MSC_VER
 #warning !!!!! Change this when nomId is a GQuark !!!!!
+# endif
   nomPrintf("\n%d: Entering %s to build %s\n", __LINE__, __FUNCTION__, *sci->nomClassId);
 #endif
 
@@ -721,20 +741,22 @@ NOMClass * NOMLINK priv_buildWithNOMClassChildAsMeta(gulong ulReserved,
   //nomClassDefault=pGlobalNomEnv->defaultMetaClass; // this gives a NOMClass* not a NOMClassPriv*
 
   if(!nomClassDefault)
-    return NULLHANDLE;
+    return NULL;
 
   /* Found NOMClass object */
 
-  //nomPrintf("_nomGetSize(): %d\n", _nomGetSize(nomClassParent, NULLHANDLE));
+  //nomPrintf("_nomGetSize(): %d\n", _nomGetSize(nomClassParent, NULL));
 
   /* Create an object */
-  if((nomClass=(NOMClass*)NOMCalloc(1, _nomGetSize(nomClassDefault, NULLHANDLE)))==NULLHANDLE)
-    return NULLHANDLE;
+  if((nomClass=(NOMClass*)NOMCalloc(1, _nomGetSize(nomClassDefault, NULL)))==NULL)
+    return NULL;
 
   nomClass->mtab=nomClassDefault->mtab;
 
+#ifndef _MSC_VER
 #warning !!!!! _nomSetInstanceSize() not called here !!!!!
 #warning !!!!! _nomSetObjectsSCI() not called here !!!!!
+#endif
 #if 0
   /* Set object data */
   _nomSetInstanceSize(somClass, _nomGetSize(nomClassDefault));
@@ -782,20 +804,22 @@ NOMClass*  createNOMObjectClassObjectAndUpdateNOMObject(NOMClass* nomClass, NOMC
   ncp= pGlobalNomEnv->ncpNOMObject;  
 
   /* Allocate a class object for NOMObject for creating NOMObject instances. */
-  if((nomObjClass=(NOMClass*)NOMCalloc(1, ulSize))==NULLHANDLE) {
+  if((nomObjClass=(NOMClass*)NOMCalloc(1, ulSize))==NULL) {
     /* We panic here for the simple reason that without a working NOMObject the whole object system
        will not work. */
     g_error("No memory for building the class object _NOMObject for NOMObject.");
-    return NULLHANDLE;
+    return NULL;
   }
 
   nomObjClass->mtab=nomClass->mtab;         /* Now it's an object */
 
-  _nomSetObjectCreateInfo(nomObjClass, pGlobalNomEnv->ncpNOMObject, NULLHANDLE); /* This NOMClassPriv holds all info to build 
+  _nomSetObjectCreateInfo(nomObjClass, pGlobalNomEnv->ncpNOMObject, NULL); /* This NOMClassPriv holds all info to build 
                                                                                     instances of NOMObject (not that anybody
                                                                                     should do that but... */
+#ifndef _MSC_VER
 #warning !!!!!!!!!!!!! _somSetObjectsSCI() not called!!!!!!!!!!!!!!!!
 #warning !!!!!!!!!!!!! _somSetClassData() not called!!!!!!!!!!!!!!!!
+#endif
 #if 0
   _somSetObjectsSCI(nomObjClass, ncp->sci);
   _somSetClassData(somObjClass, scp->sci->cds);
@@ -827,9 +851,9 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   NOMClass *nomClass;
   NOMClassPriv *nClass;
   NOMClassPriv *ncpParent;
-  ULONG ulParentDataSize=0;
-  ULONG mtabSize;
-  ULONG ulMemSize=0;
+  gulong ulParentDataSize=0;
+  gulong mtabSize;
+  gulong ulMemSize=0;
   int a;
 
 #ifdef DEBUG_NOMBUILDCLASS
@@ -855,11 +879,11 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   */
 
   if(!strcmp(*sci->nomClassId, "NOMObject")){
-    if(pGlobalNomEnv->ncpNOMObject!=NULLHANDLE){
+    if(pGlobalNomEnv->ncpNOMObject!=NULL){
       DBG_NOMBUILDCLASS(TRUE, "Class %s already built. returning 0x%x\n",
                         *sci->nomClassId, sci->nomCds->nomClassObject);
       /* FIXME: this seems to be broken!! */
-      return NULLHANDLE; /* NOMObject already built */
+      return NULL; /* NOMObject already built */
     }
   }
 
@@ -870,7 +894,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
   if(sci->ulNumStaticMethods!=0 && !sci->nomSMethods){
     nomPrintf("  !!! %s line %d: sci->nomSMethods is NULL for %s !!!\n", __FUNCTION__, __LINE__, *sci->nomClassId);
-    return NULLHANDLE;
+    return NULL;
   }
   /* Fill static classdata with the info from nomStaticMethodDesc array. This means
      putting the method adresses into the classdata struct.
@@ -902,7 +926,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 
     priv_buildNOMObjectClassInfo(ulReserved, sci, /* yes */
                                  ulMajorVersion, ulMinorVersion);
-    return NULLHANDLE; /* We can't return a NOMClass for NOMObject because NOMClass isn't built yet. */
+    return NULL; /* We can't return a NOMClass for NOMObject because NOMClass isn't built yet. */
   }
 
   /* Do we want to build NOMClass? */
@@ -913,7 +937,9 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   /* Get parent class */
   if(sci->nomIdAllParents) {
 #ifdef DEBUG_NOMBUILDCLASS
+# ifndef _MSC_VER
 #warning !!!!! Change this when nomId is a GQuark !!!!!
+# endif
     nomPrintf("%d: About to search parent %s...\n", __LINE__, **(sci->nomIdAllParents));
 #endif
 
@@ -926,13 +952,13 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
                                                                                         from NOMClass */
 #endif
     if(!ncpParent)
-      return NULLHANDLE; /* Every class except NOMObject must have a parent!! */
+      return NULL; /* Every class except NOMObject must have a parent!! */
   }/* nomIdAllParents */
   else
-    return NULLHANDLE; /* Every class except NOMObject must have a parent!! */
+    return NULL; /* Every class except NOMObject must have a parent!! */
 
   if(!ncpParent)
-    return NULLHANDLE; /* Every class except NOMObject must have a parent!! */
+    return NULL; /* Every class except NOMObject must have a parent!! */
 
 #ifdef DEBUG_NOMBUILDCLASS
   /* Do some debugging here... */
@@ -1028,8 +1054,8 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
                     *sci->nomClassId, mtabSize, ulParentDataSize);
 
   /* Alloc class struct using NOMCalloc. */
-  if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULLHANDLE)
-    return NULLHANDLE;
+  if((nClass=(NOMClassPriv*)NOMCalloc(1, ulMemSize))==NULL)
+    return NULL;
 
 #if 0
   //Moved to addMethodAndDataToThisPrivClassStruct()
@@ -1038,17 +1064,17 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
     nClass->mThunk=NOMMalloc(sizeof(nomMethodThunk)*sci->ulNumStaticMethods);
     if(!nClass->mThunk) {
       NOMFree(nClass);
-      return NULLHANDLE;
+      return NULL;
     }
   }
 #endif
 
   nClass->ulClassSize=sci->ulInstanceDataSize+ulParentDataSize;
 
-  if((nomClass=(NOMClass*)NOMCalloc(1, sci->ulInstanceDataSize+ulParentDataSize))==NULLHANDLE) {
+  if((nomClass=(NOMClass*)NOMCalloc(1, sci->ulInstanceDataSize+ulParentDataSize))==NULL) {
     //NOMFree(nClass->mThunk);
     NOMFree(nClass);
-    return NULLHANDLE;
+    return NULL;
   }
 
   nClass->ulPrivClassSize=ulMemSize;
@@ -1057,7 +1083,7 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   if(!addMethodAndDataToThisPrivClassStruct( nClass, ncpParent, sci)){
     NOMFree(nClass);
     NOMFree(nomClass);
-    return NULLHANDLE;
+    return NULL;
   };
 
   /* Resolve overrides if any */
@@ -1087,7 +1113,9 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   sci->ccds->instanceDataToken=&nClass->thunk;
 
   /* Set this class size into instance var */
+#ifndef _MSC_VER
 #warning !!!!! No call of _nomSetInstanceSize() here !!!!!
+#endif
   // _nomSetInstanceSize(nomClass, sci->ulInstanceDataSize+ulParentDataSize);
 
   DBG_NOMBUILDCLASS(TRUE, "New class ptr (class object): %x (NOMClassPriv: %x) for %s\n"
@@ -1148,21 +1176,21 @@ somId SOMLINK somIdFromString (string aString)
   if(sid) {
     sID=SOMMalloc(sizeof(void*));
     if(!sID)
-      return NULLHANDLE;
+      return NULL;
 
     *sID=(char*)sid;
     return sID;
   }
 
   /* No somId registered  yet, so create one */
-  if((sid=(somIdItem*)SOMCalloc(1, sizeof(somIdItem)))==NULLHANDLE)
-    return NULLHANDLE;
+  if((sid=(somIdItem*)SOMCalloc(1, sizeof(somIdItem)))==NULL)
+    return NULL;
 
   sid->idString=SOMMalloc(strlen(aString)+1);
   if(!sid->idString)
     {
       SOMFree(sid);
-      return NULLHANDLE;
+      return NULL;
     }
 
   sid->id=calculateNameHash(aString);
@@ -1171,12 +1199,12 @@ somId SOMLINK somIdFromString (string aString)
   if(!priv_addSomIdToIdList(pGlobalSomEnv, sid)) {
     SOMFree(sid->idString);
     SOMFree(sid);
-    return NULLHANDLE;
+    return NULL;
   }
 
   sID=SOMMalloc(sizeof(void*));
   if(!sID)
-    return NULLHANDLE;
+    return NULL;
 
   *sID=(char*)sid;
   return sID;
@@ -1192,25 +1220,25 @@ static SOMClassPriv* priv_getOverrideClass(somId *sid)
 {
   char* chrPtr;
   SOMClassPriv *scp;
-  ULONG ulLen;
+  gulong ulLen;
   char *chrMem;
 
   if(!sid)
-    return NULLHANDLE;
+    return NULL;
 
-  if((chrPtr=strchr(**sid, ':'))==NULLHANDLE)
-    return NULLHANDLE;
+  if((chrPtr=strchr(**sid, ':'))==NULL)
+    return NULL;
 
   /* Create local copy */
   ulLen=strlen(**sid);
   if(ulLen>5000) /* prevent stack overflow in case of error */
-    return NULLHANDLE;
+    return NULL;
 
   chrMem=alloca(ulLen);
   strcpy(chrMem, **sid);
 
-  if((chrPtr=strchr(chrMem, ':'))==NULLHANDLE)
-    return NULLHANDLE; /* How should that happen, but anyway... */
+  if((chrPtr=strchr(chrMem, ':'))==NULL)
+    return NULL; /* How should that happen, but anyway... */
 
   *chrPtr=0; /* Now we have separated the class name */
 #ifdef DEBUG_SOMBUILDCLASS
@@ -1221,7 +1249,7 @@ static SOMClassPriv* priv_getOverrideClass(somId *sid)
   somPrintf("%d: %s: found %x\n", __LINE__, __FUNCTION__, scp);
 #endif
   if(!scp)
-    return NULLHANDLE;
+    return NULL;
 #ifdef DEBUG_SOMBUILDCLASS
   somPrintf("%d: %s: found %x (SOMClassPriv) ->%x (SOMClass)\n", __LINE__, __FUNCTION__, scp, scp->mtab->classObject);
 #endif
@@ -1239,25 +1267,25 @@ static SOMClass* priv_getOverrideSOMClass(somId *sid)
 {
   char* chrPtr;
   SOMClassPriv *scp;
-  ULONG ulLen;
+  gulong ulLen;
   char *chrMem;
 
   if(!sid)
-    return NULLHANDLE;
+    return NULL;
 
-  if((chrPtr=strchr(**sid, ':'))==NULLHANDLE)
-    return NULLHANDLE;
+  if((chrPtr=strchr(**sid, ':'))==NULL)
+    return NULL;
 
   /* Create local copy */
   ulLen=strlen(**sid);
   if(ulLen>5000) /* prevent stack overflow in case of error */
-    return NULLHANDLE;
+    return NULL;
 
   chrMem=alloca(ulLen);
   strcpy(chrMem, **sid);
 
-  if((chrPtr=strchr(chrMem, ':'))==NULLHANDLE)
-    return NULLHANDLE; /* How should that happen, but anyway... */
+  if((chrPtr=strchr(chrMem, ':'))==NULL)
+    return NULL; /* How should that happen, but anyway... */
 
   *chrPtr=0; /* Now we have separated the class name */
 #ifdef DEBUG_SOMBUILDCLASS
@@ -1266,7 +1294,7 @@ static SOMClass* priv_getOverrideSOMClass(somId *sid)
   scp=priv_findPrivClassInGlobalClassList(pGlobalSomEnv, chrMem);
   somPrintf("%d: %s: found %x (SOMClassPriv)\n", __LINE__, __FUNCTION__, scp);
   if(!scp)
-    return NULLHANDLE;
+    return NULL;
 #ifdef DEBUG_SOMBUILDCLASS
   somPrintf("%d: %s: found %x (SOMClassPriv) ->%x\n", __LINE__, __FUNCTION__, scp, scp->mtab->classObject);
 #endif
@@ -1283,7 +1311,7 @@ static SOMClass* priv_getOverrideSOMClass(somId *sid)
 /*
   FIXME: semaphores ????
  */
-static ULONG priv_getIndexOfMethodToBeOverriden(somId *methodId )
+static gulong priv_getIndexOfMethodToBeOverriden(somId *methodId )
 {
   return 0;
 }
@@ -1296,7 +1324,7 @@ static ULONG priv_getIndexOfMethodToBeOverriden(somId *methodId )
   struct somClassInfo;
   struct somMethodTabListStruct;
   struct somParentMtabStruct;               Struct to place parent mtab pointer
-  ULONG  thunk[3];                       Assembler thunking code
+  gulong  thunk[3];                       Assembler thunking code
   somMethodTabStruct mtabStruct;         See beloe
   ClassDataStruct class1;
   ClassDataStruct class2;
@@ -1366,13 +1394,13 @@ SOMClass * SOMLINK priv_buildSOMObject(long inherit_vars,
                                        long majorVersion,
                                        long minorVersion)
 {
-  BYTE * mem;
+  guint8 * mem;
   SOMClassPriv *sClass; /* This struct holds our private data. A pointer will be in mtab->classInfo */
   SOMClass *somClass;   /* A real SOMClass pointer */
   int a;
-  ULONG mtabSize;
-  ULONG ulMemSize=0;
-  ULONG ulParentDataSize=0;
+  gulong mtabSize;
+  gulong ulMemSize=0;
+  gulong ulParentDataSize=0;
 
 #ifdef DEBUG_BUILDSOMOBJECT
   somPrintf("%d: Entering %s to build a temporary SOMObject class object\n", __LINE__, __FUNCTION__);
@@ -1381,7 +1409,7 @@ SOMClass * SOMLINK priv_buildSOMObject(long inherit_vars,
 #endif
 
   /* Note: SOMObject has no parents */
-  return NULLHANDLE;
+  return NULL;
   
   /* ulMemsize will be the size of our private class structure SOMClassPriv */
   ulMemSize=sizeof(SOMClassPriv)-sizeof(somMethodTab); /* start size class struct without the somMethodTab
@@ -1396,8 +1424,8 @@ SOMClass * SOMLINK priv_buildSOMObject(long inherit_vars,
   ulMemSize+=mtabSize; /* Add size of base mtab struct */
 
   /* Alloc private class struct using SOMCalloc. */
-  if((sClass=(SOMClassPriv*)SOMCalloc(1, ulMemSize))==NULLHANDLE)
-    return NULLHANDLE;
+  if((sClass=(SOMClassPriv*)SOMCalloc(1, ulMemSize))==NULL)
+    return NULL;
 
   /* Get mem for method thunking code. This assembler code is needed so the indirect
      jump to the methods from the object pointer which is known does work. For each class
@@ -1406,7 +1434,7 @@ SOMClass * SOMLINK priv_buildSOMObject(long inherit_vars,
   sClass->mThunk=SOMMalloc(sizeof(cwMethodThunk)*sci->numStaticMethods);
   if(!sClass->mThunk) {
     SOMFree(sClass);
-    return NULLHANDLE; 
+    return NULL; 
   }
 
   /* The size of each instance of this class. A SOM object has a method tab pointer
@@ -1424,10 +1452,10 @@ SOMClass * SOMLINK priv_buildSOMObject(long inherit_vars,
 
   /* And now the real SOMClass struct which will be seen by the user. A SOMClass has a mTab pointer
      at the beginning and the instance data following. */
-  if((somClass=(SOMClass*)SOMCalloc(1, sci->instanceDataSize+sizeof(somMethodTab*)))==NULLHANDLE) {
+  if((somClass=(SOMClass*)SOMCalloc(1, sci->instanceDataSize+sizeof(somMethodTab*)))==NULL) {
     SOMFree(sClass->mThunk);
     SOMFree(sClass);
-    return NULLHANDLE;
+    return NULL;
   }
   somClass->mtab=sClass->mtab;
 
@@ -1460,10 +1488,10 @@ SOMClass * SOMLINK priv_buildSOMObject(long inherit_vars,
 
     /* Now finally put the thunking in so the procedures are resolved correctly. */
     for(a=0;a<sci->numStaticMethods;a++) {
-      ULONG ulOffset;
+      gulong ulOffset;
 
       memcpy(&sClass->mThunk[a], mThunkCode, sizeof(mThunkCode));               /* Copy method thunking code template  */
-      ulOffset=(ULONG)((char*)(mem+sizeof(SOMClass*))-(char*)somClass->mtab);   /* Skip priv class data pointer        */
+      ulOffset=(gulong)((char*)(mem+sizeof(SOMClass*))-(char*)somClass->mtab);   /* Skip priv class data pointer        */
       sClass->mThunk[a].thunk[2]=((ulOffset+a*sizeof(somMethodProc*))<<8)+0xa2; /* Calculate offset for assembler code */
 #ifdef DEBUG_BUILDSOMOBJECT
       somPrintf(" %d: %d : Thunk offset: %d (0x%x) -> address will be: %x\n",

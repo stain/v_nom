@@ -36,10 +36,12 @@
   This file contains functions for working with the garbage collector.
  */
 
-#define INCL_DOS
-#define INCL_DOSERRORS
-#define INCL_DOSMEMMGR
-#include <os2.h>
+#ifdef __OS2__
+# define INCL_DOS
+# define INCL_DOSERRORS
+# define INCL_DOSMEMMGR
+# include <os2.h>
+#endif /* __OS2__ */
 
 #include <stdio.h>
 #include <string.h>
@@ -82,7 +84,11 @@ static void  gcFree(gpointer mem)
   This is called from the EMX wrapper to set the garbage collector
   memory functions as the GLIB default allocation function.
  */
+#ifdef __OS2__
 void _System  nomInitGarbageCollection(void* pMemInExe)
+#else
+void nomInitGarbageCollection(void* pMemInExe)
+#endif
 {
  GMemVTable vtbl={0};
 
@@ -97,33 +103,41 @@ void _System  nomInitGarbageCollection(void* pMemInExe)
  /* fprintf(stderr, "   GC memory functions set for GLIB. (%s: %d)\n", __FILE__, __LINE__); */
 
  /* Cretea tree holding the already registered DLLs */
+#ifdef _MSC_VER 
  treeRegisteredDLL=g_tree_new((GCompareFunc)stricmp);
+#else 
+ treeRegisteredDLL=g_tree_new((GCompareFunc)strcasecmp);
+#endif
 
  bUseGC=TRUE;
 }
 
 
+#ifdef __OS2__
 void test()
 {
   gulong ulObj, ulOffset;
   gchar thePath[CCHMAXPATH];
   HMODULE hModule;
 
-  if(DosQueryModFromEIP( &hModule, &ulObj, CCHMAXPATH, thePath, &ulOffset, (ULONG)test)!=0) {
+  if(DosQueryModFromEIP( &hModule, &ulObj, CCHMAXPATH, thePath, &ulOffset, (gulong)test)!=0) {
     hModule=0;
     return ; /* Error */
   }
 
 }
+#endif /* __OS2__ */
 
 NOMEXTERN void NOMLINK  nomRegisterDataAreaForGC(char* pStart, char* pEnd)
 {
   GC_add_roots(pStart, pEnd);
 }
 
+#ifdef __OS2__
+
 static void qsAddDLLToList(HREGDLL hReg, qsLrec_t* rec)
 {
-  if(NULLHANDLE==g_slist_find(hReg->dllList, rec))
+  if(NULL==g_slist_find(hReg->dllList, rec))
     hReg->dllList=g_slist_append(hReg->dllList, rec);
 }
 
@@ -159,7 +173,7 @@ static qsLrec_t* qsFindModuleRec(const qsPtrRec_t * hRegisterDLL,  USHORT hMod){
       a++;
       /* g_message("%d Checking: %x -> %04X (%s)", a, pModRec, pModRec->hmte, pModRec->pName); */
 
-      if (NULLHANDLE==pModRec->pObjInfo   && pModRec->ctObj > 0)
+      if (NULL==pModRec->pObjInfo   && pModRec->ctObj > 0)
         {
           pModRec->pObjInfo = (qsLObjrec_t*)((char*)pModRec
                                              + ((sizeof(qsLrec_t)
@@ -178,6 +192,7 @@ static qsLrec_t* qsFindModuleRec(const qsPtrRec_t * hRegisterDLL,  USHORT hMod){
   return pModRec;
 }
 
+
 /**
    Get the info about the current DLLs from OS/2. Go over all found
    DLLs and insert them in a list. For all found DLLs go over the imports
@@ -186,27 +201,27 @@ static qsLrec_t* qsFindModuleRec(const qsPtrRec_t * hRegisterDLL,  USHORT hMod){
 #define BUFSIZE 1024*1024
 NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
 {
-  ULONG rc;
-  HREGDLL hReg=NULLHANDLE;
+  gulong rc;
+  HREGDLL hReg=NULL;
   PTIB     ptib;
   PPIB     ppib;
   char *  buf;
-  HREGDLL  pRegDLL=NULLHANDLE;
+  HREGDLL  pRegDLL=NULL;
 
   rc = DosGetInfoBlocks(&ptib, &ppib);
   if (rc!=NO_ERROR)
-    return NULLHANDLE;
+    return NULL;
 
   buf = malloc(BUFSIZE);
   if(!buf)
-    return NULLHANDLE;
+    return NULL;
 
   pRegDLL =(HREGDLL) malloc(sizeof(REGDLL));
   if(!pRegDLL){
     free(buf);
-    return NULLHANDLE;
+    return NULL;
   }
-  pRegDLL->dllList=NULLHANDLE;
+  pRegDLL->dllList=NULL;
 
   memset(buf,0,BUFSIZE);
 
@@ -302,7 +317,7 @@ NOMEXTERN void NOMLINK nomEndRegisterDLLWithGC(const HREGDLL hRegisterDLL )
 #define OBJREAD         0x0001L
 #define OBJWRITE        0x0002L
 #define OBJINVALID      0x0080L
-NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName)
+NOMEXTERN gboolean NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName)
 {
   GSList* lTemp;
 
@@ -315,12 +330,12 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
       pModRec=(qsLrec_t*)lTemp->data;
       if(pModRec){
         //  g_message("DLL name: %s", pModRec->pName);
-        if(pModRec->pName && (NULLHANDLE!=strstr( pModRec->pName, chrDLLName)))
+        if(pModRec->pName && (NULL!=strstr( pModRec->pName, chrDLLName)))
           {
             qsLObjrec_t  *pObjInfo;
             //g_message("    --> Found DLL %s", pModRec->pName);
             pObjInfo=pModRec->pObjInfo;
-            if(NULLHANDLE!=pObjInfo)
+            if(NULL!=pObjInfo)
               {
                 int iObj;
                 for(iObj=0; iObj<pModRec->ctObj ;iObj++)
@@ -343,10 +358,33 @@ NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const ch
     return FALSE;
 }
 
+//#elif defined(_WIN32)
+#else /* PORTME */
 
-NOMEXTERN BOOL NOMLINK nomQueryUsingNameIsDLLRegistered(const gchar *chrName)
+NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void)
 {
-  if(NULLHANDLE!=g_tree_lookup(treeRegisteredDLL, chrName))
+    HREGDLL pRegDLL;
+
+    pRegDLL =(HREGDLL) malloc(sizeof(REGDLL));
+    if(pRegDLL)
+      pRegDLL->dllList=NULL;
+    return pRegDLL;
+}
+
+NOMEXTERN void NOMLINK nomEndRegisterDLLWithGC(const HREGDLL hRegisterDLL )
+{
+}
+
+NOMEXTERN gboolean NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName)
+{
+    return TRUE;
+}
+
+#endif
+
+NOMEXTERN gboolean NOMLINK nomQueryUsingNameIsDLLRegistered(const gchar *chrName)
+{
+  if(NULL!=g_tree_lookup(treeRegisteredDLL, chrName))
     return TRUE;
 
   return FALSE;

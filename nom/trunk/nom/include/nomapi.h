@@ -90,11 +90,11 @@ typedef struct nomParmInfoStruct {
  */
 typedef struct nomStaticMethodDescStruct {
   nomMToken *nomMAddressInClassData; /* Method token in class data struct */
-  nomID nomMethodId;          /* This is a 'gchar**' pointing to something like 
+  nomID nomMethodId;          /* This is a 'gchar**' pointing to something like
                                  "wpQueryContainerHandle" */
   char** chrMethodDescriptor; /* This points to something like:
                                  "WPFolderWindow:wpQueryContainerHandle" */
-  nomMethodProc *nomMethod;   /* Address of the function implementing this 
+  nomMethodProc *nomMethod;   /* Address of the function implementing this
                                  method. */
   nomParmInfo  *pParamInfo;   /* Information about the parameter types */
 } nomStaticMethodDesc;
@@ -139,7 +139,7 @@ typedef struct nomStaticClassInfoStruct {
 
 typedef struct
 {
-  ULONG thunk[4];
+  gulong thunk[4];
 }nomMethodThunk;
 
 #define NOM_FLG_IS_METACLASS         0x00000001
@@ -149,9 +149,9 @@ typedef struct
    It holds the default method table of the class and the thunking code necessary to access
    data and methods. Note that the name may be slightly misleading. This structure is not
    limited to objects/classes which are related to NOMClass. It's a structure used by every NOM
-   class (be it a normal class or a meta class). 
+   class (be it a normal class or a meta class).
 */
-typedef struct 
+typedef struct
 {
   nomMethodTab  *mtab;                  /* This is the mtab for this class it points to thisMtab at the
                                            end. This is not an mtab for objects created by a meta class.
@@ -163,7 +163,7 @@ typedef struct
   gulong        ulClassFlags;           /* Set to 1 if this is a metaclass                                 */
   nomStaticClassInfo *sci;              /* Class description                                               */
   /* FIXME: the following list may be obsolete maybe when we just use the parentMtabStruc??                */
-  nomMethodTabList mtabList;            /* The (private) internal list of mtabs we maintain 
+  nomMethodTabList mtabList;            /* The (private) internal list of mtabs we maintain
                                            struct nomMethodTabList {
                                            nomMethodTab             *mtab; /mtab for this class
                                            struct nomMethodTabList  *next; / parents
@@ -188,7 +188,7 @@ typedef struct
 {
   gulong fFlags;
   gpointer pReserved1;
-  gpointer pReserved2;  
+  gpointer pReserved2;
 }nomEnvironment;
 
 typedef nomEnvironment CORBA_Environment;

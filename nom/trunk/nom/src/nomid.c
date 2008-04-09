@@ -32,10 +32,11 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#define INCL_DOS
-#define INCL_DOSERRORS
-
-#include <os2.h>
+#ifdef __OS2__
+# define INCL_DOS
+# define INCL_DOSERRORS
+# include <os2.h>
+#endif /* __OS2__ */
 
 #include "nom.h"
 #include "nomtk.h"

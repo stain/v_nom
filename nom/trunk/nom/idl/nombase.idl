@@ -62,8 +62,10 @@
    in the C code. */
 #define NOMCLASSNAME( a ) native P ## a 
 #endif
+#ifndef _MSC_VER /* doesn't work here yet. */
 /* For doing parameter checks */
 #define NOMPARMCHECK(a ,...)   const string _conc(a, _conc(__PARMCHECK__, _conc(__LINE__,__INCLUDE_LEVEL__))) = #__VA_ARGS__
+#endif
 
 
 /* Native types we want to use in the IDL */

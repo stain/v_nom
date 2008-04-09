@@ -45,10 +45,14 @@
 
 /* That's the base structure of all the SOM stuff */
 typedef struct _nomEnv {
-  ULONG cbSize;      /* Size of this struct */
-  PVOID pMemPool;    /* Shared memory heap for sub alloc */
+  gulong cbSize;      /* Size of this struct */
+  void *pMemPool;    /* Shared memory heap for sub alloc */
+#ifdef __OS2__
   HMTX  hmtx_obsolete;  /* Mutex sem to protect this structure -Will go away! */
-  ULONG ulNumRegIds; /* Number of registered somIDs */
+#else
+/* PORTME */
+#endif
+  gulong ulNumRegIds; /* Number of registered somIDs */
   NOMClassPriv  *ncpNOMObject;  /* This is for NOMObject*/
   nomClasses livingMetaClasses; /* List of created meta classes. */
   NOMClass *defaultMetaClass;   /* This is a pointer to the NOMClass object */
@@ -64,9 +68,9 @@ typedef NOM_ENV *PNOM_ENV;
 
 NOMEXTERN PNOM_ENV NOMLINK nomTkInit(void);
 
-NOMEXTERN nomToken NOMLINK NOMMalloc(const ULONG size);
+NOMEXTERN nomToken NOMLINK NOMMalloc(const gulong size);
 NOMEXTERN boolean NOMLINK NOMFree(const nomToken memPtr);
-NOMEXTERN nomToken NOMLINK  NOMCalloc(const ULONG num, const ULONG size);
+NOMEXTERN nomToken NOMLINK  NOMCalloc(const gulong num, const gulong size);
 //NOMEXTERN gboolean NOMLINK nomIsObj(NOMObject * nomObj);
 NOMEXTERN gboolean NOMLINK nomIsObj(gpointer nomObj);
 NOMEXTERN int NOMLINK nomPrintf(string chrFormat, ...);
@@ -79,9 +83,9 @@ NOMEXTERN gboolean NOMLINK nomCheckObjectPtr(NOMObject *nomSelf, NOMClass* nomCl
 NOMEXTERN CORBA_Environment* NOMLINK nomCreateEnvNoObjectCheck(void);
 
 /* Functions used by nomBuildClass() */
-ULONG priv_requestSomEnvMutex(PNOM_ENV pEnv);
-ULONG priv_releaseSomEnvMutex(PNOM_ENV pEnv);
-BOOL priv_addPrivClassToGlobalClassList(PNOM_ENV pEnv, NOMClassPriv * nClass);
+gulong priv_requestSomEnvMutex(PNOM_ENV pEnv);
+gulong priv_releaseSomEnvMutex(PNOM_ENV pEnv);
+gboolean priv_addPrivClassToGlobalClassList(PNOM_ENV pEnv, NOMClassPriv * nClass);
 NOMClassPriv* priv_findPrivClassInGlobalClassListFromName(PNOM_ENV pEnv, char* nClass);
 
 NOMClass * NOMLINK priv_buildNOMClass(NOM_ulong ulReserved,
@@ -113,7 +117,7 @@ void priv_resolveOverrideMethods(NOMClassPriv *nClass, nomStaticClassInfo *sci);
 #define TST_OBJECT(a)
 #endif
 
-void _dumpClassDataStruct(nomClassDataStructure* cds, ULONG ulNumMethods);
+void _dumpClassDataStruct(nomClassDataStructure* cds, gulong ulNumMethods);
 void _dumpSci(nomStaticClassInfo* sci);
 void  _dumpMtab(nomMethodTab* mtab);
 void  _dumpObjShort(NOMObject* sObj);

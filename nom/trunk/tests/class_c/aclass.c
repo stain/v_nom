@@ -35,8 +35,10 @@
 #define NOM_AClass_IMPLEMENTATION_FILE
 #endif
 
-#define INCL_DOS
-#include <os2.h>
+#ifdef __OS2__
+# define INCL_DOS
+# include <os2.h>
+#endif /* __OS2__ */
 
 #include "glib.h"
 #include "nom.h"

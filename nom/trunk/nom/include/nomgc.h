@@ -38,20 +38,26 @@
 typedef struct _REGDLL
 {
   GSList*      dllList;
+#ifdef __OS2__
   qsPtrRec_t * pMainAnchor;
+#endif
 }REGDLL,*HREGDLL;
 
 /* Garbage collector */
+#ifdef __OS2__
 void _System nomInitGarbageCollection(void* pMemPtr); //The parameter will go away
+#else
+void nomInitGarbageCollection(void* pMemPtr); //The parameter will go away
+#endif 
 NOMEXTERN HREGDLL NOMLINK nomBeginRegisterDLLWithGC(void);
 NOMEXTERN void NOMLINK nomEndRegisterDLLWithGC(const HREGDLL hRegisterDLL );
-NOMEXTERN BOOL NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName);
+NOMEXTERN gboolean NOMLINK nomRegisterDLLByName(const HREGDLL hRegisterDLL, const char* chrDLLName);
 NOMEXTERN void NOMLINK  nomRegisterDataAreaForGC(char* pStart, char* pEnd);
 #if 0
-NOMEXTERN BOOL NOMLINK nomRegisterDLLByHandle(const HREGDLL hRegisterDLL, const gpointer pDLLHandle);
+NOMEXTERN gboolean NOMLINK nomRegisterDLLByHandle(const HREGDLL hRegisterDLL, const gpointer pDLLHandle);
 #endif
 
-NOMEXTERN BOOL NOMLINK nomQueryUsingNameIsDLLRegistered(const gchar *chrName);
+NOMEXTERN gboolean NOMLINK nomQueryUsingNameIsDLLRegistered(const gchar *chrName);
 
 #endif /* NOMGC_H_INCLUDED */
 

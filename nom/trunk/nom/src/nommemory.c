@@ -32,36 +32,38 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#define INCL_DOS
-#define INCL_DOSERRORS
-#define INCL_DOSMEMMGR
+#ifdef __OS2__
+# define INCL_DOS
+# define INCL_DOSERRORS
+# define INCL_DOSMEMMGR
+# include <os2.h>
+#endif /* __OS2__ */
 
-#include <os2.h>
 
 #include <string.h>
 #include <stdlib.h>
 
-#include <gtk/gtk.h>
+/* #include <gtk/gtk.h> - why? */
 #include <nom.h>
 #include <nomtk.h>
 
 /* This tells us if memory allocation is done using the garbage collector */
 extern gboolean bUseGC; /* Set during initialization */
 
-NOMEXTERN nomToken NOMLINK NOMMalloc(ULONG size)
+NOMEXTERN nomToken NOMLINK NOMMalloc(const gulong size)
 {
   gchar* memPtr;
 
-  if((memPtr=g_malloc(size))==NULLHANDLE)
-    return NULLHANDLE;
+  if((memPtr=g_malloc(size))==NULL)
+    return NULL;
 
   return (nomToken) memPtr;
 
 #if 0
   PULONG memPtr;
 
-  if((memPtr=g_malloc(size+sizeof(gpointer)))==NULLHANDLE)
-    return NULLHANDLE;
+  if((memPtr=g_malloc(size+sizeof(gpointer)))==NULL)
+    return NULL;
 
   *memPtr=size;
   memPtr++;
@@ -69,12 +71,12 @@ NOMEXTERN nomToken NOMLINK NOMMalloc(ULONG size)
 #endif
 }
 
-nomToken NOMLINK NOMCalloc(const ULONG num, const ULONG size)
+nomToken NOMLINK NOMCalloc(const gulong num, const gulong size)
 {
   gchar* memPtr;
 
-  if((memPtr=g_malloc(size*num ))==NULLHANDLE)
-    return NULLHANDLE; /* We won't end here because GLib just terminates the process :-/ 
+  if((memPtr=g_malloc(size*num ))==NULL)
+    return NULL; /* We won't end here because GLib just terminates the process :-/ 
                           A really sick idea imho. */
   if(!bUseGC)
     memset(memPtr, 0, size*num); /* GC always returns zeroed memory */
@@ -84,11 +86,11 @@ nomToken NOMLINK NOMCalloc(const ULONG num, const ULONG size)
 #if 0
   PULONG memPtr;
 
-  if((memPtr=g_malloc(size*num + sizeof(ULONG)))==NULLHANDLE)
-    return NULLHANDLE; /* We won't end here because GLib just terminates the process :-/ 
+  if((memPtr=g_malloc(size*num + sizeof(gulong)))==NULL)
+    return NULL; /* We won't end here because GLib just terminates the process :-/ 
                           A really sick idea imho. */
   if(!bUseGC)
-    memset(memPtr, 0, size*num + sizeof(ULONG)); /* GC always returns zeroed memory */
+    memset(memPtr, 0, size*num + sizeof(gulong)); /* GC always returns zeroed memory */
 
   *memPtr=size;
   memPtr++;
@@ -102,7 +104,7 @@ nomToken NOMLINK NOMCalloc(const ULONG num, const ULONG size)
 NOMEXTERN boolean NOMLINK NOMFree(const nomToken memPtr)
 {
 #if 0
-  ULONG* pul=(PULONG)memPtr;
+  gulong* pul=(PULONG)memPtr;
 
   pul--;
   g_free(pul);
