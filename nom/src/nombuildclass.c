@@ -377,7 +377,7 @@ BUILDNOMCLASS_ENTER
   /* Copy object data. This all goes at the address of "nomMethodProc* entries[0]" 
     entries[] contain copies of the ClassDataStruct and thus the proc addresses of the static methods.
     */
-  mem=(char*)nClass->mtab; /* Target address */
+  mem=(guint8*)nClass->mtab; /* Target address */
   memcpy(mem, ncpParent->mtab, ncpParent->mtab->mtabSize); /* copy parent mtab with all proc addresses */
 #ifdef DEBUG_NOMBUILDCLASS
     nomPrintf("copy parent data: %d (mtabSize) from %x (mtab of %s, taken from NOMClassPriv) to %x (mtab to build)\n", 
@@ -385,7 +385,7 @@ BUILDNOMCLASS_ENTER
               sci->nomCds, ncpParent->mtab->nomClassName, mem);
 #endif
 
-  mem=((char*)nClass->mtab) + ncpParent->mtab->mtabSize; /* points right after the parent mtab now in 
+  mem=((guint8*)nClass->mtab) + ncpParent->mtab->mtabSize; /* points right after the parent mtab now in 
                                                            our private struct */
   /* Add class struct of this class. This includes the proc adresses. */
   if(sci->ulNumStaticMethods) {
@@ -431,6 +431,8 @@ BUILDNOMCLASS_ENTER
 static NOMClassPriv* priv_getClassFromName(gchar* chrClassName)
 {
   NOMClassPriv *ncpParent=NULL;
+
+  DBG_NOMBUILDCLASS(TRUE, "Find NOMClassPriv for %s %x\n", chrClassName, chrClassName);
 
   if(NULL==NOMClassMgrObject){
     /* If we build NOMClass or NOMClassMgr we just use the pointer we saved before. */
@@ -520,7 +522,7 @@ static NOMClassPriv * NOMLINK priv_buildPrivClassStruct(long inherit_vars,
 
   /* Get parent class if any */
   if(NULL!=sci->chrParentClassNames){
-    ncpParent=priv_getClassFromName(sci->chrParentClassNames[sci->ulNumParentsInChain]);
+    ncpParent=priv_getClassFromName(sci->chrParentClassNames[sci->ulNumParentsInChain-1]);
   }/* nomIdAllParents */
   else
     ncpParent = NULL;
@@ -907,14 +909,14 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
   /* Insert class data structure method tokens */
   for(a=0;a<sci->ulNumStaticMethods;a++) {
     *sci->nomSMethods[a].nomMAddressInClassData=(void*)sci->nomSMethods[a].nomMethod; /*  Address to place the resolved function address in see *.ih files. */
-#ifdef _DEBUG_NOMBUILDCLASS
+#ifdef DEBUG_NOMBUILDCLASS
     nomPrintf("  static method: %s, %lx\n", *sci->nomSMethods[a].chrMethodDescriptor, sci->nomSMethods[a].nomMethod);
     nomPrintf("%d: %d: method: %x %s (classdata addr. %x) (Fill static class struct with procs)\n", 
               __LINE__, a, sci->nomSMethods[a].nomMethod,  *sci->nomSMethods[a].nomMethodId, sci->nomSMethods[a].nomMAddressInClassData);
 #endif
   }
 
-#ifdef _DEBUG_NOMBUILDCLASS
+#ifdef DEBUG_NOMBUILDCLASS
   nomPrintf("%d: Dumping the filled classdata structure:\n", __LINE__);
   _dumpClassDataStruct(sci->nomCds, sci->ulNumStaticMethods);
 #endif
@@ -940,10 +942,12 @@ NOMEXTERN NOMClass * NOMLINK nomBuildClass(gulong ulReserved,
 # ifndef _MSC_VER
 #warning !!!!! Change this when nomId is a GQuark !!!!!
 # endif
-    nomPrintf("%d: About to search parent %s...\n", __LINE__, **(sci->nomIdAllParents));
+    nomPrintf("%d: About to search parent %s (%d)...\n", __LINE__, **(sci->nomIdAllParents), sci->ulNumParentsInChain);
+    nomPrintf("%d: About to search parent %s (%s)...\n", __LINE__, **(sci->nomIdAllParents),
+	      sci->chrParentClassNames[0]);
 #endif
 
-    ncpParent=priv_getClassFromName(sci->chrParentClassNames[sci->ulNumParentsInChain]);
+    ncpParent=priv_getClassFromName(sci->chrParentClassNames[sci->ulNumParentsInChain-1]);
 
 #if 0
     ncpParent=priv_getClassFromName(**(sci->nomIdAllParents));
