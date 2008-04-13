@@ -171,7 +171,7 @@ ifndef PATH_SDK_glib2
   PATH_SDK_glib2 := $(firstword $(wildcard $(PATH_ROOT)/tools/$(BUILD_TARGET).$(BUILD_TARGET_ARCH)/glib/v2*) )
  endif
  ifeq ($(PATH_SDK_glib2),)
-  PATH_SDK_glib2 := $(patsubst %/include/glib-2.0/glib.h,%,$(firstword $(wildcard /usr/include/glib-2.0/glib.h /usr/local/include/glib-2.0/glib.h) ))
+  PATH_SDK_glib2 := $(patsubst %/include/glib-2.0/glib.h,%,$(firstword $(wildcard /usr/include/glib-2.0/glib.h /usr/local/include/glib-2.0/glib.h /opt/local/include/glib-2.0/glib.h) ))
  endif
 else
  PATH_SDK_glib2 := $(PATH_SDK_glib2)
