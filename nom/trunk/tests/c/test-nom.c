@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 
   /* Init NOM */
   NOMClassMgrObject=nomEnvironmentNew();
-
+  
   g_message("\n");
   g_message("================================================================");
   g_message("=====          Testing AClass, child of NOMObject          =====");
