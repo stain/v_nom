@@ -34,6 +34,7 @@ libnomobjtk_SOURCES = \
 	src/nombuildnomcls.c \
 	src/nomid.c \
 	src/nomgc.c \
+	src/thunk.c \
 	class_c/nomobj.c \
 	class_c/nomclassmanager.c \
 	class_c/nomcls.c

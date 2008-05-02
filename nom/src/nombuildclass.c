@@ -58,6 +58,8 @@
 #include <nomcls.h>
 #include <nomclassmanager.h>
 
+#include <thunk.h>
+
 /* Define if you want to have messages from nomBuildClass() and friends */
 //#define DEBUG_NOMBUILDCLASS
 /* Define if you want to have messages from building NOMObject */
@@ -97,6 +99,7 @@ extern PNOM_ENV pGlobalNomEnv;
 
 /******************* somBuildClass **********************/
 
+#if 0
 /*
   Thunking code to get the instance var address from an object pointer pushed
   on the stack. The following translates into this assembler code:
@@ -114,7 +117,7 @@ MOV EDX,DWORD PTR [ECX]   : move [ECX] in EDX -> mtab in EDX
 JMP DWORD PTR [EDX+0ACh]  : JMP to address pointing to by EDX+0ACh
  */
 static gulong mThunkCode[]={0x04244c8b, 0xff00518b, 0x0000aca2 , 0x16000000};
-
+#endif
 
 /***********************************************************************************/
 /***********************************************************************************/

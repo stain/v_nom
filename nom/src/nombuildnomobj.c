@@ -47,6 +47,7 @@
 #include <nom.h>
 #include <nomtk.h>
 #include <nomobj.h>
+#include <thunk.h>
 
 /********************************************************/
 
@@ -59,29 +60,12 @@
 
 extern PNOM_ENV pGlobalNomEnv;
 
-/*
-  Thunking code to get the instance var address from an object pointer pushed
-  on the stack. The following translates into this assembler code:
-
-  MOV EAX,DWORD PTR [ESP+4] ;Move object ptr into EAX
-  ADD EAX, +4
-  RET
-*/
-
-static gulong thunk[]={0x0424448b, 0x00000405, 0x0000c300};
-
-/*
-MOV ECX,DWORD PTR [ESP+4] : move object pointer from stack in ECX
-MOV EDX,DWORD PTR [ECX]   : move [ECX] in EDX -> mtab in EDX
-JMP DWORD PTR [EDX+0ACh]  : JMP to address pointing to by EDX+0ACh
- */
-static gulong mThunkCode[]={0x04244c8b, 0xff00518b, 0x0000aca2 , 0x16000000};
 
 /********************************************************/
 
 
 /*
-  Create the SOMClassPriv structure *only* for SOMObject and fill it with info
+  Create the NOMClassPriv structure *only* for NOMObject and fill it with info
   from the sci.
 
   This function does
