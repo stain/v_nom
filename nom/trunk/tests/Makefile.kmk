@@ -89,6 +89,22 @@ endif
 
 test-nom_LIBS.linux = $(PATH_LIB)/libnomgc.so
 
+
+#
+# The garbage collector test program.
+#
+PROGRAMS += test-gc
+test-gc_TEMPLATE = nombin
+test-gc_SOURCES = \
+	c/test-gc.c
+ifeq ($(BUILD_TARGET),win)
+ test-gc_LIBS = \
+	$(TARGET_libnomtest:.dll=.lib)
+else
+ test-gc_LIBS = \
+	$(TARGET_libnomtest)
+endif
+
 endif # NOM_WITH_TESTCASES
 
 include $(PATH_KBUILD)/subfooter.kmk
