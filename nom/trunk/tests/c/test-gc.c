@@ -59,8 +59,8 @@
 #include "nomtk.h"
 #include "nomgc.h"
 
-#define MEMSIZE   1700
-#define NUMALLOCS 25000
+#define MEMSIZE   17
+#define NUMALLOCS 25000*2
 
 /**
   
@@ -68,7 +68,7 @@
 int main(int argc, char **argv)
 {
   int a;
-
+  
   /* GSlice isn't GC aware */
   g_slice_set_config(G_SLICE_CONFIG_ALWAYS_MALLOC, TRUE);
   
@@ -89,12 +89,12 @@ int main(int argc, char **argv)
 	{
       gpointer gp;
 
-      gp=g_malloc(MEMSIZE);
+      gp=g_malloc(MEMSIZE*a);
       g_assert(gp);      
     }
-    g_message("Allocated %d chunks of %d bytes of memory -> %d bytes", NUMALLOCS, MEMSIZE, NUMALLOCS*MEMSIZE);
+    g_message("Allocated %d chunks of %d bytes of memory -> %d bytes", NUMALLOCS, MEMSIZE*a, NUMALLOCS*MEMSIZE*a);
   }
-
+  
   g_message("               --> OK");
   
   return 0;
