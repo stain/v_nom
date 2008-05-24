@@ -273,7 +273,7 @@ int main(int argc, char **argv)
     }
     g_message("Allocated %d chunks of %d bytes of memory -> %d bytes. Allocated %d objects.", NUMALLOCS, MEMSIZE*a, NUMALLOCS*MEMSIZE*a, NUMALLOCS);
   }
-  g_message("Allocated %d objects at all.", NUMALLOCS*a);
+  g_message("Allocated %d objects at all.", NUMALLOCS*(a-1));
   
 
   g_message("================================================================");
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
   g_message("================================================================");
 
 
-  for(a=1; a<=100;a++)
+  for(a	=1; a<=100;a++)
   {
     int b;
     
@@ -311,7 +311,7 @@ int main(int argc, char **argv)
     }
     g_message("Allocated %d chunks of %d bytes of memory -> %d bytes. Allocated %d objects.", NUMALLOCS, MEMSIZE*a, NUMALLOCS*MEMSIZE*a, NUMALLOCS);
   }
-  g_message("Allocated %d objects at all.", NUMALLOCS*a);
+  g_message("Allocated %d objects at all.", NUMALLOCS*(a-1));
 
   return 0;
 };
