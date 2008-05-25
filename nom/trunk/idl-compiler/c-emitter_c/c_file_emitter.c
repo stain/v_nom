@@ -56,8 +56,10 @@ static void emitCFileHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "#define NOM_%s_IMPLEMENTATION_FILE\n", pif->chrName);
   fprintf(fh, "#endif\n\n");
 
+  fprintf(fh, "#if __OS2__\n");
   fprintf(fh, "#define INCL_DOS\n");
   fprintf(fh, "#include <os2.h>\n");
+  fprintf(fh, "#endif /* __OS2__ */\n\n");
 
   fprintf(fh, "#include <nom.h>\n");
   fprintf(fh, "#include <nomtk.h>\n\n");
