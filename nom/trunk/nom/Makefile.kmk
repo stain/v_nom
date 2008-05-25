@@ -25,6 +25,7 @@ libnomobjtk_SOURCES = \
 	idl/nomclassmanager.idl \
 	idl/nomcls.idl \
 	idl/nomobj.idl \
+	idl/nomstring.idl \
 	idl/nomarray.idl \
 	\
 	src/nomtkinit.c \
@@ -39,6 +40,7 @@ libnomobjtk_SOURCES = \
 	class_c/nomobj.c \
 	class_c/nomclassmanager.c \
 	class_c/nomcls.c \
+	class_c/nomstring.c \
 	class_c/nomarray.c
 libnomobjtk_SOURCES.os2 = \
 	$(PATH_TARGET)/nobjtk-os2.def
