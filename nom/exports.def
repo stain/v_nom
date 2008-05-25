@@ -50,6 +50,10 @@ EXPORTS
 	_NOMClassMgrCClassData   
 	NOMClassMgrNewClass      
 
+	_NOMArrayClassData    
+	_NOMArrayCClassData  
+	NOMArrayNewClass 
+
 ;	_NOMTestClassData      
 ;	_NOMTestCClassData     
 ;	NOMTestNewClass       
