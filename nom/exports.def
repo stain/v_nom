@@ -62,6 +62,10 @@ EXPORTS
 	_NOMTestCaseCClassData     
 	NOMTestCaseNewClass       
 
+	_NOMTestResultClassData      
+	_NOMTestResultCClassData     
+	NOMTestResultNewClass       
+
 ;	_NOMTest2ClassData      
 ;	_NOMTest2CClassData     
 ;	NOMTest2NewClass       
