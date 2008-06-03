@@ -27,6 +27,8 @@ libnomobjtk_SOURCES = \
 	idl/nomobj.idl \
 	idl/nomstring.idl \
 	idl/nomarray.idl \
+	idl/nomtestcase.idl \
+	idl/nomtestresult.idl \
 	\
 	src/nomtkinit.c \
 	src/nommemory.c \
@@ -41,7 +43,9 @@ libnomobjtk_SOURCES = \
 	class_c/nomclassmanager.c \
 	class_c/nomcls.c \
 	class_c/nomstring.c \
-	class_c/nomarray.c
+	class_c/nomarray.c \
+	class_c/nomtestcase.c \
+	class_c/nomtestresult.c
 libnomobjtk_SOURCES.os2 = \
 	$(PATH_TARGET)/nobjtk-os2.def
 libnomobjtk_SOURCES.win = \

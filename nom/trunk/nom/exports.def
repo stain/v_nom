@@ -58,9 +58,9 @@ EXPORTS
 	_NOMStringCClassData  
 	NOMString	     NewClass 
 
-;	_NOMTestClassData      
-;	_NOMTestCClassData     
-;	NOMTestNewClass       
+	_NOMTestCaseClassData      
+	_NOMTestCaseCClassData     
+	NOMTestCaseNewClass       
 
 ;	_NOMTest2ClassData      
 ;	_NOMTest2CClassData     
