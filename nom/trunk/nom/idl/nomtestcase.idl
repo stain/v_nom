@@ -38,6 +38,7 @@
 #include "nomobj.idl"
 
 interface NOMArray;
+interface NOMTestResult;
 
 NOMCLASSNAME(NOMTestCase);
 
@@ -66,17 +67,13 @@ interface NOMTestCase : NOMObject
   void tearDown();
   /*boolean assertTrue();*/
   NOMArray*	 runTests();
-  void runSingleTest(in string chrTestName);
+  NOMTestResult* runSingleTest(in string chrTestName);
 
   /** 
      Override of nomInit() to initialize the GPtrArray*
       */  
   //NOMOVERRIDE(nomInit);
 
-  /**
-     The GPtrArray holding the objects
-  */
-  //NOMINSTANCEVAR(GPtrArray* pPtrArray);
 };
 
 #endif  /* NOMTESTCASE_IDL_INCLUDED */

@@ -48,11 +48,12 @@
 #include <nomtk.h>
 
 #include "nomarray.h"
+#include "nomstring.h"
+#include "nomtestresult.h"
 #include "nomtestcase.ih"
-#include "nomstring.ih"
-#include "nommethod.ih"
+#include "nommethod.h"
 
-typedef void* NOMLINK nomProc(void*, void*);
+typedef boolean NOMLINK nomProc(void*, void*);
 
 NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMTestCase_setUp(NOMTestCase* nomSelf,
                                                            CORBA_Environment *ev)
@@ -85,31 +86,66 @@ NOMDLLEXPORT NOM_Scope NOMArray* NOMLINK impl_NOMTestCase_runTests(NOMTestCase* 
     /* Only Methods starting with ˚test˚ are run. */
     if(0==strstr( methodName, "test"))
     {
+      NOMTestResult* nResult=NOMTestResultNew();
       nomProc* nProc=_queryMethodToken(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL);
       
       _setUp(nomSelf, NULL);
       
-      if(NULL!=nProc)
-        nProc(nomSelf, NULL);
+      /* The name of this test */
+      _setName(nResult, _getName(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL), NULL);
       
-      _tearDown(nomSelf, NULL);      
-    }
-    
+      /* Call the test method */
+      if(NULL!=nProc)
+        _setSuccess(nResult, nProc(nomSelf, NULL), NULL); /* TRUE if success */
+      
+      /* Clean up */
+      _tearDown(nomSelf, NULL);
+      NOMArray_append(resultArray, nResult, NULL);
+    }    
   }
   
   return resultArray;	
 }
 
-NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMTestCase_runSingleTest(NOMTestCase* nomSelf,
+NOMDLLEXPORT NOM_Scope NOMTestResult* NOMLINK impl_NOMTestCase_runSingleTest(NOMTestCase* nomSelf,
                                                                    const CORBA_char* chrTestName,
                                                                    CORBA_Environment *ev)
 {
+  NOMTestResult* nResult=NOMTestResultNew();
+  NOMString* nsName;
+  NOMArray* methodArray=NULL;
+  int a;
+  
   /* NOMTestCaseData* nomThis = NOMTestCaseGetData(nomSelf); */
 
-  _setUp(nomSelf, NULL);
+  /* Get list of all methods of this class */
+  methodArray=_nomGetMethodList(nomSelf, FALSE, NULL);
+
+  /* The name of this test */
+  nsName=NOMStringNew();
+  NOMString_assignString(nsName, chrTestName, NULL);
   
-  g_message("%s: This method is not yet implemented.", __FUNCTION__);
+  _setName(nResult, nsName, NULL);
+
+  for(a=0; a<NOMArray_length(methodArray, NULL); a++)
+  {
+    char* methodName=_queryString(_getName(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL), NULL);
+    
+    if(0==strcmp( methodName, chrTestName))
+    {
+      nomProc* nProc=_queryMethodToken(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL);
+      
+      _setUp(nomSelf, NULL);
+            
+      /* Call the test method */
+      if(NULL!=nProc)
+        _setSuccess(nResult, nProc(nomSelf, NULL), NULL); /* TRUE if success */
+      
+      /* Clean up */
+      _tearDown(nomSelf, NULL);
+    }    
+  }
   
-  _tearDown(nomSelf, NULL);  
+  return nResult;
 }
 
