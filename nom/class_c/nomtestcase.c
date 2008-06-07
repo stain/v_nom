@@ -43,11 +43,16 @@
 #include <os2.h>
 #endif /* __OS2__ */
 
+#include "string.h"
 #include <nom.h>
 #include <nomtk.h>
 
 #include "nomarray.h"
 #include "nomtestcase.ih"
+#include "nomstring.ih"
+#include "nommethod.ih"
+
+typedef void* NOMLINK nomProc(void*, void*);
 
 NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMTestCase_setUp(NOMTestCase* nomSelf,
                                                            CORBA_Environment *ev)
@@ -67,12 +72,31 @@ NOMDLLEXPORT NOM_Scope NOMArray* NOMLINK impl_NOMTestCase_runTests(NOMTestCase* 
                                                               CORBA_Environment *ev)
 {
   NOMArray* resultArray=NOMArrayNew();
+  NOMArray* methodArray=NULL;
+  int a;
   
   /* NOMTestCaseData* nomThis = NOMTestCaseGetData(nomSelf); */
-
-  _setUp(nomSelf, NULL);
+  methodArray=_nomGetMethodList(nomSelf, FALSE, NULL);
   
-  _tearDown(nomSelf, NULL);
+  for(a=0; a<NOMArray_length(methodArray, NULL); a++)
+  {
+    char* methodName=_queryString(_getName(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL), NULL);
+    
+    /* Only Methods starting with ˚test˚ are run. */
+    if(0==strstr( methodName, "test"))
+    {
+      nomProc* nProc=_queryMethodToken(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL);
+      
+      _setUp(nomSelf, NULL);
+      
+      if(NULL!=nProc)
+        nProc(nomSelf, NULL);
+      
+      _tearDown(nomSelf, NULL);      
+    }
+    
+  }
+  
   return resultArray;	
 }
 
@@ -84,6 +108,7 @@ NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMTestCase_runSingleTest(NOMTestCase* 
 
   _setUp(nomSelf, NULL);
   
+  g_message("%s: This method is not yet implemented.", __FUNCTION__);
   
   _tearDown(nomSelf, NULL);  
 }
