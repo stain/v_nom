@@ -19,6 +19,7 @@
 #include <nom.h>
 #include <nomtk.h>
 
+#include "nomstring.h"
 #include "nomtestresult.ih"
 
 NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_NOMTestResult_success(NOMTestResult* nomSelf,
@@ -28,5 +29,34 @@ NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_NOMTestResult_success(NOMTestR
   CORBA_boolean nomRetval=FALSE;
 
   return nomRetval;
+}
+
+
+NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMTestResult_setSuccess(NOMTestResult* nomSelf,
+                                                                  const CORBA_boolean fSuccess,
+                                                                  CORBA_Environment *ev)
+{
+  NOMTestResultData* nomThis = NOMTestResultGetData(nomSelf);
+  
+  _fSuccess=fSuccess;
+}
+
+
+NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMTestResult_setName(NOMTestResult* nomSelf,
+                                                               const NOMString* nsName,
+                                                               CORBA_Environment *ev)
+{
+  NOMTestResultData* nomThis = NOMTestResultGetData(nomSelf);
+  
+  _nsTestName=nsName;
+}
+
+
+NOMDLLEXPORT NOM_Scope NOMString* NOMLINK impl_NOMTestResult_queryName(NOMTestResult* nomSelf,
+                                                                       CORBA_Environment *ev)
+{
+  NOMTestResultData* nomThis = NOMTestResultGetData(nomSelf);
+  
+  return _nsTestName;
 }
 

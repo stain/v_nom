@@ -40,7 +40,7 @@
 
 NOMCLASSNAME(NOMTestResult);
 
-
+interface NOMString;
 
 /** \class NOMTestResult
     Base class for unit test results.
@@ -62,6 +62,15 @@ interface NOMTestResult : NOMObject
 
    */
   boolean success();
+  
+  void setSuccess(in boolean fSuccess);
+
+  void setName(in NOMString* nsName);
+  NOMString* queryName();
+  
+  NOMINSTANCEVAR(boolean fSuccess);
+  NOMINSTANCEVAR(NOMString* nsTestName);
+  
 };
 
 #endif  /* NOMTESTRESULT_IDL_INCLUDED */
