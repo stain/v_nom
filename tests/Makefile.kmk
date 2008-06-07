@@ -122,6 +122,21 @@ else
 endif
 
 
+#
+# Program for playing around.
+#
+PROGRAMS += nom-play
+nom-play_TEMPLATE = nombin
+nom-play_SOURCES = \
+	c/nom-play.c
+ifeq ($(BUILD_TARGET),win)
+ nom-play_LIBS = \
+	$(TARGET_libnomtest:.dll=.lib)
+else
+ 	nom-play_LIBS = \
+	$(TARGET_libnomtest)
+endif
+
 endif # NOM_WITH_TESTCASES
 
 include $(PATH_KBUILD)/subfooter.kmk

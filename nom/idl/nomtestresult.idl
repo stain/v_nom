@@ -32,8 +32,8 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#ifndef NOMTESTCASE_IDL_INCLUDED
-#define NOMTESTCASE_IDL_INCLUDED
+#ifndef NOMTESTRESULT_IDL_INCLUDED
+#define NOMTESTRESULT_IDL_INCLUDED
 
 #include "nomobj.idl"
 
@@ -64,6 +64,6 @@ interface NOMTestResult : NOMObject
   boolean success();
 };
 
-#endif  /* NOMTESTCASE_IDL_INCLUDED */
+#endif  /* NOMTESTRESULT_IDL_INCLUDED */
 
 

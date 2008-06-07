@@ -66,7 +66,7 @@ NOMDLLEXPORT NOM_Scope NOMString* NOMLINK impl_NOMString_assignString(NOMString*
                                                                       CORBA_Environment *ev)
 {
   NOMStringData* nomThis = NOMStringGetData(nomSelf);
-  
+
   g_string_assign(_gString, chrString); /* This copies the input string */
   return nomSelf;
 }

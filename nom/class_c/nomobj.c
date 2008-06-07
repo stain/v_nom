@@ -53,6 +53,8 @@
 
 #include "nomobj.ih"
 
+#include "nomstring.h"
+#include "nommethod.h"
 #include "gc.h"
 
 /**
@@ -123,14 +125,14 @@ NOM_Scope void NOMLINK impl_NOMObject_delete(NOMObject* nomSelf, CORBA_Environme
 }
 
 /**
-    \brief This function implements the method nomGetClass() of class NOMObject.
+    \brief This function implements the method nomQueryClass() of class NOMObject.
     It returns a pointer to the class object of this object.
 
     \param nomSelf The pointer to the object.
     \param ev      Environment pointer or NULL.
     \retval PNOMClass A pointer to the class object for this object. This can never be NULL.
  */
-NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomGetClass(NOMObject* nomSelf, CORBA_Environment *ev)
+NOM_Scope PNOMClass NOMLINK impl_NOMObject_nomQueryClass(NOMObject* nomSelf, CORBA_Environment *ev)
 {
 /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
 
@@ -157,7 +159,7 @@ NOM_Scope PNOMObject NOMLINK impl_NOMObject_new(NOMObject* nomSelf, CORBA_Enviro
      <CkassName>New() here.
      It is possible that we are called by a subclass. So get the class object and let the
      class object create the correct class. */
-  nomCls=NOMObject_nomGetClass(nomSelf, NULL);
+  nomCls=NOMObject_nomQueryClass(nomSelf, NULL);
   return NOMClass_nomNew(nomCls, NULL);
 }
 
@@ -205,7 +207,7 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsInstanceOf(NOMObject* nomSel
     return FALSE;
   }
  
-  if(nomClass==_nomGetClass(nomSelf, NULL))
+  if(nomClass==_nomQueryClass(nomSelf, NULL))
     return TRUE;
   
   return FALSE;
@@ -219,3 +221,45 @@ NOM_Scope CORBA_string NOMLINK impl_NOMObject_nomGetClassName(NOMObject* nomSelf
   /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
   return nomSelf->mtab->nomClassName;
 }
+
+
+NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMObject_nomGetMethodList(NOMObject* nomSelf,
+                                                                    const CORBA_boolean bIncludingParents,
+                                                                    CORBA_Environment *ev)
+{
+  NOMClassPriv* ncPriv;
+  
+  /* NOMObjectData* nomThis = NOMObjectGetData(nomSelf); */
+
+  g_message("In %s (%d): %s", __FUNCTION__, __LINE__, _nomGetClassName(_nomQueryClass(nomSelf, NULL), NULL));
+  
+  ncPriv=(NOMClassPriv*)_nomGetObjectCreateInfo(_nomQueryClass(nomSelf, NULL), NULL);
+  
+  if(ncPriv){
+    gulong a, ulNumIntroducedMethods;
+
+    ulNumIntroducedMethods=ncPriv->sci->ulNumStaticMethods;
+    for(a=0;a< ulNumIntroducedMethods;a++)
+    {
+      NOMMethod* nMethod=NOMMethodNew();
+      NOMString* ns;
+      
+      _initData(nMethod, (gpointer) &ncPriv->sci->nomSMethods[a], NULL);
+      g_message("In %s (%d): %s %X", __FUNCTION__, __LINE__, *ncPriv->sci->nomSMethods[a].nomMethodId, nMethod /*chrMethodDescriptor*/);
+
+      g_message("  In %s (%d): %s\n", __FUNCTION__, __LINE__, _nomGetClassName(_getName(nMethod, NULL), NULL));
+      
+      
+      //g_message("    In %s (%d): %X NOMString: %x", __FUNCTION__, __LINE__, nMethod, _getName(nMethod, NULL));
+      
+      g_message("    In %s (%d): NOMMethod: %x %s 3\n", __FUNCTION__, __LINE__, nMethod, _queryString(_getName(nMethod, NULL), NULL));
+      
+    }
+    //nomPrintf("     %s %s \n", nomSelf->mtab->nomClassName, ncPriv->mtab->nomClassName);
+  }
+  
+  //nomPrintf("In %s: metaclass: %s, class: %s\n", __FUNCTION__, _nomGetClassName(_nomQueryClass(nomSelf, NULL), NULL),
+    //        _nomGetClassName(nomSelf, NULL));
+
+}
+

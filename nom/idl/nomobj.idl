@@ -124,9 +124,9 @@ interface NOMObject
 
      \return Pointer to the class object
 
-     \sa impl_NOMObject_nomGetClass()
+     \sa impl_NOMObject_nomQueryClass()
    */
-  PNOMClass nomGetClass();
+  PNOMClass nomQueryClass();
 
   /**
      Create a new class of the kind the caller is. This method ensures that subclasses
@@ -225,6 +225,7 @@ interface NOMObject
    */
   boolean nomIsANoClsCheck(in PNOMClass nomClass);
 
+  void nomGetMethodList(in boolean bIncludingParents);
 };
 
 #endif /* NOMOBJ_IDL_INCLUDED */

@@ -52,11 +52,11 @@ EXPORTS
 
 	_NOMArrayClassData    
 	_NOMArrayCClassData  
-	NOMArray	     NewClass 
+	NOMArrayNewClass 
 
 	_NOMStringClassData    
 	_NOMStringCClassData  
-	NOMString	     NewClass 
+	NOMStringNewClass 
 
 	_NOMTestCaseClassData      
 	_NOMTestCaseCClassData     
@@ -65,6 +65,10 @@ EXPORTS
 	_NOMTestResultClassData      
 	_NOMTestResultCClassData     
 	NOMTestResultNewClass       
+
+	_NOMMethodClassData    
+	_NOMMethodCClassData  
+	NOMMethodNewClass 
 
 ;	_NOMTest2ClassData      
 ;	_NOMTest2CClassData     
