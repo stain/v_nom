@@ -241,9 +241,9 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       if(strcmp(pm->chrName, "nomIsObject"))
         {
           if(strcmp(pif->chrName , "NOMObject"))
-            fprintf(fh, "        ({ %s* %s_nomSelf_ = (nomSelf) ;nomCheckObjectPtr((NOMObject*)%s_nomSelf_, %sClassData.classObject,", pif->chrName, pif->chrName, pif->chrName, pif->chrName);
+            fprintf(fh, "        ({ %s* %s_nomSelf_ = (nomSelf) ; nomCheckObjectPtr((NOMObject*)%s_nomSelf_, %sClassData.classObject,", pif->chrName, pif->chrName, pif->chrName, pif->chrName);
           else
-            fprintf(fh, "        (nomCheckNOMObjectPtr(%s_nomSelf_, %sClassData.classObject,",pif->chrName, pif->chrName);
+            fprintf(fh, "        ({ %s* %s_nomSelf_ = (nomSelf) ; nomCheckNOMObjectPtr(%s_nomSelf_, %sClassData.classObject,", pif->chrName, pif->chrName, pif->chrName, pif->chrName);
           fprintf(fh, "\"%s_%s\", ev) ? \\\n", pif->chrName, pm->chrName);
           fprintf(fh, "        (NOM_Resolve(%s_nomSelf_, %s, %s) \\\n", pif->chrName, pif->chrName, pm->chrName);
           fprintf(fh, "        (%s_nomSelf_,", pif->chrName);
