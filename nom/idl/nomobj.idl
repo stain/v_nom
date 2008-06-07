@@ -197,6 +197,7 @@ interface NOMObject
      \sa nomIsA(), nomIsANoClsCheck()
    */
   boolean nomIsInstanceOf(in PNOMClass nomClass);
+
   /**
      This method returns the name of the class this object is an instance of.
      
@@ -206,9 +207,9 @@ interface NOMObject
      \returns A null terminated C string. Note that this is not a copy. The string
      is valid as long as the class object exists (not the instance).
 
-     \sa impl_NOMClass_nomGetClassName()
+     \sa impl_NOMClass_nomQueryClassName()
   */
-  string nomGetClassName();
+  string nomQueryClassName();
 
   /**
      This method checks if the object is an instance of the given class or some subclass. Using

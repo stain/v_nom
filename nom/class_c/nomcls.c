@@ -237,7 +237,7 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
       //The following was used before changing nomGetname()
       //if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetName(nomSelf, NULL),
       //                        0, 0, NULL))
-      if(!_nomFindClassFromName(NOMClassMgrObject, _nomGetClassName(nomSelf, &tempEnv),
+      if(!_nomFindClassFromName(NOMClassMgrObject, _nomQueryClassName(nomSelf, &tempEnv),
                               0, 0, &tempEnv))
 
         {

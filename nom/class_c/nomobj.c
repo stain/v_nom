@@ -215,9 +215,9 @@ NOM_Scope CORBA_boolean NOMLINK impl_NOMObject_nomIsInstanceOf(NOMObject* nomSel
 }
 
 /**
-   Function which implements the nomGetClassName() method of NOMObject.
+   Function which implements the nomQueryClassName() method of NOMObject.
 */
-NOM_Scope CORBA_string NOMLINK impl_NOMObject_nomGetClassName(NOMObject* nomSelf, CORBA_Environment *ev)
+NOM_Scope CORBA_string NOMLINK impl_NOMObject_nomQueryClassName(NOMObject* nomSelf, CORBA_Environment *ev)
 {
   /* NOMObjectData* nomThis=NOMObjectGetData(nomSelf); */
   return nomSelf->mtab->nomClassName;
