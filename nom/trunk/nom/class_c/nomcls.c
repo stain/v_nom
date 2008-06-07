@@ -285,13 +285,20 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
         /* Metaclass is already registered. Register the object class this
            metaclass may create. */
 
-        nomPrintf("%s: Metaclass already registered, registering normal object class now.\n", __FUNCTION__);
+        nomPrintf("%s (%d): Metaclass already registered, registering normal object class now.\n", __FUNCTION__, __LINE__);
 
         ncPriv=(NOMClassPriv*)_nomGetObjectCreateInfo(nomSelf, NULL);//nomSelf->mtab->nomClsInfo;
-        // ncPriv->ulIsMetaClass=0; /* Mark that we are not a metaclass (should be 0 already) */
-        ncPriv->ulClassFlags&=~NOM_FLG_IS_METACLASS; /* Mark that we are not a metaclass (should be 0 already) */
+        
         if(ncPriv){
           gulong a, ulNumIntroducedMethods;
+
+          // ncPriv->ulIsMetaClass=0; /* Mark that we are not a metaclass (should be 0 already) */
+          ncPriv->ulClassFlags&=~NOM_FLG_IS_METACLASS; /* Mark that we are not a metaclass (should be 0 already) */
+
+          if(_nomFindClassFromName(NOMClassMgrObject, ncPriv->mtab->nomClassName,
+                                   0, 0, &tempEnv))
+            nomPrintf("%s: %s already registered\n", __FUNCTION__, ncPriv->mtab->nomClassName);
+          
           /* Register all the methods this class introduces */
           ulNumIntroducedMethods=ncPriv->sci->ulNumStaticMethods;
           for(a=0;a<ulNumIntroducedMethods;a++)
@@ -300,7 +307,7 @@ NOM_Scope void NOMLINK impl_NOMClass_nomClassReady(NOMClass* nomSelf, CORBA_Envi
                 _nomRegisterMethod(NOMClassMgrObject, ncPriv->mtab,
                                    *ncPriv->sci->nomSMethods[a].chrMethodDescriptor, NULL);
             }
-          //nomPrintf("%s %s \n", nomSelf->mtab->nomClassName, ncPriv->mtab->nomClassName);
+          //nomPrintf("%s %s %s \n", __FUNCTION__, nomSelf->mtab->nomClassName, ncPriv->mtab->nomClassName);
           _nomRegisterClass(NOMClassMgrObject, ncPriv->mtab, NULL);
         }
       }
