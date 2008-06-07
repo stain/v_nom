@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2007
+* Portions created by the Initial Developer are Copyright (C) 2007-2008
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -204,6 +204,7 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, "    CORBA_Environment *ev);\n");
+      fprintf(fh, "#error The macro is broken. It does not support ˚recursive˚ calls (Line: %d)\n", __LINE__);
       /* Macro to be used when several parameters are checked */
       fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
       /* Do parameters */
@@ -240,18 +241,18 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       if(strcmp(pm->chrName, "nomIsObject"))
         {
           if(strcmp(pif->chrName , "NOMObject"))
-            fprintf(fh, "        (nomCheckObjectPtr((NOMObject*)nomSelf, %sClassData.classObject,",pif->chrName);
+            fprintf(fh, "        ({ %s* %s_nomSelf_ = (nomSelf) ;nomCheckObjectPtr((NOMObject*)%s_nomSelf_, %sClassData.classObject,", pif->chrName, pif->chrName, pif->chrName, pif->chrName);
           else
-            fprintf(fh, "        (nomCheckNOMObjectPtr(nomSelf, %sClassData.classObject,",pif->chrName);
+            fprintf(fh, "        (nomCheckNOMObjectPtr(%s_nomSelf_, %sClassData.classObject,",pif->chrName, pif->chrName);
           fprintf(fh, "\"%s_%s\", ev) ? \\\n", pif->chrName, pm->chrName);
-          fprintf(fh, "        (NOM_Resolve(nomSelf, %s, %s) \\\n", pif->chrName, pm->chrName);
-          fprintf(fh, "        (nomSelf,");
+          fprintf(fh, "        (NOM_Resolve(%s_nomSelf_, %s, %s) \\\n", pif->chrName, pif->chrName, pm->chrName);
+          fprintf(fh, "        (%s_nomSelf_,", pif->chrName);
           /* Do parameters */
           emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
           fprintf(fh, " ev)) : (%s", pm->mpReturn.chrType);
           for(b=0;b<pm->mpReturn.uiStar;b++)
             fprintf(fh, "*");
-          fprintf(fh, ") NULL)\n");
+          fprintf(fh, ") NULL; })\n");
         }
       else
         {
