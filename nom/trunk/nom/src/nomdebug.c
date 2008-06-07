@@ -67,7 +67,7 @@ NOMEXTERN void NOMLINK nomPrintObjectPointerErrorMsg(NOMObject*  nomObject, NOMC
       g_error("The object used to call the method %s is not a valid NOM object. ", chrMethodName);
     else
       g_error("The object for which the method %s should be called is not valid for this method.\nThe object must be some instance of class %s (or of a subclass) but is a %s.", chrMethodName, NOMClass_nomGetCreatedClassName(nomClass, NULL), 
-                NOMObject_nomGetClassName(nomObject, NULL));
+                NOMObject_nomQueryClassName(nomObject, NULL));
   }
 }
 
