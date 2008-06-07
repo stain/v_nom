@@ -55,6 +55,7 @@
 
 #include "nomstring.h"
 #include "nommethod.h"
+#include "nomarray.h"
 #include "gc.h"
 
 /**
@@ -222,16 +223,20 @@ NOM_Scope CORBA_string NOMLINK impl_NOMObject_nomGetClassName(NOMObject* nomSelf
   return nomSelf->mtab->nomClassName;
 }
 
-
-NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMObject_nomGetMethodList(NOMObject* nomSelf,
-                                                                    const CORBA_boolean bIncludingParents,
-                                                                    CORBA_Environment *ev)
+/*
+ Create a new NOMArray holding NOMMethod objects.
+ */
+NOMDLLEXPORT NOM_Scope NOMObject* NOMLINK impl_NOMObject_nomGetMethodList(NOMObject* nomSelf,
+                                                                          const CORBA_boolean bIncludingParents,
+                                                                          CORBA_Environment *ev)
 {
   NOMClassPriv* ncPriv;
+  NOMArray*nomArray=NOMArrayNew();
   
   /* NOMObjectData* nomThis = NOMObjectGetData(nomSelf); */
-
-  g_message("In %s (%d): %s", __FUNCTION__, __LINE__, _nomGetClassName(_nomQueryClass(nomSelf, NULL), NULL));
+  
+  if(TRUE==bIncludingParents)
+    g_message("Flag ˚bIncludeParents˚ not supported yet");
   
   ncPriv=(NOMClassPriv*)_nomGetObjectCreateInfo(_nomQueryClass(nomSelf, NULL), NULL);
   
@@ -242,24 +247,12 @@ NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMObject_nomGetMethodList(NOMObject* n
     for(a=0;a< ulNumIntroducedMethods;a++)
     {
       NOMMethod* nMethod=NOMMethodNew();
-      NOMString* ns;
       
       _initData(nMethod, (gpointer) &ncPriv->sci->nomSMethods[a], NULL);
-      g_message("In %s (%d): %s %X", __FUNCTION__, __LINE__, *ncPriv->sci->nomSMethods[a].nomMethodId, nMethod /*chrMethodDescriptor*/);
-
-      g_message("  In %s (%d): %s\n", __FUNCTION__, __LINE__, _nomGetClassName(_getName(nMethod, NULL), NULL));
       
-      
-      //g_message("    In %s (%d): %X NOMString: %x", __FUNCTION__, __LINE__, nMethod, _getName(nMethod, NULL));
-      
-      g_message("    In %s (%d): NOMMethod: %x %s 3\n", __FUNCTION__, __LINE__, nMethod, _queryString(_getName(nMethod, NULL), NULL));
-      
+      NOMArray_append(nomArray, nMethod, NULL);
     }
-    //nomPrintf("     %s %s \n", nomSelf->mtab->nomClassName, ncPriv->mtab->nomClassName);
   }
-  
-  //nomPrintf("In %s: metaclass: %s, class: %s\n", __FUNCTION__, _nomGetClassName(_nomQueryClass(nomSelf, NULL), NULL),
-    //        _nomGetClassName(nomSelf, NULL));
-
+  return nomArray;
 }
 

@@ -49,7 +49,7 @@
 NOM_Scope void NOMLINK impl_AClass_tstPrintHello(AClass* nomSelf, CORBA_Environment *ev)
 {
 /* AClassData* nomThis=AClassGetData(nomSelf); */
-  g_message("Hello");
+  g_message("Hello at %x", impl_AClass_tstPrintHello);
 }
 
 NOM_Scope gulong NOMLINK impl_AClass_tstQueryUlongVar1(AClass* nomSelf, CORBA_Environment *ev)
