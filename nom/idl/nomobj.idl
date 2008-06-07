@@ -43,6 +43,8 @@ Class definition file for the NOM class NOMObject.
 
 //NOMCLASSNAME(NOMObject);
 
+interface NOMArray;
+
 /** \interface NOMObject
 
     This is the root class of NOM. It provides methods common to all objects.
@@ -225,7 +227,7 @@ interface NOMObject
    */
   boolean nomIsANoClsCheck(in PNOMClass nomClass);
 
-  void nomGetMethodList(in boolean bIncludingParents);
+  NOMObject* nomGetMethodList(in boolean bIncludingParents);
 };
 
 #endif /* NOMOBJ_IDL_INCLUDED */
