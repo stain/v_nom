@@ -62,6 +62,14 @@
 #include "aclass.h"
 #include "bclass.h"
 
+/* For unit test */
+#include "nomarray.h"
+#include "nomstring.h"
+#include "nommethod.h"
+#include "nomtestresult.h"
+#include "testnomobject.h"
+
+
 #define ULONG_TESTVALUE_1         0xffeeddcc
 #define ULONG_TESTVALUE_2         0x55aa1122
 #define ULONG_TESTVALUE_BCLASS_1  0x50403020
@@ -209,6 +217,18 @@ void tstSetBClassInstanceVar(BClass * aObject)
 }
 
 
+static void printTestResults(NOMArray* nArray)
+{
+  int a;
+  
+  for(a=0; a < NOMArray_length(nArray, NULL) ; a++)
+  {
+    g_message("Test '%s()': %s", _queryString(NOMTestResult_queryName(NOMArray_queryObjectAtIdx(nArray, a, NULL), NULL), NULL),
+              NOMTestResult_success(NOMArray_queryObjectAtIdx(nArray, a, NULL), NULL) ? "Ok" : "Not ok");
+  }
+}
+
+
 /**
    Main entry point for the idl compiler.
  */
@@ -218,6 +238,11 @@ int main(int argc, char **argv)
   HREGDLL hReg=NULL;
   AClass*  aObject;
   BClass*  bObject;
+
+  /* Unit test */
+  NOMArray* nArray;
+  TestNomObject* tstNomObject;
+  int a;
 
 #if 0
   /* Preload the DLL otherwise it won't be found by the GC registering function */
@@ -278,6 +303,13 @@ int main(int argc, char **argv)
   tstSetAClassInstanceVar(bObject);
   tstSetBClassInstanceVar(bObject);
 
+  nomPrintf("\n");
+  g_message("Testing NOMObject");
+  tstNomObject=TestNomObjectNew();
+  _setClassMgrObject(tstNomObject, NOMClassMgrObject, NULL);
+  nArray=_runTests(tstNomObject, NULL);
+  printTestResults(nArray);
+  
   return 0;
 };
 
