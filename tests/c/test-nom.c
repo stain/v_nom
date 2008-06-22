@@ -68,6 +68,7 @@
 #include "nommethod.h"
 #include "nomtestresult.h"
 #include "testnomobject.h"
+#include "testnomclassmgr.h"
 
 
 #define ULONG_TESTVALUE_1         0xffeeddcc
@@ -242,6 +243,7 @@ int main(int argc, char **argv)
   /* Unit test */
   NOMArray* nArray;
   TestNomObject* tstNomObject;
+  TestNOMClassMgr* tstNOMClassMgr;
   int a;
 
 #if 0
@@ -304,10 +306,22 @@ int main(int argc, char **argv)
   tstSetBClassInstanceVar(bObject);
 
   nomPrintf("\n");
-  g_message("Testing NOMObject");
+  g_message("================================================================");
+  g_message("=====          Testing NOMObject base class                =====");
+  g_message("================================================================");
   tstNomObject=TestNomObjectNew();
   _setClassMgrObject(tstNomObject, NOMClassMgrObject, NULL);
   nArray=_runTests(tstNomObject, NULL);
+  nomPrintf("\n");
+  printTestResults(nArray);
+
+  nomPrintf("\n");
+  g_message("================================================================");
+  g_message("=====          Testing NOMClassMgr base class              =====");
+  g_message("================================================================");
+  tstNOMClassMgr=TestNOMClassMgrNew();
+  _setClassMgrObject(tstNOMClassMgr, NOMClassMgrObject, NULL);
+  nArray=_runTests(tstNOMClassMgr, NULL);
   nomPrintf("\n");
   printTestResults(nArray);
   

@@ -14,3 +14,7 @@ EXPORTS
 	_TestNomObjectClassData    
 	_TestNomObjectCClassData  
 	TestNomObjectNewClass     
+
+	_TestNOMClassMgrClassData    
+	_TestNOMClassMgrCClassData  
+	TestNOMClassMgrNewClass     
