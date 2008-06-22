@@ -308,6 +308,7 @@ int main(int argc, char **argv)
   tstNomObject=TestNomObjectNew();
   _setClassMgrObject(tstNomObject, NOMClassMgrObject, NULL);
   nArray=_runTests(tstNomObject, NULL);
+  nomPrintf("\n");
   printTestResults(nArray);
   
   return 0;
