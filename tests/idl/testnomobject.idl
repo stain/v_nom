@@ -15,7 +15,7 @@
 *
 * The Initial Developer of the Original Code is
 * netlabs.org: Chris Wohlgemuth <cinc-ml@netlabs.org>.
-* Portions created by the Initial Developer are Copyright (C) 2005-2008
+* Portions created by the Initial Developer are Copyright (C) 2008
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
@@ -31,9 +31,9 @@
 * version of this file under the terms of any one of the CDDL or the LGPL.
 *
 * ***** END LICENSE BLOCK ***** */
-/** \file nomcls.idl 
+/** \file testnomobject.idl 
     
-Class definition file for NOM class NOMClass the root metaclass.
+Class definition file for class TestNomObject.
 */
 #ifndef TESTNOMOBJECT_IDL_INCLUDED
 #define TESTNOMOBJECT_IDL_INCLUDED
