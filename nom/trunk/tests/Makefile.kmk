@@ -24,9 +24,11 @@ libnomtest_LDFLAGS.darwin = -install_name @executable_path/../lib/libnomtest.dyl
 libnomtest_SOURCES = \
 	idl/aclass.idl \
 	idl/bclass.idl \
+	idl/testnomclassmgr.idl \
 	idl/testnomobject.idl \
 	class_c/aclass.c \
 	class_c/bclass.c \
+	class_c/testnomclassmgr.c \
 	class_c/testnomobject.c
 libtest_SOURCES.os2 = \
 	$(PATH_TARGET)/libnomtest-os2.def
