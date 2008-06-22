@@ -25,10 +25,9 @@
 NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_NOMTestResult_success(NOMTestResult* nomSelf,
                                                                         CORBA_Environment *ev)
 {
-  /* NOMTestResultData* nomThis = NOMTestResultGetData(nomSelf); */
-  CORBA_boolean nomRetval=FALSE;
+  NOMTestResultData* nomThis = NOMTestResultGetData(nomSelf);
 
-  return nomRetval;
+  return _fSuccess;
 }
 
 

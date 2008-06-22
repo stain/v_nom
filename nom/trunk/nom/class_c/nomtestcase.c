@@ -82,9 +82,9 @@ NOMDLLEXPORT NOM_Scope NOMArray* NOMLINK impl_NOMTestCase_runTests(NOMTestCase* 
   for(a=0; a<NOMArray_length(methodArray, NULL); a++)
   {
     char* methodName=_queryString(_getName(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL), NULL);
-    
+
     /* Only Methods starting with ˚test˚ are run. */
-    if(0==strstr( methodName, "test"))
+    if(0!=strnstr( methodName, "test", 4))
     {
       NOMTestResult* nResult=NOMTestResultNew();
       nomProc* nProc=_queryMethodToken(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL);
@@ -97,7 +97,7 @@ NOMDLLEXPORT NOM_Scope NOMArray* NOMLINK impl_NOMTestCase_runTests(NOMTestCase* 
       /* Call the test method */
       if(NULL!=nProc)
         _setSuccess(nResult, nProc(nomSelf, NULL), NULL); /* TRUE if success */
-      
+
       /* Clean up */
       _tearDown(nomSelf, NULL);
       NOMArray_append(resultArray, nResult, NULL);
@@ -149,3 +149,23 @@ NOMDLLEXPORT NOM_Scope NOMTestResult* NOMLINK impl_NOMTestCase_runSingleTest(NOM
   return nResult;
 }
 
+
+
+NOMDLLEXPORT NOM_Scope void NOMLINK impl_NOMTestCase_setClassMgrObject(NOMTestCase* nomSelf,
+                                                                       const NOMClassMgr* nomClassMgrObject,
+                                                                       CORBA_Environment *ev)
+{
+  NOMTestCaseData* nomThis = NOMTestCaseGetData(nomSelf);
+  
+  _nomClassMgrObject=nomClassMgrObject;
+  
+}
+
+
+NOMDLLEXPORT NOM_Scope NOMClassMgr* NOMLINK impl_NOMTestCase_queryClassMgrObject(NOMTestCase* nomSelf,
+                                                                                 CORBA_Environment *ev)
+{
+  NOMTestCaseData* nomThis = NOMTestCaseGetData(nomSelf);
+ 
+  return _nomClassMgrObject;
+}
