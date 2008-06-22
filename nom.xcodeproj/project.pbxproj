@@ -20,8 +20,8 @@
 		36C523D30DFC380300B71A79 /* Makefile.kup */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.kup; sourceTree = "<group>"; };
 		36C523D40DFC380300B71A79 /* test-nom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "test-nom.c"; sourceTree = "<group>"; };
 		36C523D50DFC380300B71A79 /* test-nom-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "test-nom-2.c"; sourceTree = "<group>"; };
-		36C523D70DFC380300B71A79 /* aclass.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = aclass.idl; sourceTree = "<group>"; };
-		36C523D80DFC380300B71A79 /* bclass.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bclass.idl; sourceTree = "<group>"; };
+		36C523D70DFC380300B71A79 /* aclass.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = aclass.idl; sourceTree = "<group>"; };
+		36C523D80DFC380300B71A79 /* bclass.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = bclass.idl; sourceTree = "<group>"; };
 		36C523DA0DFC386A00B71A79 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		36C523DB0DFC386A00B71A79 /* Makefile.kmk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.kmk; sourceTree = "<group>"; };
 		36C523DD0DFC386A00B71A79 /* h_file_emitter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = h_file_emitter.c; sourceTree = "<group>"; };
@@ -63,15 +63,15 @@
 		36C5240D0DFC389F00B71A79 /* nomapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nomapi.h; sourceTree = "<group>"; };
 		36C5240E0DFC389F00B71A79 /* nombase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nombase.h; sourceTree = "<group>"; };
 		36C5240F0DFC389F00B71A79 /* make.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = make.inc; sourceTree = "<group>"; };
-		36C524120DFC389F00B71A79 /* nomarray.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nomarray.idl; sourceTree = "<group>"; };
-		36C524130DFC389F00B71A79 /* nomtestcase.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nomtestcase.idl; sourceTree = "<group>"; };
-		36C524140DFC389F00B71A79 /* nomstring.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nomstring.idl; sourceTree = "<group>"; };
-		36C524150DFC389F00B71A79 /* nomcls.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nomcls.idl; sourceTree = "<group>"; };
-		36C524160DFC389F00B71A79 /* nomtestresult.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nomtestresult.idl; sourceTree = "<group>"; };
-		36C524170DFC389F00B71A79 /* nomclassmanager.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nomclassmanager.idl; sourceTree = "<group>"; };
-		36C524180DFC389F00B71A79 /* nombase.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nombase.idl; sourceTree = "<group>"; };
-		36C524190DFC389F00B71A79 /* nommethod.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nommethod.idl; sourceTree = "<group>"; };
-		36C5241A0DFC389F00B71A79 /* nomobj.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = nomobj.idl; sourceTree = "<group>"; };
+		36C524120DFC389F00B71A79 /* nomarray.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nomarray.idl; sourceTree = "<group>"; };
+		36C524130DFC389F00B71A79 /* nomtestcase.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nomtestcase.idl; sourceTree = "<group>"; };
+		36C524140DFC389F00B71A79 /* nomstring.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nomstring.idl; sourceTree = "<group>"; };
+		36C524150DFC389F00B71A79 /* nomcls.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nomcls.idl; sourceTree = "<group>"; };
+		36C524160DFC389F00B71A79 /* nomtestresult.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nomtestresult.idl; sourceTree = "<group>"; };
+		36C524170DFC389F00B71A79 /* nomclassmanager.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nomclassmanager.idl; sourceTree = "<group>"; };
+		36C524180DFC389F00B71A79 /* nombase.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nombase.idl; sourceTree = "<group>"; };
+		36C524190DFC389F00B71A79 /* nommethod.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nommethod.idl; sourceTree = "<group>"; };
+		36C5241A0DFC389F00B71A79 /* nomobj.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = nomobj.idl; sourceTree = "<group>"; };
 		36C5241C0DFC389F00B71A79 /* nomtestresult.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nomtestresult.c; sourceTree = "<group>"; };
 		36C5241D0DFC389F00B71A79 /* nommethod.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nommethod.c; sourceTree = "<group>"; };
 		36C5241E0DFC389F00B71A79 /* nomobj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nomobj.c; sourceTree = "<group>"; };
@@ -91,7 +91,6 @@
 		36C5242E0DFC389F00B71A79 /* nomdebug.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nomdebug.c; sourceTree = "<group>"; };
 		36C5242F0DFC389F00B71A79 /* nombuildnomcls.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nombuildnomcls.c; sourceTree = "<group>"; };
 		36C524300DFC389F00B71A79 /* nomtkinit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nomtkinit.c; sourceTree = "<group>"; };
-		36C524310DFC389F00B71A79 /* _nomgc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = _nomgc.c; sourceTree = "<group>"; };
 		36C524320DFC389F00B71A79 /* thunk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = thunk.c; sourceTree = "<group>"; };
 		36C524330DFC389F00B71A79 /* nomid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nomid.c; sourceTree = "<group>"; };
 		36C524340DFC389F00B71A79 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -100,6 +99,10 @@
 		36C524370DFC389F00B71A79 /* nommemory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nommemory.c; sourceTree = "<group>"; };
 		36C524380DFC389F00B71A79 /* Makefile.kmk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.kmk; sourceTree = "<group>"; };
 		36C524390DFC389F00B71A79 /* exports.def */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = exports.def; sourceTree = "<group>"; };
+		36C5245A0DFC512E00B71A79 /* testnomobject.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = testnomobject.idl; sourceTree = "<group>"; };
+		36C5248D0DFC55CA00B71A79 /* testnomobject.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testnomobject.c; sourceTree = "<group>"; };
+		36C780090E0ED8F800B897F3 /* testnomclassmgr.idl */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = testnomclassmgr.idl; sourceTree = "<group>"; };
+		36C7800D0E0EDB5D00B897F3 /* testnomclassmgr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testnomclassmgr.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -129,6 +132,8 @@
 		36C523C60DFC380300B71A79 /* class_c */ = {
 			isa = PBXGroup;
 			children = (
+				36C7800D0E0EDB5D00B897F3 /* testnomclassmgr.c */,
+				36C5248D0DFC55CA00B71A79 /* testnomobject.c */,
 				36C523C70DFC380300B71A79 /* bclass.c */,
 				36C523C80DFC380300B71A79 /* Makefile.kup */,
 				36C523C90DFC380300B71A79 /* aclass.c */,
@@ -153,6 +158,8 @@
 		36C523D60DFC380300B71A79 /* idl */ = {
 			isa = PBXGroup;
 			children = (
+				36C780090E0ED8F800B897F3 /* testnomclassmgr.idl */,
+				36C5245A0DFC512E00B71A79 /* testnomobject.idl */,
 				36C523D70DFC380300B71A79 /* aclass.idl */,
 				36C523D80DFC380300B71A79 /* bclass.idl */,
 			);
@@ -368,7 +375,6 @@
 				36C5242E0DFC389F00B71A79 /* nomdebug.c */,
 				36C5242F0DFC389F00B71A79 /* nombuildnomcls.c */,
 				36C524300DFC389F00B71A79 /* nomtkinit.c */,
-				36C524310DFC389F00B71A79 /* _nomgc.c */,
 				36C524320DFC389F00B71A79 /* thunk.c */,
 				36C524330DFC389F00B71A79 /* nomid.c */,
 				36C524340DFC389F00B71A79 /* Makefile */,

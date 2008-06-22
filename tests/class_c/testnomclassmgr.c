@@ -70,7 +70,7 @@ NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_TestNOMClassMgr_test_nomFindCl
     if(!nomIsObj(nClassObject))
       break;
     
-    if(0!=strcmp( _nomGetCreatedClassName(nClassObject, NULL), "NOMObject"))
+    if(0!=strcmp( _nomQueryCreatedClassName(nClassObject, NULL), "NOMObject"))
       break;
       
     nomRetval=TRUE;
