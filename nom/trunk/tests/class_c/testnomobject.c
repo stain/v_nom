@@ -59,12 +59,21 @@ NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_TestNomObject_test_nomQueryCla
     CORBA_Environment *ev)
 {
   /* TestNomObjectData* nomThis = TestNomObjectGetData(nomSelf); */
-  CORBA_boolean nomRetval;
-  
-  if(0==strcmp(_nomQueryClassName(nomSelf, NULL), "TestNomObject"))
-    return TRUE;
+  CORBA_boolean nomRetval=FALSE;
+    
+  for(;;)
+  {
+    if(0!=strcmp(_nomQueryClassName(nomSelf, NULL), "TestNomObject"))
+      break;
 
-  return FALSE;
+    if(0!=strcmp(_nomQueryClassName((NOMObject*)_queryClassMgrObject(nomSelf, NULL), NULL), "NOMClassMgr"))
+      break;
+    
+    nomRetval=TRUE;
+    break;
+  }
+  
+  return nomRetval;
 }
 
 
