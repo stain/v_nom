@@ -75,9 +75,9 @@ interface NOMClass:NOMObject
      \par How to override:
      This method is usually not overriden.
 
-     \sa nomGetClassName()
+     \sa nomQueryClassName()
    */
-  string nomGetCreatedClassName();
+  string nomQueryCreatedClassName();
 
   /**
      This method is called for example by nomNew() when creating a new object. It may be

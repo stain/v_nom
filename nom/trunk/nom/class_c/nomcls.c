@@ -162,9 +162,9 @@ NOM_Scope gpointer NOMLINK impl_NOMClass_nomAllocate(NOMClass* nomSelf, const CO
 }
 
 /**
-   Function which implements the nomGetCreatedClassName() method of NOMClass.
+   Function which implements the nomQueryCreatedClassName() method of NOMClass.
 */
-NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomGetCreatedClassName(NOMClass* nomSelf, CORBA_Environment *ev)
+NOM_Scope CORBA_string NOMLINK impl_NOMClass_nomQueryCreatedClassName(NOMClass* nomSelf, CORBA_Environment *ev)
 {
   NOMClassPriv* ncp;
 
