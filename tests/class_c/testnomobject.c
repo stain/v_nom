@@ -76,6 +76,8 @@ NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_TestNomObject_test_nomIsA(Test
 
   for(;;)
   {
+    /* Because we call the method without a valid class there will be a warning message on the console */
+    g_message("In %s: The following warning is expected.", __FUNCTION__);
     if(_nomIsA(nomSelf, NULL, NULL))
       break;
 
@@ -103,6 +105,8 @@ NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_TestNomObject_test_nomIsInstan
   
   for(;;)
   {
+    /* Because we call the method without a valid class there will be a warning message on the console */
+    g_message("In %s: The following warning is expected.", __FUNCTION__);
     if(_nomIsInstanceOf(nomSelf, NULL, NULL))
       break;
 
