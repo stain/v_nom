@@ -10,3 +10,7 @@ EXPORTS
 	_BClassClassData    
 	_BClassCClassData  
 	BClassNewClass     
+
+	_TestNomObjectClassData    
+	_TestNomObjectCClassData  
+	TestNomObjectNewClass     

@@ -17,14 +17,17 @@ libnomtest_TEMPLATE = nomdll
 libnomtest_NAME.os2 = nomtest
 libnomtest_DEFS = \
 	NOM_AClass_IMPLEMENTATION_FILE \
-	NOM_BClass_IMPLEMENTATION_FILE
+	NOM_BClass_IMPLEMENTATION_FILE \
+	NOM_TestNomObject_IMPLEMENTATION_FILE
 libnomtest_INCS = idl
 libnomtest_LDFLAGS.darwin = -install_name @executable_path/../lib/libnomtest.dylib
 libnomtest_SOURCES = \
 	idl/aclass.idl \
 	idl/bclass.idl \
+	idl/testnomobject.idl \
 	class_c/aclass.c \
-	class_c/bclass.c
+	class_c/bclass.c \
+	class_c/testnomobject.c
 libtest_SOURCES.os2 = \
 	$(PATH_TARGET)/libnomtest-os2.def
 libtest_SOURCES.win = \

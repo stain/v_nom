@@ -64,6 +64,8 @@
 #include "nomarray.h"
 #include "nomstring.h"
 #include "nommethod.h"
+#include "nomtestresult.h"
+#include "testnomobject.h"
 
 #define ULONG_TESTVALUE_1         0xffeeddcc
 #define ULONG_TESTVALUE_2         0x55aa1122
@@ -212,6 +214,17 @@ void tstSetBClassInstanceVar(BClass * aObject)
 }
 
 
+void printTestResults(NOMArray* nArray)
+{
+  int a;
+
+  for(a=0; a < NOMArray_length(nArray, NULL) ; a++)
+  {
+    g_message("Test '%s()': %s", _queryString(NOMTestResult_queryName(NOMArray_queryObjectAtIdx(nArray, a, NULL), NULL), NULL),
+               NOMTestResult_success(NOMArray_queryObjectAtIdx(nArray, a, NULL), NULL) ? "Ok" : "Not ok");
+  }
+}
+
 /**
    Main entry point for the idl compiler.
  */
@@ -222,6 +235,7 @@ int main(int argc, char **argv)
   AClass*  aObject;
   BClass*  bObject;
   NOMArray* nArray;
+  TestNomObject* tstNomObject;
   int a;
   
 #if 0
@@ -257,6 +271,14 @@ int main(int argc, char **argv)
 
   /* Init NOM */
   NOMClassMgrObject=nomEnvironmentNew();
+  
+  nomPrintf("\n");
+  g_message("Testing NOMObject");
+  tstNomObject=TestNomObjectNew();
+  _setClassMgrObject(tstNomObject, NOMClassMgrObject, NULL);
+  nArray=_runTests(tstNomObject, NULL);
+  printTestResults(nArray);
+  exit(0);
   
   g_message("\n");
   g_message("================================================================");
