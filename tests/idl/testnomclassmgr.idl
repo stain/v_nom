@@ -55,9 +55,6 @@ interface TestNOMClassMgr : NOMTestCase
   
   setUp : override;
   tearDown : override;
-  NOMINSTANCEVAR(NOMClass* nClass);
-  NOMINSTANCEVAR(NOMClass* testCaseClass);
-  NOMINSTANCEVAR(NOMClass* nomObjectClass);                 
 };
 
 #endif /* TESTNOMCLOASSMGR_IDL_INCLUDED */
