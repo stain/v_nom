@@ -39,6 +39,7 @@
 
 interface NOMArray;
 interface NOMTestResult;
+interface NOMClassMgr;
 
 NOMCLASSNAME(NOMTestCase);
 
@@ -65,15 +66,13 @@ interface NOMTestCase : NOMObject
    */
   void setUp();
   void tearDown();
-  /*boolean assertTrue();*/
   NOMArray*	 runTests();
   NOMTestResult* runSingleTest(in string chrTestName);
+  void setClassMgrObject(in NOMClassMgr* nomClassMgrObject);
+  NOMClassMgr* queryClassMgrObject();
 
-  /** 
-     Override of nomInit() to initialize the GPtrArray*
-      */  
-  //NOMOVERRIDE(nomInit);
 
+  NOMINSTANCEVAR(NOMClassMgr* nomClassMgrObject);
 };
 
 #endif  /* NOMTESTCASE_IDL_INCLUDED */
