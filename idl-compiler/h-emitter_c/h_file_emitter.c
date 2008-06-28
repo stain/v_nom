@@ -204,8 +204,9 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       /* Do parameters */
       emitMethodParams(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, "    CORBA_Environment *ev);\n");
-      fprintf(fh, "#error The macro is broken. It does not support ˚recursive˚ calls (Line: %d)\n", __LINE__);
+
       /* Macro to be used when several parameters are checked */
+      fprintf(fh, "#error The macro is broken. It does not support ˚recursive˚ calls (Line: %d)\n", __LINE__);
       fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
       /* Do parameters */
       emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
@@ -233,6 +234,7 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
           fprintf(fh, " ev))\n");
         }
       fprintf(fh, "#else /* Extended parameter check */\n"); /* else NOM_NO_PARAM_CHECK */
+
       /* Check object only  */
       fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
       /* Do parameters */
@@ -265,6 +267,7 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
         }
       fprintf(fh, "#endif\n");
       fprintf(fh, "#else /* NOM_NO_PARAM_CHECK */\n");
+      /* Standard macro without parameter check */
       fprintf(fh, "#define %s_%s(nomSelf,", pif->chrName, pm->chrName);
       /* Do parameters */
       emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
@@ -275,7 +278,13 @@ static void emitNewMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
       emitMethodParamsNoTypes(pLocalPI, pif, pm->pParamArray);
       fprintf(fh, " ev))\n");
       fprintf(fh, "#endif\n");
+
+      fprintf(fh, "#ifdef _%s\n", pm->chrName);
+      fprintf(fh, "#undef _%s\n", pm->chrName);      
+      fprintf(fh, "#else\n");
       fprintf(fh, "#define _%s %s_%s\n", pm->chrName, pif->chrName, pm->chrName);
+      fprintf(fh, "#endif\n");
+
       fprintf(fh, "#endif /* _decl_%s_%s_ */ \n\n", pif->chrName,  pm->chrName);
     }
 };
