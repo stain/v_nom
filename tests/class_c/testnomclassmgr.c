@@ -46,11 +46,6 @@
 #include <nom.h>
 #include <nomtk.h>
 
-#include "nomclassmanager.h"
-#include "nomarray.h"
-#include "nomstring.h"
-#include "nomtestresult.h"
-#include "nomtestcase.h"
 #include "testnomclassmgr.ih"
 
 NOMDLLEXPORT NOM_Scope CORBA_boolean NOMLINK impl_TestNOMClassMgr_test_nomFindClassFromName(TestNOMClassMgr* nomSelf,

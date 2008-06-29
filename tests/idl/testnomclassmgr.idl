@@ -39,9 +39,8 @@ Class definition file for TestNOMClassMgr class.
 #define TESTNOMCLASSMGR_IDL_INCLUDED
 
 #include "nomtestcase.idl"
-
-interface NOMClass;
-interface NOMClassMgr;
+#include "nomcls.idl"
+#include "nomclassmanager.idl"
 
 
 interface TestNOMClassMgr : NOMTestCase
