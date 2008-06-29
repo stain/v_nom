@@ -63,6 +63,8 @@ static void emitHFileHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "extern \"C\" {\n");
   fprintf(fh, "#endif /* __cplusplus */\n\n");
 
+  fprintf(fh, "#ifndef NOMCOMPILER\n");
+  
   /* Define the name as an object */
   fprintf(fh, "#if !defined(_%s_defined)\n", pif->chrName);
   fprintf(fh, "#define _%s_defined 1\n", pif->chrName);
@@ -71,7 +73,6 @@ static void emitHFileHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "typedef %s *P%s;\n", pif->chrName, pif->chrName);
   fprintf(fh, "#endif\n");
   fprintf(fh, "#endif\n\n");
-
 }
 
 /**
@@ -355,7 +356,9 @@ static void emitNomCompilerInfo(PPARSEINFO pLocalPI, PINTERFACE pif)
   
   pArray=pif->pMethodArray;
   
-  fprintf(fh, "#ifdef NOMCOMPILER\n");
+  fprintf(fh, "#else /* NOMCOMPILER */\n");
+
+  emitInterfaceIncludes(pLocalPI, pif);
 
   fprintf(fh, "interface %s", pif->chrName);
   if(pif->chrParent)

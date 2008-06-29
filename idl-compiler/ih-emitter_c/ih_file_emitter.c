@@ -60,6 +60,8 @@ static void emitIHFileHeader(PPARSEINFO pLocalPI, PINTERFACE pif)
   /* The *.h of this class contains some declarations we need */
   fprintf(fh, "#include \"%s.h\"\n\n", pif->chrFileStem);
 
+  fprintf(fh, "#ifndef NOMCOMPILER\n");
+
 }
 
 
@@ -573,6 +575,9 @@ static void emitIHFileFooter(PPARSEINFO pLocalPI, PINTERFACE pif)
   FILE* fh=pLocalPI->outFile;
 
   fprintf(fh, "\n#endif /* NOM_%s_IMPLEMENTATION_FILE */\n", pif->chrName);
+  
+  fprintf(fh, "#endif /* NOMCOMPILER */\n");
+
   fprintf(fh, "#endif/* %s_IH */\n", pif->chrName);
 }
 
