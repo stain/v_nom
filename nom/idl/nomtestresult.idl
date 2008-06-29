@@ -36,11 +36,7 @@
 #define NOMTESTRESULT_IDL_INCLUDED
 
 #include "nomobj.idl"
-
-
-NOMCLASSNAME(NOMTestResult);
-
-interface NOMString;
+#include "nomstring.idl"
 
 /** \class NOMTestResult
     Base class for unit test results.

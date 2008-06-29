@@ -53,7 +53,6 @@
 
 #include "nomobj.ih"
 
-#include "nomstring.h"
 #include "nommethod.h"
 #include "nomarray.h"
 #include "gc.h"

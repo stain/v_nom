@@ -59,7 +59,6 @@
 
 #include "nomclassmanager.ih"
 
-//#include "nomfilepath.h"
 
 /**
    \brief Function which implements the nomFindClassFromID() method of NOMClassMgr.

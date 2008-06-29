@@ -38,7 +38,6 @@
 native GString;
 
 #include "nomobj.idl"
-//#include "nomfoundation.idl"
 
 NOMCLASSNAME(NOMString);
 

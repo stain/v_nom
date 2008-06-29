@@ -40,6 +40,7 @@ Class definition file for the NOM class NOMClassMgr
 #define nomcm_idl
 
 #include "nomobj.idl"
+#include "nomcls.idl"
 
 /** \interface NOMClassMgr
 
@@ -48,8 +49,6 @@ Class definition file for the NOM class NOMClassMgr
     put into the global variable \i NOMClassMgrObject.
     
  */
-
-interface NOMClass;
 
 interface NOMClassMgr : NOMObject
 {

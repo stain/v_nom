@@ -35,11 +35,11 @@
 #ifndef NOMTESTCASE_IDL_INCLUDED
 #define NOMTESTCASE_IDL_INCLUDED
 
+/* classes we use */
 #include "nomobj.idl"
-
-interface NOMArray;
-interface NOMTestResult;
-interface NOMClassMgr;
+#include "nomarray.idl"
+#include "nomtestresult.idl"
+#include "nomclassmanager.idl"
 
 NOMCLASSNAME(NOMTestCase);
 

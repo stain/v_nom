@@ -36,11 +36,7 @@
 #define NOMMETHOD_IDL_INCLUDED
 
 #include "nomobj.idl"
-
-interface NOMString;
-
-NOMCLASSNAME(NOMMethod);
-
+#include "nomstring.idl"
 
 
 /** \class NOMMethod

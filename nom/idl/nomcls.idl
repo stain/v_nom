@@ -40,8 +40,6 @@ Class definition file for NOM class NOMClass the root metaclass.
 
 #include "nomobj.idl"
 
-//NOMCLASSNAME(NOMClass);
-
 /** \interface NOMClass
 
     This is the root class for metaclasses.
