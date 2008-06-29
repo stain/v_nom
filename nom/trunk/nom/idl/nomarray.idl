@@ -36,7 +36,6 @@
 #define NOMARRAY_IDL_INCLUDED
 
 #include "nomobj.idl"
-//#include "nomfoundation.idl"
 
 NOMCLASSNAME(NOMArray);
 

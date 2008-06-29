@@ -19,7 +19,6 @@
 #include <nom.h>
 #include <nomtk.h>
 
-#include "nomstring.h"
 #include "nommethod.ih"
 
 
