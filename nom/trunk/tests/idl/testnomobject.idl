@@ -39,10 +39,7 @@ Class definition file for class TestNomObject.
 #define TESTNOMOBJECT_IDL_INCLUDED
 
 #include "nomtestcase.idl"
-
-interface NOMClass;
-interface NOMClassMgr;
-
+#include "nomcls.idl"
 
 interface TestNomObject : NOMTestCase
 {

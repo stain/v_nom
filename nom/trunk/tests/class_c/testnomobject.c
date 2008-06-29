@@ -47,11 +47,6 @@
 #include <nom.h>
 #include <nomtk.h>
 
-#include "nomclassmanager.h"
-#include "nomarray.h"
-#include "nomstring.h"
-#include "nomtestresult.h"
-#include "nomtestcase.h"
 #include "testnomobject.ih"
 
 
