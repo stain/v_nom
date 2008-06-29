@@ -41,10 +41,6 @@ Class definition file for the NOM class NOMObject.
 
 #include "nombase.idl"
 
-//NOMCLASSNAME(NOMObject);
-
-interface NOMArray;
-
 /** \interface NOMObject
 
     This is the root class of NOM. It provides methods common to all objects.
