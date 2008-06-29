@@ -347,6 +347,37 @@ static void emitParentClassMethods(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "\n");
 }
 
+static void emitNomCompilerInfo(PPARSEINFO pLocalPI, PINTERFACE pif)
+{
+  FILE* fh=pLocalPI->outFile;
+  GPtrArray *pArray;
+  int a;
+  
+  pArray=pif->pMethodArray;
+  
+  fprintf(fh, "#ifdef NOMCOMPILER\n");
+
+  fprintf(fh, "interface %s", pif->chrName);
+  if(pif->chrParent)
+  {
+    fprintf(fh, " : %s", pif->chrParent);
+  }
+  fprintf(fh, "\n{\n");
+  
+  /* Print known methods */
+  for(a=0;a<pArray->len;a++)
+  {
+    int b;
+    PMETHOD pm=(PMETHOD)g_ptr_array_index(pArray, a);
+
+    fprintf(fh, "    %s(", pm->chrName); /* Methodname */
+    emitMethodParams(pLocalPI, pif, pm->pParamArray);
+    fprintf(fh, ");\n");     
+  }
+  fprintf(fh, "}\n");  
+  fprintf(fh, "\n#endif /* NOMCOMPILER */\n\n");
+}
+
 static void emitHFileFooter(PPARSEINFO pLocalPI, PINTERFACE pif)
 {
   FILE* fh=pLocalPI->outFile;
@@ -388,6 +419,7 @@ void emitHFile(GPtrArray* pInterfaceArray)
                   emitObjectCheckFunction(pLocalPI, pif);
                   emitNewMethods(pLocalPI, pif);
                   emitParentClassMethods(pLocalPI, pif);
+                  emitNomCompilerInfo(pLocalPI, pif);                  
                   emitHFileFooter(pLocalPI, pif);
                   closeOutfile(pLocalPI->outFile);
                   pLocalPI->outFile = NULL;
