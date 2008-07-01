@@ -92,6 +92,60 @@ void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
     }
 }
 
+
+/*
+ \param pArray Pointer to the list of parameters.
+ */
+void emitMethodParamsForNOMCompiler(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray)
+{
+  FILE* fh=pLocalPI->outFile;
+  int a;
+  
+  for(a=0;a<pArray->len;a++)
+  {
+    int b;
+    gchar *chrType;
+    PMETHODPARAM pm=(PMETHODPARAM)g_ptr_array_index(pArray, a);
+    
+    chrType= pm->chrType;
+
+#if 0
+    /* For old IDL files using orbit IDL compiler */
+    if(!strcmp(pm->chrType, "string"))
+      chrType="CORBA_char*";
+    else if(!strcmp(pm->chrType, "long"))
+      chrType="CORBA_long";
+    else if(!strcmp(pm->chrType, "unsigned long"))
+      chrType="CORBA_unsigned_long";
+    else if(!strcmp(pm->chrType, "boolean"))
+      chrType="CORBA_boolean";
+#endif
+    
+    switch(pm->uiDirection)
+    {
+      case PARM_DIRECTION_IN:
+        fprintf(fh, " in %s", chrType);
+        break;
+      case PARM_DIRECTION_OUT:
+        fprintf(fh, " out  %s", chrType);
+        break;
+      case PARM_DIRECTION_INOUT:
+        fprintf(fh, " inout %s", chrType);
+        break;
+      default:
+      
+        break;
+    }
+    for(b=0;b<pm->uiStar;b++)
+      fprintf(fh, "*");
+    fprintf(fh, " %s", pm->chrName);
+    if(a<pArray->len-1)
+      fprintf(fh, ",");
+      
+  }
+}
+
+
 /*
   \param pArray Pointer to the list of parameters.
  */
@@ -128,6 +182,33 @@ void emitReturnType(PPARSEINFO pLocalPI, PINTERFACE pif, PMETHOD pm)
   else if(!strcmp(pm->mpReturn.chrType, "unsigned long"))
     chrType="CORBA_unsigned_long";
 
+  fprintf(fh, "%s", chrType);
+  for(b=0;b<pm->mpReturn.uiStar;b++)
+    fprintf(fh, "*");
+}
+
+
+void emitReturnTypeForNOMCompiler(PPARSEINFO pLocalPI, PINTERFACE pif, PMETHOD pm)
+{
+  FILE* fh=pLocalPI->outFile;
+  int b;
+  gchar* chrType;
+  
+  chrType= pm->mpReturn.chrType;
+
+#if 0
+  /* Support for orbit IDL files */
+  if(!strcmp(pm->mpReturn.chrType, "long"))
+    chrType="CORBA_long";
+  else if(!strcmp(pm->mpReturn.chrType, "boolean"))
+    chrType="CORBA_boolean";
+  else if(!strcmp(pm->mpReturn.chrType, "unsigned long"))
+    chrType="CORBA_unsigned_long";
+#endif
+  
+  if(!strcmp(pm->mpReturn.chrType, "boolean"))
+    chrType="gboolean";
+  
   fprintf(fh, "%s", chrType);
   for(b=0;b<pm->mpReturn.uiStar;b++)
     fprintf(fh, "*");
