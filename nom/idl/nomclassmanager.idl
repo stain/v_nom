@@ -132,7 +132,7 @@ interface NOMClassMgr : NOMObject
      A pointer on the head of a GData list. Note that this is not a copy.
 
    */
-  PGData nomGetClassList();
+  gpointer nomGetClassList();
 
   /**
      This method returns a pointer to a class specific private structure holding additional
