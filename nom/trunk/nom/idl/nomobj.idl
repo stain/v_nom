@@ -41,6 +41,8 @@ Class definition file for the NOM class NOMObject.
 
 #include "nombase.idl"
 
+interface NOMClass;
+
 /** \interface NOMObject
 
     This is the root class of NOM. It provides methods common to all objects.
@@ -160,7 +162,7 @@ interface NOMObject
 
      \sa impl_NOMObject_new()
    */
-  PNOMObject new();
+  NOMObject* new();
 
   /**
      This method checks if the object is an instance of the given class or some subclass. Using
