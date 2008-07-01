@@ -69,8 +69,8 @@
 
 
 /* Native types we want to use in the IDL */
-native PNOMObject;
-native PNOMClass;
+//native PNOMObject;
+//native PNOMClass;
 
 native  gint;
 native  gulong;
