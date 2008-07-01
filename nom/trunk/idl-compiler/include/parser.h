@@ -192,6 +192,8 @@ void emitCFile(GPtrArray* pInterfaceArray);
 void emitMethodParams(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray);
 void emitMethodParamsNoTypes(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray);
 void emitReturnType(PPARSEINFO pLocalPI, PINTERFACE pif, PMETHOD pm);
+void emitMethodParamsForNOMCompiler(PPARSEINFO pLocalPI, PINTERFACE pif, GPtrArray *pArray);
+void emitReturnTypeForNOMCompiler(PPARSEINFO pLocalPI, PINTERFACE pif, PMETHOD pm);
 
 /* In printdata.c */
 void printInterface(PINTERFACE pif);
