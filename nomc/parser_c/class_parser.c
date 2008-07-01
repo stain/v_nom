@@ -63,6 +63,8 @@ static PINTERFACE createInterfaceStruct()
   return pInterface;
 }
 
+
+
 static void registerInterface(void)
 {
   PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
@@ -123,15 +125,13 @@ static void deRegisterInterface(PINTERFACE pif)
 
 
 /*
-  Function to parse the body of an interface declaration.
+  Function to parse the body of a class.
   Current token is '{'.
 
-  IB:= CV                                             // NOMCLASSVERSION()
-     | IV                                             // NOMINSTANCEVAR()
-     |  M                                             // Method
-     | OV                                             // Overriden method
+  CBODY:= 
+ 
  */
-static void parseIBody(void)
+static void parseCBody(void)
 {
   /* Current token is '{' */
   PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
@@ -140,12 +140,9 @@ static void parseIBody(void)
   do{
     PSYMBOL pCurSymbol;
     GTokenValue value;
-    
-    //g_printf("%d: ", g_scanner_cur_line(gScanner)+pParseInfo->uiLineCorrection);
-    
+        
     //pParseInfo->fPrintToken=TRUE;
     //printToken(gScanner->token);
-    //getNextToken();
     
     /* Method implementations must start with "impl" which is registered as a symbol. Here we check if
      the token is a symbol. */
@@ -185,137 +182,28 @@ static void parseIBody(void)
                             TRUE); /* is_error */
       cleanupAndExit(1);
     }
-
-    //printToken(gScanner->token);
-
-//    parseMethodImplementation();
-   // g_message("Method parsed...");
- //   cleanupAndExit(1);
-#if 0
-    /* Typespec check must be first */
-    if(matchNextKind(KIND_TYPESPEC)) /* Be aware that we don't compare types here */
-      {
-        parseMethod();
-      }
-    else if(matchNext(G_TOKEN_IDENTIFIER))
-      {
-        /* This may be an override statement */
-        parseOverrideMethodFromIdentifier();
-      }
-    else if(matchNext(G_TOKEN_SYMBOL))
-      {
-        value=gScanner->value;
-        pCurSymbol=value.v_symbol;
-        switch(pCurSymbol->uiSymbolToken)
-          {
-          case IDL_SYMBOL_INSTANCEVAR:
-            parseInstanceVar();
-            break;
-          case IDL_SYMBOL_FILESTEM:
-            parseFileStem();
-            break;
-          default:
-            {
-              g_scanner_unexp_token(gScanner,
-                                    G_TOKEN_SYMBOL,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    "Trying to parse interface body.",
-                                    TRUE); /* is_error */
-              cleanupAndExit(1);
-            }
-          }/* switch */
-      }
-    else
-      {
-        getNextToken();
-        g_scanner_unexp_token(gScanner,
-                              G_TOKEN_IDENTIFIER,
-                              NULL,
-                              NULL,
-                              NULL,
-                              "Trying to parse interface body.",
-                              TRUE); /* is_error */
-        cleanupAndExit(1);
-      }
-#endif
-  }while(g_scanner_peek_next_token(gScanner)!='}');
+  }while(g_scanner_peek_next_token(gScanner)!= G_TOKEN_EOF && g_scanner_peek_next_token(gScanner)!='}');
 
 }
 
 
-/*
-  Parse the class name. If we already encountered this class the name is registered as a
-  symbol. IF this is the first time the name is an identifier.
- 
-  Note that the current token is the 'class' keyword.
-
-  CLASSIDENT:=  G_TOKEN_IDENTIFIER
-              | IDL_SYMBOL_INTERFACE
- */
-static void parseClassIdent(GTokenType token)
-{
-  PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
-  
-  if(matchNext(G_TOKEN_IDENTIFIER))
-    {
-      /* Save interface info */
-      GTokenValue value=gScanner->value;
-      pParseInfo->pCurInterface->chrName=g_strdup(value.v_identifier);
-    }
-  else
-    {
-      if(matchNext(G_TOKEN_SYMBOL))
-        {
-          /* If the interface name is a symbol, it means the interface was
-             already registered before. Maybe because of a forward statement.
-             We will check that in the function which called us. */
-          
-          /* Check if it's one of our interface symbols */
-          PSYMBOL pCurSymbol;
-          GTokenValue value;
-
-          value=gScanner->value;
-          pCurSymbol=value.v_symbol;
-          if(IDL_SYMBOL_REGINTERFACE!=pCurSymbol->uiSymbolToken)
-            {
-              //g_message("%s %d", pCurSymbol->chrSymbolName, pCurSymbol->uiKind);
-              g_scanner_unexp_token(gScanner,
-                                    G_TOKEN_SYMBOL,
-                                    NULL, NULL, NULL,
-                                    "Keyword 'interface' is not followed by a valid identifier.",
-                                    TRUE); /* is_error */
-              cleanupAndExit(1);
-            }
-          /* Save interface name */
-          pParseInfo->pCurInterface->chrName=g_strdup(pCurSymbol->chrSymbolName);
-        }
-      else{
-        g_scanner_unexp_token(gScanner,
-                              G_TOKEN_IDENTIFIER,
-                              NULL, NULL, NULL,
-                              "Keyword 'interface' must be followed by an identifier",
-                              TRUE); /* is_error */
-        cleanupAndExit(1);
-      }
-    }
-}
 
 
 /*
-  Current token is '{'.
+  Current token is CLASSIDENT.
 
-  IB2:= '{' IB '}'
-      | '{' IB '}' ';'
+  CLASSBODY:=  '{' CBODY '}'
+             | '{' CBODY '}' ';'
 
 */
-static void parseIFaceBody(void)
+static void parseClassBody(void)
 {
   
-  parseIBody();
+  exitIfNotMatchNext('{',  "No opening brace for class body.");
+    
+  parseCBody();
 
-  exitIfNotMatchNext(G_TOKEN_SYMBOL,  "No closing of 'interface' section.");
+  exitIfNotMatchNext('}',  "No closing of 'interface' section.");
     
   /* Remove a terminating ';' from the input if present. */
   matchNext(';');
@@ -323,10 +211,153 @@ static void parseIFaceBody(void)
 
 
 /*
+ Parse the class name. If we already encountered this class the name is registered as a
+ symbol. IF this is the first time the name is an identifier.
+ 
+ Note that the current token is the 'class' keyword.
+ 
+ CLASSIDENT:=  G_TOKEN_IDENTIFIER
+             | IDL_SYMBOL_INTERFACE
+ */
+static gchar* parseClassIdent(void)
+{
+  PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
+  
+  if(matchNext(G_TOKEN_IDENTIFIER))
+  {
+    /* Save interface info */
+    GTokenValue value=gScanner->value;
+
+    return g_strdup(value.v_identifier);
+  }  
+  else
+  {
+    if(matchNext(G_TOKEN_SYMBOL))
+    {
+      /* If the interface name is a symbol, it means the interface was
+       already registered before. Maybe because of a forward statement.
+       We will check that in the function which called us. */
+      
+      /* Check if it's one of our interface symbols */
+      PSYMBOL pCurSymbol;
+      GTokenValue value;
+      
+      value=gScanner->value;
+      pCurSymbol=value.v_symbol;
+      if(IDL_SYMBOL_REGINTERFACE!=pCurSymbol->uiSymbolToken)
+      {
+        /* No, some other symbol */
+        g_scanner_unexp_token(gScanner,
+                              G_TOKEN_SYMBOL,
+                              NULL, NULL, NULL,
+                              "Keyword 'class' is not followed by a valid identifier.",
+                              TRUE); /* is_error */
+        cleanupAndExit(1);
+      }
+
+      /* Save interface name */
+      return g_strdup(pCurSymbol->chrSymbolName);
+    }
+    else
+    {
+      g_scanner_unexp_token(gScanner,
+                            G_TOKEN_IDENTIFIER,
+                            NULL, NULL, NULL,
+                            "Keyword 'class' must be followed by an identifier",
+                            TRUE); /* is_error */
+      cleanupAndExit(1);
+    }
+  }
+}
+
+
+static gchar* parseParentClassIdent(void)
+{
+  g_message("Line %d: Error in class declaration",  g_scanner_cur_line(gScanner));
+  cleanupAndExit(0);
+  
+  return NULL;
+}
+
+
+static void doForwardClassDeclaration(void)
+{
+  PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
+  PINTERFACE pif;
+  
+  /* Check if we already have a (maybe forward) declaration */
+  pif=findInterfaceFromName(pParseInfo->pCurInterface->chrName);
+  if(pif)
+  {
+    /* One forward declaration is enough... */
+    g_free(pParseInfo->pCurInterface->chrName);
+    g_free(pParseInfo->pCurInterface);
+  }
+  else
+  {
+    pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
+    pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
+    /* It's save to register the interface right here even if the struct is almost empty. 
+     If anything goes wrong later we will exit anyway. */
+    registerInterface();  
+  }
+}
+
+
+static void doClassDeclaration(void)
+{
+  PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
+  
+  PINTERFACE pif;
+  gchar *chrTemp=pParseInfo->pCurInterface->chrName;
+  
+  /* Check if we already have a (maybe forward) declaration */
+  pif=findInterfaceFromName(pParseInfo->pCurInterface->chrName);
+  if(pif)
+  {
+    if(pif->fIsForwardDeclaration)
+    {
+      /* Remove the forward declaration and insert the real thing afterwards. */
+      deRegisterInterface(pif);
+    }
+    else
+    {
+      /* It˚s the declaration from the *.h file. Save a pointer to this information. */
+      pParseInfo->pClassDefinition=pif;
+      deRegisterInterface(pif);
+    }
+  }
+  
+  pParseInfo->pCurInterface->chrName=chrTemp;
+  pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
+  
+  /* It's save to register the interface right here even if the struct is almost empty. 
+   If anything goes wrong later we will exit anyway. */
+  registerInterface();  
+  
+  /* The class definition in *.nom files does not contain all the stuff an interface may define. We use the found
+   interface to fill the gaps. If we don˚t have an interface something went wrong and we quit. */
+  if(!pParseInfo->pClassDefinition)
+  {
+    g_message("Line %d: Error during class parsing. No class definition found. MAke sure you included the *.ih file.",  g_scanner_cur_line(gScanner));
+    cleanupAndExit(0);
+  }
+  
+  pParseInfo->pCurInterface->chrParent=g_strdup(pParseInfo->pClassDefinition->chrParent);
+  
+  /* Note: We don˚t support subclasses yet. */
+  if(matchNext(':'))
+  { 
+    parseParentClassIdent();
+  }  
+    parseClassBody();
+}
+
+/*
   Parse a class declaration. The current token is the 'class' keyword.
 
-  class:=  CLASSIDENT ';'                         // Forward declaration
-         | CLASSIDENT ':' SUBCLASSIDENT CLASSBODY // Subclass (not used yet!)
+  class:=  CLASSIDENT ';'                            // Forward declaration
+         | CLASSIDENT ':' PARENTCLASSIDENT CLASSBODY // Subclass (not used yet!)
          | CLASSIDENT CLASSBODY
  
  */
@@ -335,97 +366,25 @@ void parseClass(GTokenType token)
   PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
   pParseInfo->pCurInterface=createInterfaceStruct();
 
-  /* Get the interface name */
-  parseClassIdent(token);
+  /* Get the class name. */
+  pParseInfo->pCurInterface->chrName=parseClassIdent();
   
    /* Check for forward declaration */
   if(matchNext(';'))
     {
-      PINTERFACE pif;
-
-      /* Check if we already have a (maybe forward) declaration */
-      pif=findInterfaceFromName(pParseInfo->pCurInterface->chrName);
-      if(pif)
-        {
-          g_free(pParseInfo->pCurInterface);
-        }
-      else
-      {
-        pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
-        pParseInfo->pCurInterface->fIsForwardDeclaration=TRUE;
-        /* It's save to register the interface right here even if the struct is almost empty. 
-         If anything goes wrong later we will exit anyway. */
-        registerInterface();  
-      }
+      doForwardClassDeclaration();
     }
   else
     {
-      PINTERFACE pif;
-      gchar *chrTemp=pParseInfo->pCurInterface->chrName;
-
-      /* Check if we already have a (maybe forward) declaration */
-      pif=findInterfaceFromName(pParseInfo->pCurInterface->chrName);
-      if(pif)
-        {
-          if(pif->fIsForwardDeclaration)
-            {
-              /* Remove the forward declaration and insert the real thing afterwards. */
-              deRegisterInterface(pif);
-            }
-          else
-            {
-              pParseInfo-> pClassDefinition=pif;
-#if 0              
-              /* Oops, we already have an interface declaration */
-              g_scanner_unexp_token(gScanner, G_TOKEN_SYMBOL,
-                                    NULL, NULL, NULL,
-                                    "An interface with this name was already declared.",
-                                    TRUE); /* is_error */
-              cleanupAndExit(1);
-#endif              
-            }
-        }
-      pParseInfo->pCurInterface->chrName=chrTemp;
-      pParseInfo->pCurInterface->chrSourceFileName=g_strdup(pParseInfo->chrCurrentSourceFile);
-
-      /* It's save to register the interface right here even if the struct is almost empty. 
-         If anything goes wrong later we will exit anyway. */
-      //registerInterface();  
-
-      /* The class definition in *.nom files does not contain all the stuff an interface may define. We use the found
-       interface to fill the gaps. If we don˚t have an interface something went wrong and we quit. */
-      if(!pParseInfo->pClassDefinition)
-      {
-        g_message("Line %d: Error during class parsing. No class definition found. MAke sure you included the *.ih file.",  g_scanner_cur_line(gScanner));
-        cleanupAndExit(0);
-      }
-      pParseInfo->pCurInterface->chrParent=g_strdup(pParseInfo->pClassDefinition->chrParent);
-      
-      if(matchNext(':'))
-        { 
-          //parseSubclassedIFace();
-          g_message("Line %d: Error in class declaration",  g_scanner_cur_line(gScanner));
-          cleanupAndExit(0);
-        }
-      else if(matchNext('{'))
-        {          
-          parseIFaceBody();
-        }
-      else
-        {
-          g_message("Line %d: Error in class declaration",  g_scanner_cur_line(gScanner));
-          cleanupAndExit(0);
-        }
-    }
+      /* This is the real thing. */
+      doClassDeclaration();
+    }/* not forward declaration */
   
 #if 0
-  g_printf("\n");
-  g_printf("\n");
+  g_printf("\n\n");
   /* In printdata.c */  
   printAllInterfaces();
-  g_printf("\n");
-  g_printf("\n");
-  
+  g_printf("\n\n");
   printInterface(pParseInfo->pCurInterface);
 #endif
 }
