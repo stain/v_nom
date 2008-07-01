@@ -123,30 +123,39 @@ static void deRegisterInterface(PINTERFACE pif)
 }
 
 
+/*
+ Function to parse the body of a class.
+ Current token is '{'.
+ 
+ CBODY:= '}'   //This is an empty class body
+        | CLASSMETHODS '}'
+ */
+/*
+ 
+ CLASSMETHODS:=  CLASSMETHOD
+               | CLASSMETHOD CLASSMETHODS
+ */
 
 /*
   Function to parse the body of a class.
   Current token is '{'.
 
-  CBODY:= 
+  CBODY:= '}'   //This is an empty class body
+         | IMPL CLASSMETHODS '}'
  
  */
 static void parseCBody(void)
 {
-  /* Current token is '{' */
   PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
 
-
-  do{
+  while(g_scanner_peek_next_token(gScanner)!= G_TOKEN_EOF && g_scanner_peek_next_token(gScanner)!='}')
+  {
     PSYMBOL pCurSymbol;
     GTokenValue value;
-        
-    //pParseInfo->fPrintToken=TRUE;
-    //printToken(gScanner->token);
     
     /* Method implementations must start with "impl" which is registered as a symbol. Here we check if
      the token is a symbol. */
-    TST_NEXT_TOKEN_NOT_OK(G_TOKEN_SYMBOL, "Method implementation must start with 'impl'.");
+    exitIfNotMatchNext(G_TOKEN_SYMBOL, "Method implementation must start with 'impl'.");
 
     value=gScanner->value;
     pCurSymbol=value.v_symbol;
@@ -156,9 +165,7 @@ static void parseCBody(void)
     {
       g_scanner_unexp_token(gScanner,
                             G_TOKEN_SYMBOL,
-                            NULL,
-                            NULL,
-                            NULL,
+                            NULL, NULL, NULL,
                             "'impl'.",
                             TRUE); /* is_error */
       cleanupAndExit(1);
@@ -175,15 +182,14 @@ static void parseCBody(void)
       getNextToken();
       g_scanner_unexp_token(gScanner,
                             G_TOKEN_IDENTIFIER,
-                            NULL,
-                            NULL,
-                            NULL,
+                            NULL, NULL, NULL,
                             "Expected return type specifier.",
                             TRUE); /* is_error */
       cleanupAndExit(1);
     }
-  }while(g_scanner_peek_next_token(gScanner)!= G_TOKEN_EOF && g_scanner_peek_next_token(gScanner)!='}');
+  };
 
+  exitIfNotMatchNext('}',  "No closing of 'class' section.");
 }
 
 
@@ -192,8 +198,8 @@ static void parseCBody(void)
 /*
   Current token is CLASSIDENT.
 
-  CLASSBODY:=  '{' CBODY '}'
-             | '{' CBODY '}' ';'
+  CLASSBODY:=  '{' CBODY
+             | '{' CBODY ';'
 
 */
 static void parseClassBody(void)
@@ -202,8 +208,6 @@ static void parseClassBody(void)
   exitIfNotMatchNext('{',  "No opening brace for class body.");
     
   parseCBody();
-
-  exitIfNotMatchNext('}',  "No closing of 'interface' section.");
     
   /* Remove a terminating ';' from the input if present. */
   matchNext(';');
