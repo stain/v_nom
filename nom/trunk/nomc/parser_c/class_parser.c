@@ -123,25 +123,13 @@ static void deRegisterInterface(PINTERFACE pif)
 }
 
 
-/*
- Function to parse the body of a class.
- Current token is '{'.
- 
- CBODY:= '}'   //This is an empty class body
-        | CLASSMETHODS '}'
- */
-/*
- 
- CLASSMETHODS:=  CLASSMETHOD
-               | CLASSMETHOD CLASSMETHODS
- */
 
 /*
   Function to parse the body of a class.
   Current token is '{'.
 
   CBODY:= '}'   //This is an empty class body
-         | IMPL CLASSMETHODS '}'
+         | CLASSMETHODS '}'
  
  */
 static void parseCBody(void)

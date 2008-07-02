@@ -137,6 +137,210 @@ static void parseMethodParams(PMETHOD pMethod)
 }
 
 
+
+
+static void doSingleMethodParam(void)
+{
+  GTokenValue value;
+  PSYMBOL pCurSymbol;
+
+  PMETHODPARAM pParam;
+  pParam=g_malloc0(sizeof(METHODPARAM));
+
+  /* Do direction */
+  /* Direction */
+  if(!matchNextKind(KIND_DIRECTION)) /* Be aware that we don't compare types here */
+  {
+    pParam->uiDirection=PARM_DIRECTION_IN;        
+  }
+  else
+  {
+    value=gScanner->value;
+    pCurSymbol=value.v_symbol;
+    switch(pCurSymbol->uiSymbolToken)
+    {
+      case IDL_SYMBOL_IN:
+        pParam->uiDirection=PARM_DIRECTION_IN;
+        break;
+      case IDL_SYMBOL_OUT:
+        pParam->uiDirection=PARM_DIRECTION_OUT;
+        break;
+      case IDL_SYMBOL_INOUT:
+        pParam->uiDirection=PARM_DIRECTION_INOUT;
+        break;
+      default:
+        break;
+    }
+  }
+  
+  
+  /* Do typespec */
+  
+  /* Do identifier */
+  exitIfNotMatchNext(G_TOKEN_IDENTIFIER, "Error in method implementation.");
+  
+  /* The current token is the identifier */
+  value=gScanner->value;
+  pParam->chrName=g_strdup(value.v_identifier);
+  
+  
+}
+
+/*
+ 
+ MPARAMS :=  ˚)˚
+           | MPARAM
+           | MPARAM ',' MPARAMS 
+ */
+static void doMethodParams(PMETHOD pMethod)
+{
+  
+  while(g_scanner_peek_next_token(gScanner)!= G_TOKEN_EOF && g_scanner_peek_next_token(gScanner)!=')')
+  {
+    doSingleMethodParam();
+    
+    if(!matchNext(','))
+      break;
+  }
+  exitIfNotMatchNext(')',  "No closing of method parameter list.");
+}
+
+/*
+ 
+ MPARAM :=  TYPESPEC IDENT 
+ 
+ */
+
+
+/*
+ Current token is the one just before the typespec.
+ 
+ METHOD := TYPESPEC IDENT '(' MPARAMS
+
+ */
+static void parseMethod(PMETHOD pMethod)
+{
+  GTokenValue value;
+  PINTERFACE pif;
+  PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
+
+  /********* Parse typespec *******************************************/  
+
+
+  /********* Method identifier ****************************************/  
+
+  exitIfNotMatchNext(G_TOKEN_IDENTIFIER, "Error in method implementation.");
+
+  /* The current token is the identifier */
+  value=gScanner->value;
+  pMethod->chrName=g_strdup(value.v_identifier);
+  
+  /* Now check if the method was introduced by some parent. The interface struct contains
+   the parent name if any and the function will follow the chain of parents. */
+  if((pif=findInterfaceForMethod(pParseInfo->pCurInterface, pMethod->chrName))!=NULL)
+  {
+    gchar* chrMessage;
+    chrMessage=g_strdup_printf("A method '%s' is already present in interface '%s'.",
+                               pMethod->chrName, pif->chrName);
+    
+    g_scanner_unexp_token(gScanner,
+                          G_TOKEN_IDENTIFIER,
+                          NULL, NULL, NULL,
+                          chrMessage,
+                          TRUE); /* is_error */
+    cleanupAndExit(1);
+  }
+  
+  /* Check if the method is defined at all */
+  if(NULL==findMethodInfoFromMethodNameWithCurrent(pParseInfo->pClassDefinition, pMethod->chrName))
+  {
+    gchar* chrMessage;
+    chrMessage=g_strdup_printf("Method '%s' is not defined for the current class or one of the parents.",
+                               pMethod->chrName);
+    
+    g_scanner_unexp_token(gScanner,
+                          G_TOKEN_IDENTIFIER,
+                          NULL, NULL, NULL,
+                          chrMessage,
+                          TRUE); /* is_error */
+    cleanupAndExit(1);
+    
+  }
+
+  /****** Method parameters ***************************************************/  
+  exitIfNotMatchNext('(', "Error in method implementation.");
+
+  /* Do parameters */
+  
+}
+
+/*
+ 
+ CLASSMETHODS:=  CLASSMETHOD
+               | CLASSMETHOD CLASSMETHODS
+ 
+ CLASSMETHOD := IMPL METHOD
+ 
+ */
+static void parseSingleClassMethod(void)
+{
+  GTokenValue value;
+  PSYMBOL pCurSymbol;
+  PPARSEINFO pParseInfo=(PPARSEINFO)gScanner->user_data;
+  PMETHOD pMethod=createMethodStruct();
+
+  g_ptr_array_add( pParseInfo->pCurInterface->pMethodArray, (gpointer) pMethod);
+
+  /* Method implementations must start with "impl" which is registered as a symbol. Here we check if
+   the token is a symbol. */
+  exitIfNotMatchNext(G_TOKEN_SYMBOL, "Method implementation must start with 'impl'.");
+  
+  value=gScanner->value;
+  pCurSymbol=value.v_symbol;
+  
+  /* Check if symbol is "impl". */
+  if(!pCurSymbol || pCurSymbol->uiSymbolToken!=NOMC_SYMBOL_IMPL)
+  {
+    g_scanner_unexp_token(gScanner,
+                          G_TOKEN_SYMBOL,
+                          NULL, NULL, NULL,
+                          "'impl'.",
+                          TRUE); /* is_error */
+    cleanupAndExit(1);
+  }
+  
+  /* Parse method */
+  parseMethod(pMethod);
+  
+}
+
+/*
+ 
+ CLASSMETHODS:=  IMPL METHOD
+ ^             | IMPL METHOD  CLASSMETHODS
+*/
+ void parseClassMethods(void)
+{
+  do
+  {
+    PSYMBOL pCurSymbol;
+    GTokenValue value;
+
+    /* There must be at least one class method */
+    parseSingleClassMethod();
+    
+    /* Any additional methods start with ˚impl˚ */
+    if(g_scanner_peek_next_token(gScanner)!=G_TOKEN_SYMBOL)
+      break;
+
+    value=gScanner->next_value;
+    pCurSymbol=value.v_symbol;
+
+    if(!pCurSymbol || pCurSymbol->uiSymbolToken!=NOMC_SYMBOL_IMPL)
+      break;
+  }while(g_scanner_peek_next_token(gScanner)!= G_TOKEN_EOF);
+}
+
 /*
   Current token is the typespec.
 

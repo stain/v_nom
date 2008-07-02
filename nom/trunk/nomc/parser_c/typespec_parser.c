@@ -44,6 +44,31 @@
 extern gchar* getTypeSpecStringFromCurToken(void);
 
 /*
+ Parse a typespec e.g. 'gulong' or 'gulong*'.
+ 
+ Current token is the one directly before the typespec.
+ Note: only single word typespecs are allowed.
+ 
+ TS:= TYPESPEC
+ |  TYPESPEC '*'
+ 
+ */
+void parseTypeSpec2(PMETHODPARAM pMethodParam)
+{
+  char *chrTemp;
+  
+  exitIfNotMatchNextKind(KIND_TYPESPEC, "Expected return type specifier.");
+  
+  /* Return type name */
+  pMethodParam->chrType=getTypeSpecStringFromCurToken();
+  
+  /* Do we return a pointer (check for '*') */
+  while(matchNext('*'))
+    pMethodParam->uiStar++;
+}
+
+
+/*
   Parse a typespec e.g. 'gulong' or 'gulong*'.
 
   Current token is the typespec.

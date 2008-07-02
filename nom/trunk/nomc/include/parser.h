@@ -214,7 +214,7 @@ void parseTypeSpec(PMETHODPARAM pMethodParam);
 void parseClassMethod(void);
 void parseCodeBlock(void);
 void parseInterface(GTokenType token);
-void parseMethod(void);
+void parseInterfaceMethod(void);
 
 /* In printdata.c */
 void printInterface(PINTERFACE pif);
@@ -228,6 +228,7 @@ PINTERFACE getParentInterface(PINTERFACE pif);
 PMETHOD findMethodInfoFromMethodName(PINTERFACE pif, gchar* chrName);
 PMETHOD findMethodInfoFromMethodNameWithCurrent(PINTERFACE pif, gchar* chrName);
 void exitIfNotMatchNext(GTokenType token, gchar* msg);
+void exitIfNotMatchNextKind(guint uiKind, gchar* msg);
 
 #if 0
 void parseInstanceVar(void);

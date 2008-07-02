@@ -245,7 +245,7 @@ void exitIfNotMatchNext(GTokenType token, gchar* msg)
 {
   if(!matchNext(token))
   {
-    getNextToken(); /* Make sure error references the correct token */ \    
+    getNextToken(); /* Make sure error references the correct token */    
     g_scanner_unexp_token(gScanner,
                           token,
                           NULL, NULL, NULL,
@@ -255,3 +255,16 @@ void exitIfNotMatchNext(GTokenType token, gchar* msg)
   }
 }
 
+void exitIfNotMatchNextKind(guint uiKind, gchar* msg)
+{
+  if(!matchNextKind(uiKind))
+  {
+    getNextToken(); /* Make sure error references the correct token */
+    g_scanner_unexp_token(gScanner,
+                          G_TOKEN_IDENTIFIER,
+                          NULL, NULL, NULL,
+                          msg,
+                          TRUE); /* is_error */
+    cleanupAndExit(1);
+  }
+}
