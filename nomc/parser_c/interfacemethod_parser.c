@@ -156,7 +156,7 @@ static void parseMethodParams(PMETHOD pMethod)
   M:= TS G_TOKEN_IDENTIFIER '(' ')' ';'        // method
     | TS G_TOKEN_IDENTIFIER '(' MPARMS ')' ';' // method
  */
-void parseMethod(void)
+void parseInterfaceMethod(void)
 {
   GTokenValue value;
   PMETHOD pMethod=createMethodStruct();

@@ -142,7 +142,7 @@ void parseIBody(void)
         //g_printf("%d: ", __LINE__);
         //printToken(gScanner->token);
         
-        parseMethod();
+        parseInterfaceMethod();
       }
     else if(matchNext('#'))
       parseHash();
