@@ -301,7 +301,7 @@ static void parseSingleClassMethod(void)
   pCurSymbol=value.v_symbol;
   
   /* Check if symbol is "impl". */
-  if(!pCurSymbol || pCurSymbol->uiSymbolToken!=NOMC_SYMBOL_IMPL)
+  if(!pCurSymbol || pCurSymbol->uiSymbolToken!=NOMC_SYMBOL_PUBLIC)
   {
     g_scanner_unexp_token(gScanner,
                           G_TOKEN_SYMBOL,
@@ -337,7 +337,7 @@ static void parseSingleClassMethod(void)
     value=gScanner->next_value;
     pCurSymbol=value.v_symbol;
 
-    if(!pCurSymbol || pCurSymbol->uiSymbolToken!=NOMC_SYMBOL_IMPL)
+    if(!pCurSymbol || pCurSymbol->uiSymbolToken!=NOMC_SYMBOL_PUBLIC)
       break;
   }while(g_scanner_peek_next_token(gScanner)!= G_TOKEN_EOF);
 }
