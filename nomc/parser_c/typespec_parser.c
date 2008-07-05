@@ -53,7 +53,7 @@ extern gchar* getTypeSpecStringFromCurToken(void);
  |  TYPESPEC '*'
  
  */
-void parseTypeSpec2(PMETHODPARAM pMethodParam)
+void parseTypeSpec(PMETHODPARAM pMethodParam)
 {
   char *chrTemp;
   
@@ -67,7 +67,7 @@ void parseTypeSpec2(PMETHODPARAM pMethodParam)
     pMethodParam->uiStar++;
 }
 
-
+#if 0
 /*
   Parse a typespec e.g. 'gulong' or 'gulong*'.
 
@@ -102,8 +102,5 @@ void parseTypeSpec(PMETHODPARAM pMethodParam)
   while(matchNext('*'))
     pMethodParam->uiStar++;
 }
-
-
-
-
+#endif
 

@@ -136,6 +136,9 @@ void parseIBody(void)
     //g_printf("%d: ", __LINE__);
     //printToken(gScanner->token);
 
+    parseInterfaceMethod();
+    
+#if 0
     /* Typespec check must be first */
     if(matchNextKind(KIND_TYPESPEC)) /* Be aware that we don't compare types here */
       {
@@ -188,6 +191,7 @@ void parseIBody(void)
                               TRUE); /* is_error */
         exit(1);
       }
+#endif
     }while(g_scanner_peek_next_token(gScanner)!='}');
   //g_printf("%d: ", __LINE__);
   //printToken(gScanner->token);
