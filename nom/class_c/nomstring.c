@@ -132,7 +132,7 @@ NOMDLLEXPORT NOM_Scope gulong NOMLINK impl_NOMString_length(NOMString* nomSelf,
 
 
 NOMDLLEXPORT NOM_Scope PNOMString NOMLINK impl_NOMString_truncate(NOMString* nomSelf,
-                                                                  const CORBA_unsigned_long ulNewLen,
+                                                                  const gulong ulNewLen,
                                                                   CORBA_Environment *ev)
 {
   NOMStringData* nomThis = NOMStringGetData(nomSelf);
