@@ -150,11 +150,11 @@ NOM_Scope void NOMLINK impl_NOMClassMgr_nomRegisterClass(NOMClassMgr* nomSelf, c
 /**
    \brief Function which implements the nomGetClassList() method of NOMClassMgr.
  */
-NOM_Scope PGData NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, CORBA_Environment *ev)
+NOM_Scope gpointer NOMLINK impl_NOMClassMgr_nomGetClassList(NOMClassMgr* nomSelf, CORBA_Environment *ev)
 {
   NOMClassMgrData *nomThis = NOMClassMgrGetData(nomSelf);
 
-  return _gdataClassList;
+  return (gpointer) _gdataClassList;
 }
 
 

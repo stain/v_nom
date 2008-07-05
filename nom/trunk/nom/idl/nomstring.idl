@@ -137,7 +137,7 @@ interface NOMString : NOMObject
      \return
      Truncated NOMString object. This is not a copy. 
   */
-  PNOMString truncate(in unsigned long ulNewLen);
+  PNOMString truncate(in gulong ulNewLen);
 
   /**
      Create a copy of the NOMString object this method is called on. The caller

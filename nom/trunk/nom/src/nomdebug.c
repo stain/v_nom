@@ -155,7 +155,7 @@ NOMEXTERN  void NOMLINK dumpClasses(void)
 
   nomPrintf("----- %s -----  NOMClassMgrObject: %lx\n", __FUNCTION__, NOMClassMgrObject);
 
-  pgdata=_nomGetClassList(NOMClassMgrObject, NULL);
+  pgdata=(GData*)_nomGetClassList(NOMClassMgrObject, NULL);
   if(pgdata){
     nomPrintf("%s: classlist: %lx\n", __FUNCTION__, pgdata);
     g_datalist_foreach(&pgdata, dumpClassFunc, pgdata);
