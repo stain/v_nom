@@ -108,6 +108,8 @@ static void parseMethodParams(PMETHOD pMethod)
       }
     }
     
+    parseTypeSpec(pParam);
+#if 0
     /* Typespec */
     if(matchNextKind(KIND_TYPESPEC)) /* Be aware that we don't compare types here */
       parseTypeSpec(pParam);
@@ -123,7 +125,7 @@ static void parseMethodParams(PMETHOD pMethod)
                               TRUE); /* is_error */
         cleanupAndExit(1);
       }
-
+#endif
     //pParam->chrType=getTypeSpecStringFromCurToken();
     //g_printf("%s %d", __FUNCTION__, __LINE__);
     //printToken(curToken);
@@ -311,13 +313,12 @@ static void parseSingleClassMethod(void)
   
   /* Parse method */
   parseMethod(pMethod);
-  
 }
 
 /*
  
  CLASSMETHODS:=  IMPL METHOD
- ^             | IMPL METHOD  CLASSMETHODS
+               | IMPL METHOD  CLASSMETHODS
 */
  void parseClassMethods(void)
 {

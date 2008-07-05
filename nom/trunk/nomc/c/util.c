@@ -257,6 +257,7 @@ void exitIfNotMatchNext(GTokenType token, gchar* msg)
 
 void exitIfNotMatchNextKind(guint uiKind, gchar* msg)
 {
+  printToken(gScanner->token);
   if(!matchNextKind(uiKind))
   {
     getNextToken(); /* Make sure error references the correct token */

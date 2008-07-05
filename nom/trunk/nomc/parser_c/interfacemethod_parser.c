@@ -106,6 +106,9 @@ static void parseMethodParams(PMETHOD pMethod)
       }
 
     /* Typespec */
+    parseTypeSpec(pParam);
+    
+#if 0
     if(matchNextKind(KIND_TYPESPEC)) /* Be aware that we don't compare types here */
       parseTypeSpec(pParam);
     else
@@ -120,7 +123,8 @@ static void parseMethodParams(PMETHOD pMethod)
                               TRUE); /* is_error */
         cleanupAndExit(1);
       }
-
+#endif
+    
     //pParam->chrType=getTypeSpecStringFromCurToken();
     //g_printf("%s %d", __FUNCTION__, __LINE__);
     //printToken(curToken);

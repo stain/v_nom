@@ -159,22 +159,8 @@ static void parseCBody(void)
       cleanupAndExit(1);
     }
 
-    /* Check if the token is a known (registered) type */
-    if(matchNextKind(KIND_TYPESPEC)) /* Be aware that we don't compare types here */
-    {
-      /* Get name, parameters and stuff. Print the body. */
-      parseClassMethod();
-    }
-    else
-    {
-      getNextToken();
-      g_scanner_unexp_token(gScanner,
-                            G_TOKEN_IDENTIFIER,
-                            NULL, NULL, NULL,
-                            "Expected return type specifier.",
-                            TRUE); /* is_error */
-      cleanupAndExit(1);
-    }
+    /* Get name, parameters and stuff. Print the body. */
+    parseClassMethod();
   };
 
   exitIfNotMatchNext('}',  "No closing of 'class' section.");
@@ -224,41 +210,30 @@ static gchar* parseClassIdent(void)
   }  
   else
   {
-    if(matchNext(G_TOKEN_SYMBOL))
-    {
-      /* If the interface name is a symbol, it means the interface was
-       already registered before. Maybe because of a forward statement.
-       We will check that in the function which called us. */
-      
-      /* Check if it's one of our interface symbols */
-      PSYMBOL pCurSymbol;
-      GTokenValue value;
-      
-      value=gScanner->value;
-      pCurSymbol=value.v_symbol;
-      if(IDL_SYMBOL_REGINTERFACE!=pCurSymbol->uiSymbolToken)
-      {
-        /* No, some other symbol */
-        g_scanner_unexp_token(gScanner,
-                              G_TOKEN_SYMBOL,
-                              NULL, NULL, NULL,
-                              "Keyword 'class' is not followed by a valid identifier.",
-                              TRUE); /* is_error */
-        cleanupAndExit(1);
-      }
+    PSYMBOL pCurSymbol;
+    GTokenValue value;
 
-      /* Save interface name */
-      return g_strdup(pCurSymbol->chrSymbolName);
-    }
-    else
+    /* If the interface name is a symbol, it means the interface was
+     already registered before. Maybe because of a forward statement.
+     We will check that in the function which called us. */    
+    exitIfNotMatchNext(G_TOKEN_SYMBOL, "Keyword 'class' must be followed by an identifier");
+    
+    /* Check if it's one of our interface symbols */
+    value=gScanner->value;
+    pCurSymbol=value.v_symbol;
+    if(IDL_SYMBOL_REGINTERFACE!=pCurSymbol->uiSymbolToken)
     {
+      /* No, some other symbol */
       g_scanner_unexp_token(gScanner,
-                            G_TOKEN_IDENTIFIER,
+                            G_TOKEN_SYMBOL,
                             NULL, NULL, NULL,
-                            "Keyword 'class' must be followed by an identifier",
+                            "Keyword 'class' is not followed by a valid identifier.",
                             TRUE); /* is_error */
       cleanupAndExit(1);
     }
+    
+    /* Save interface name */
+    return g_strdup(pCurSymbol->chrSymbolName);    
   }
 }
 
@@ -351,7 +326,6 @@ static void doClassDeclaration(void)
   class:=  CLASSIDENT ';'                            // Forward declaration
          | CLASSIDENT ':' PARENTCLASSIDENT CLASSBODY // Subclass (not used yet!)
          | CLASSIDENT CLASSBODY
- 
  */
 void parseClass(GTokenType token)
 {
