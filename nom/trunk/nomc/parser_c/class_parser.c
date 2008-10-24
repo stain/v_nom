@@ -141,14 +141,14 @@ static void parseCBody(void)
     PSYMBOL pCurSymbol;
     GTokenValue value;
     
-    /* Method implementations must start with "impl" which is registered as a symbol. Here we check if
+    /* Method implementations must start with "public" which is registered as a symbol. Here we check if
      the token is a symbol. */
     exitIfNotMatchNext(G_TOKEN_SYMBOL, "Method implementation must start with 'public'.");
 
     value=gScanner->value;
     pCurSymbol=value.v_symbol;
 
-    /* Check if token is "impl". */
+    /* Check if token is "public". */
     if(!pCurSymbol || pCurSymbol->uiSymbolToken!=NOMC_SYMBOL_PUBLIC)
     {
       g_scanner_unexp_token(gScanner,
