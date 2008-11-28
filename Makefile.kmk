@@ -16,10 +16,13 @@ endif
 #
 # Include the sub-makefiles.
 #
-include gc6.8/Makefile.kmk
+ifneq ($(BUILD_TARGET),freebsd)
+ include gc6.8/Makefile.kmk
+endif
 include idl-compiler/Makefile.kmk
 include nom/Makefile.kmk
 include tests/Makefile.kmk
+include nomc/Makefile.kmk
 
 #
 # Stuff that should be installed for the build to run.

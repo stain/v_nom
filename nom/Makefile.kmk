@@ -57,8 +57,11 @@ ifeq ($(BUILD_TARGET),win)
 endif
 ifeq ($(BUILD_TARGET),darwin_)
 	   libnomobjtk_LIBS += /opt/local/lib/libgc.dylib
+endif
+ifeq ($(BUILD_TARGET),freebsd)
+	   libnomobjtk_LIBS += /usr/local/lib/libgc$(SUFF_DLL)
 else
- libnomobjtk_LIBS += $(PATH_LIB)/libnomgc$(SUFF_DLL)
+	   libnomobjtk_LIBS += $(PATH_LIB)/libnomgc$(SUFF_DLL)
 endif
 
 #

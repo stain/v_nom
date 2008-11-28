@@ -549,6 +549,8 @@ static void emitClassCreationFunc(PPARSEINFO pLocalPI, PINTERFACE pif)
   fprintf(fh, "# warning FIXME: Check out GC/dylib.\n");
   fprintf(fh, "#elif defined(__linux__)\n");
   fprintf(fh, "# warning FIXME: Check out GC/so on linux.\n");
+  fprintf(fh, "#elif defined(__FreeBSD__)\n");
+  fprintf(fh, "# warning FIXME: Check out GC/so on FreeBSD\n");
   fprintf(fh, "#else\n");
   fprintf(fh, "#error DLL must be registered with the garbage collector!\n");
   fprintf(fh, "#endif\n\n");
