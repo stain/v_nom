@@ -54,14 +54,20 @@ libnomobjtk_SOURCES.win = \
 	$(PATH_TARGET)/libnomobjtk-win.def
 ifeq ($(BUILD_TARGET),win)
  libnomobjtk_LIBS += $(PATH_LIB)/libnomgc$(SUFF_LIB)
-endif
+else
 ifeq ($(BUILD_TARGET),darwin_)
 	   libnomobjtk_LIBS += /opt/local/lib/libgc.dylib
-endif
+else
 ifeq ($(BUILD_TARGET),freebsd)
 	   libnomobjtk_LIBS += /usr/local/lib/libgc$(SUFF_DLL)
 else
+ifeq ($(BUILD_TARGET),linux)
+	   libnomobjtk_LIBS += /usr/lib/libgc$(SUFF_DLL)
+else
 	   libnomobjtk_LIBS += $(PATH_LIB)/libnomgc$(SUFF_DLL)
+endif
+endif
+endif
 endif
 
 #

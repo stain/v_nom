@@ -92,7 +92,7 @@ endif
 #	$(TARGET_nomtest_a)
 
 
-test-nom_LIBS.linux = $(PATH_LIB)/libnomgc.so
+#test-nom_LIBS.linux = $(PATH_LIB)/libnomgc.so
 
 
 #

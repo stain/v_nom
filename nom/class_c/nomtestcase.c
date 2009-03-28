@@ -81,7 +81,7 @@ NOMDLLEXPORT NOM_Scope NOMArray* NOMLINK impl_NOMTestCase_runTests(NOMTestCase* 
     char* methodName=_queryString(_getName(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL), NULL);
 
     /* Only Methods starting with ˚test˚ are run. */
-    if(0!=strnstr( methodName, "test", 4))
+    if(strstr(methodName, "test")==methodName)
     {
       NOMTestResult* nResult=NOMTestResultNew();
       nomProc* nProc=_queryMethodToken(NOMArray_queryObjectAtIdx(methodArray, a, NULL), NULL);
