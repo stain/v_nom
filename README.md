@@ -2,6 +2,13 @@
 
 This repository is a snapshot of [Netlab's Voyager NOM](http://trac.netlabs.org/v_nom) source code and is **no longer maintained**.
 
+You may also need:
+
+* https://github.com/stain/v_nom/
+* https://github.com/stain/v_desktop/
+* https://github.com/stain/v_triton/
+* https://github.com/stain/v_doc/
+
 ## License/copyright
 
 License and copyright was not explicit across the original source repository, but where in-line, is indicated as Dual-license CDDL 1.0/LGPL 2.1, e.g.:
